@@ -1,0 +1,68 @@
+# PhotoLib – Project TODO
+
+This document tracks planned work, ideas, and architectural notes.
+It is intentionally incomplete and evolves with the project.
+
+---
+
+## Backend – Core API
+
+### Photos
+
+- [x] Separate photo metadata from file endpoints
+- [x] Store originals and thumbnails separately
+- [x] Add thumbnail endpoint
+- [ ] Decide on delete strategy (soft vs hard)
+- [ ] Implement soft delete logic (IsDeleted)
+- [ ] Handle file cleanup on hard delete (if used)
+- [ ] Add metadata-only GET /photo/{id}
+
+### Galleries
+
+- [ ] Review GalleryController endpoints
+- [ ] Decide gallery delete behavior
+- [ ] Add gallery-level sync support
+
+---
+
+## Backend – Storage & Architecture
+
+- [x] File-based storage for originals and thumbnails
+- [ ] Extract file path logic into helper/service
+- [ ] Consider future cloud storage abstraction
+- [ ] Add remarks/docs for storage evolution
+
+---
+
+## Frontend – Angular
+
+- [ ] Align gallery view with thumbnail-only API
+- [ ] Lazy-load thumbnails
+- [ ] Fetch original image only on user interaction
+- [ ] Offline-first sync UI states
+
+---
+
+## Sync & Offline
+
+- [x] Two-ID model (localId / serverId)
+- [ ] Soft delete propagation
+- [ ] Conflict resolution strategy
+- [ ] Retry logic for file upload
+
+---
+
+## Non-Functional
+
+- [ ] Authentication & authorization
+- [ ] Basic logging
+- [ ] Error handling strategy
+- [ ] Prepare for CI/CD
+
+---
+
+## Ideas / Notes
+
+- Cloud storage support (Blob / S3) – future version
+- Multiple thumbnail sizes
+- EXIF parsing on backend
