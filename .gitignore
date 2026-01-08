@@ -8,6 +8,7 @@
 /e2e/test-output/
 /.angular/
 /.angular-cli.json
+/frontend__broken/
 /.ng/
 **/.angular/
 **/.angular/**
