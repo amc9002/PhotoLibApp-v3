@@ -1,0 +1,16 @@
+<h2>Galleries</h2>
+
+<div
+  *ngFor="let g of galleries"
+  class="gallery-item"
+  [class.selected]="g.id === selectedGalleryId"
+  (click)="select(g)"
+>
+  <span class="gallery-title">
+    {{ g.title }}
+  </span>
+
+  <button type="button" class="delete-btn" (click)="onDelete(g, $event)">
+    ×
+  </button>
+</div>
