@@ -12,6 +12,8 @@
 /.ng/
 **/.angular/
 **/.angular/**
+/frontend/.gitignore
+/frontend/README.md
 
 
 # Node modules and dependency files
