@@ -1,0 +1,17 @@
+<div class="overlay">
+  <div class="window">
+    <div class="window-header">
+      <span>New gallery</span>
+      <button (click)="cancel.emit()">✕</button>
+    </div>
+
+    <div class="window-content">
+      <input type="text" placeholder="Gallery title" [(ngModel)]="title" />
+
+      <div class="actions">
+        <button (click)="submit()">Create</button>
+        <button (click)="cancel.emit()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>

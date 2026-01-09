@@ -15,6 +15,7 @@
       No galleries
     </div>
   </div>
+
   <span
     class="gallery-title"
     *ngIf="selectedGallery"
@@ -38,12 +39,11 @@
     </button>
 
     <div class="service-menu" *ngIf="serviceMenuOpen">
-      <div class="service-menu-item" (click)="closeServiceMenu()">
-        Gallery properties
-      </div>
-
-      <div class="service-menu-item danger" (click)="closeServiceMenu()">
-        Delete gallery
+      <div
+        class="service-menu-item"
+        (click)="onNewGallery(); $event.stopPropagation()"
+      >
+        New gallery
       </div>
 
       <div
@@ -51,6 +51,10 @@
         (click)="closeServiceMenu(); properties.emit()"
       >
         Gallery properties
+      </div>
+
+      <div class="service-menu-item danger" (click)="closeServiceMenu()">
+        Delete gallery
       </div>
     </div>
   </div>

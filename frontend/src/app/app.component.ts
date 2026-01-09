@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { GalleryPropertiesComponent } from './components/gallery-properties/gallery-properties.component';
 import { GalleryViewComponent } from './components/gallery-view/gallery-view.component';
+import { CreateGalleryComponent } from './components/create-gallery/create-gallery.component';
 
 @Component({
   selector: 'app-root',
@@ -14,6 +15,7 @@ import { GalleryViewComponent } from './components/gallery-view/gallery-view.com
     ToolbarComponent,
     GalleryPropertiesComponent,
     GalleryViewComponent,
+    CreateGalleryComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
@@ -43,5 +45,20 @@ export class AppComponent implements OnInit {
 
   closeGalleryProperties() {
     this.showGalleryProperties = false;
+  }
+
+  showCreateGallery = false;
+
+  openCreateGallery() {
+    this.showCreateGallery = true;
+  }
+
+  closeCreateGallery() {
+    this.showCreateGallery = false;
+  }
+
+  createGallery(title: string) {
+    console.log('CREATE GALLERY:', title);
+    this.showCreateGallery = false;
   }
 }

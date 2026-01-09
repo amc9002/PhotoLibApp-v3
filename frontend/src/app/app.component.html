@@ -13,6 +13,7 @@
     <app-toolbar
       layout="right"
       [selectedGallery]="selectedGallery"
+      (newGallery)="openCreateGallery()"
       (properties)="openGalleryProperties()"
     ></app-toolbar>
     <app-gallery-properties
@@ -31,3 +32,11 @@
 <div *ngIf="!selectedGallery" class="empty-state">
   Select a gallery to view photos
 </div>
+
+<div *ngIf="showCreateGallery" style="color: red">CREATE GALLERY OPEN</div>
+
+<app-create-gallery
+  *ngIf="showCreateGallery"
+  (create)="createGallery($event)"
+  (cancel)="closeCreateGallery()"
+></app-create-gallery>

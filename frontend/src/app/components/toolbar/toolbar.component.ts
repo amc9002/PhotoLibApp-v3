@@ -23,6 +23,7 @@ export class ToolbarComponent {
   @Input() layout: 'left' | 'right' = 'left';
   @Output() gallerySelected = new EventEmitter<Gallery>();
   @Output() properties = new EventEmitter<void>();
+  @Output() newGallery = new EventEmitter<void>();
 
   constructor(private elementRef: ElementRef) {}
 
@@ -45,6 +46,11 @@ export class ToolbarComponent {
   select(gallery: Gallery) {
     this.gallerySelected.emit(gallery);
     this.dropdownOpen = false;
+  }
+
+  onNewGallery() {
+    this.closeServiceMenu();
+    this.newGallery.emit();
   }
 
   serviceMenuOpen = false;
