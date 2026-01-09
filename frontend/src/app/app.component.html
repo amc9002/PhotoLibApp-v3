@@ -33,8 +33,6 @@
   Select a gallery to view photos
 </div>
 
-<div *ngIf="showCreateGallery" style="color: red">CREATE GALLERY OPEN</div>
-
 <app-create-gallery
   *ngIf="showCreateGallery"
   (create)="createGallery($event)"

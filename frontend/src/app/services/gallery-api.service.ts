@@ -19,7 +19,7 @@ export class GalleryApiService {
   }
 
   create(dto: Partial<GalleryDto>) {
-    return this.api.post<GalleryDto>('galleries', dto);
+    return this.api.post<GalleryDto>('Gallery', dto);
   }
 
   delete(id: string) {

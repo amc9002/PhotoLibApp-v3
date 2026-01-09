@@ -58,7 +58,15 @@ export class AppComponent implements OnInit {
   }
 
   createGallery(title: string) {
-    console.log('CREATE GALLERY:', title);
-    this.showCreateGallery = false;
+    this.galleryApi.create({ title }).subscribe({
+      next: (gallery) => {
+        this.galleries = [...this.galleries, gallery];
+        this.selectedGallery = gallery;
+        this.showCreateGallery = false;
+      },
+      error: (err) => {
+        console.error('create gallery error:', err);
+      },
+    });
   }
 }
