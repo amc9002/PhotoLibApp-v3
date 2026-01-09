@@ -1,0 +1,21 @@
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-auto-rows: 120px;
+  gap: 12px;
+}
+
+.photo-tile {
+  background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
+  border-radius: 6px;
+}
+
+/* Варыянты */
+
+.photo-tile.large {
+  grid-row: span 2;
+}
+
+.photo-tile.wide {
+  grid-column: span 2;
+}

@@ -61,8 +61,58 @@ It is intentionally incomplete and evolves with the project.
 
 ---
 
+## Frontend – Gallery & Photo Viewing
+
+- [ ] Gallery grid view (thumbnail-only, masonry / quilt layout)
+- [ ] Photo viewer mode (single photo focus)
+- [ ] Next / previous navigation
+- [ ] Thumbnail carousel in viewer mode
+- [ ] Full-size / original photo overlay
+- [ ] Autoplay (ordered)
+- [ ] Autoplay (random)
+- [ ] Empty gallery state (no photos yet)
+
+---
+
+## Frontend – Gallery Presentation & Sharing
+
+- [x] Gallery grid view (masonry / quilt-style layout) <!-- толькі што зроблена -->
+- [ ] Gallery view as photo album (album-like presentation mode)
+- [ ] Allow creating virtual photo albums from selected photos
+- [ ] Allow sharing:
+  - [ ] individual photos
+  - [ ] photo albums
+- [ ] Define album as a virtual collection (not a physical gallery)
+
+---
+
+## Social / Collaboration (Future)
+
+- [ ] Share photos between users (read-only)
+- [ ] Share photo albums between users
+- [ ] Define access levels (owner / viewer)
+
+---
+
+## Media Types – Future Vision
+
+- [ ] Support short video clips inside galleries (inspired by Harry Potter moving photos)
+- [ ] Define unified media model (photo / video)
+
+---
+
+## AI / Neural Features – Long Term
+
+- [ ] Photo animation using neural networks
+- [ ] Define AI-generated media as derived content (not original)
+
 ## Ideas / Notes
 
 - Cloud storage support (Blob / S3) – future version
 - Multiple thumbnail sizes
 - EXIF parsing on backend
+- Distinct UI modes:
+- Gallery overview (grid / masonry)
+- Photo viewer (focused)
+- Overlay windows (properties, full-size)
+- Consider enforcing gallery creation only together with first photo upload

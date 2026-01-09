@@ -1,31 +1,33 @@
-<div class="app-layout">
-  <header class="app-header">PhotoLib</header>
+<header class="app-header">
+  <div class="header-left">
+    <span class="app-title">PhotoLib</span>
 
-  <div class="app-body">
-    <aside class="sidebar">
-      <app-gallery-list
-        (gallerySelected)="onGallerySelected($event)"
-      ></app-gallery-list>
-    </aside>
-
-    <main class="content">
-      <ng-container *ngIf="selectedGallery; else empty">
-        <h2>{{ selectedGallery.title }}</h2>
-
-        <p>
-          Created:
-          {{ selectedGallery.createdAtUtc | date: "medium" }}
-        </p>
-
-        <p>
-          Updated:
-          {{ selectedGallery.updatedAtUtc | date: "medium" }}
-        </p>
-      </ng-container>
-
-      <ng-template #empty>
-        <p>Select a gallery on the left</p>
-      </ng-template>
-    </main>
+    <app-toolbar
+      [galleries]="galleries"
+      [selectedGallery]="selectedGallery"
+      (gallerySelected)="selectGallery($event)"
+    ></app-toolbar>
   </div>
+
+  <div class="header-right">
+    <app-toolbar
+      layout="right"
+      [selectedGallery]="selectedGallery"
+      (properties)="openGalleryProperties()"
+    ></app-toolbar>
+    <app-gallery-properties
+      *ngIf="showGalleryProperties && selectedGallery"
+      [gallery]="selectedGallery"
+      (close)="closeGalleryProperties()"
+    ></app-gallery-properties>
+  </div>
+</header>
+
+<app-gallery-view
+  *ngIf="selectedGallery"
+  [gallery]="selectedGallery"
+></app-gallery-view>
+
+<div *ngIf="!selectedGallery" class="empty-state">
+  Select a gallery to view photos
 </div>

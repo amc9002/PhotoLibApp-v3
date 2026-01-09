@@ -1,0 +1,135 @@
+.toolbar {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* LEFT SIDE */
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px; /* візуальны падзел */
+  overflow: hidden;
+}
+
+/* PROJECT */
+.project-title {
+  font-style: italic; /* ← курсіў */
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+/* GALLERY BLOCK */
+.gallery-block {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* ← больш адлегласці ад кнопкі */
+  padding-left: 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.25); /* візуальны падзел */
+  overflow: hidden;
+}
+
+/* GALLERY TITLE */
+.gallery-title {
+  max-width: 320px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.85;
+}
+
+.gallery-title.muted {
+  opacity: 0.5;
+}
+
+/* RIGHT SIDE */
+.toolbar-right {
+  margin-left: auto; /* ← строга ў правы бок */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* BUTTONS */
+.toolbar-btn {
+  height: 28px;
+  padding: 0 8px;
+  font-size: 14px;
+  color: #fff;
+
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+
+  cursor: pointer;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.18);
+}
+
+.toolbar-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.gallery-btn {
+  font-weight: 500;
+}
+
+.dropdown {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  min-width: 220px;
+  background-color: #222;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  z-index: 100;
+}
+
+.dropdown-item {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.dropdown-empty {
+  padding: 6px 10px;
+  opacity: 0.6;
+}
+
+.service-menu-wrapper {
+  position: relative;
+}
+
+.service-menu {
+  position: absolute;
+  right: 0;
+  top: 36px;
+  min-width: 180px;
+
+  background-color: #222;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  z-index: 200;
+}
+
+.service-menu-item {
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.service-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.service-menu-item.danger {
+  color: #ff6b6b;
+}

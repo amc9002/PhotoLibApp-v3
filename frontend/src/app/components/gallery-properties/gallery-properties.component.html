@@ -1,0 +1,17 @@
+<div class="window" [style.left.px]="x" [style.top.px]="y">
+  <div class="window-header" (mousedown)="startDrag($event)">
+    <span>Gallery properties</span>
+    <button class="close-btn" (click)="close.emit()">✕</button>
+  </div>
+
+  <div class="window-content">
+    <div><strong>Title:</strong> {{ gallery.title }}</div>
+    <div><strong>ID:</strong> {{ gallery.id }}</div>
+    <div>
+      <strong>Created:</strong> {{ gallery.createdAtUtc | date: "medium" }}
+    </div>
+    <div>
+      <strong>Updated:</strong> {{ gallery.updatedAtUtc | date: "medium" }}
+    </div>
+  </div>
+</div>

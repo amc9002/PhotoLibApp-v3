@@ -1,47 +1,35 @@
-.app-layout {
-  height: 100vh;
+.app-header {
+  height: 40px;
   display: flex;
-  flex-direction: column;
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  flex-direction: row;
+  align-items: center;
+  padding: 0 12px;
+  background-color: #111;
+  color: #fff;
 }
 
-/* HEADER */
-.app-header {
-  height: 48px;
-  padding: 0 16px;
+app-toolbar {
   display: flex;
   align-items: center;
-
-  background-color: #111; /* чорны */
-  color: #fff;
-
-  font-weight: 600;
-  letter-spacing: 0.5px;
 }
 
-/* BODY */
-.app-body {
-  flex: 1;
+.app-title {
+  font-style: italic; /* ← вяртаем */
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+.header-left {
   display: flex;
-  overflow: hidden;
+  align-items: center;
+  gap: 16px;
 }
 
-/* SIDEBAR */
-.sidebar {
-  width: 240px;
-  background-color: #f3f3f3; /* светла-шэры */
-  border-right: 1px solid #ddd;
-  overflow-y: auto;
-}
-
-/* CONTENT */
-.content {
-  flex: 1;
-  background-color: #fff;
-  padding: 16px;
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
 }

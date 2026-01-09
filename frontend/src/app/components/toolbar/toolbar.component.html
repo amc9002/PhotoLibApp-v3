@@ -1,0 +1,57 @@
+<!-- LEFT TOOLBAR -->
+<ng-container *ngIf="layout === 'left'">
+  <button
+    class="toolbar-btn gallery-btn"
+    (click)="toggleDropdown(); $event.stopPropagation()"
+  >
+    Галерэя ▼
+  </button>
+  <div class="dropdown" *ngIf="dropdownOpen">
+    <div class="dropdown-item" *ngFor="let g of galleries" (click)="select(g)">
+      {{ g.title }}
+    </div>
+
+    <div *ngIf="galleries.length === 0" class="dropdown-empty">
+      No galleries
+    </div>
+  </div>
+  <span
+    class="gallery-title"
+    *ngIf="selectedGallery"
+    title="{{ selectedGallery.title }}"
+  >
+    {{ selectedGallery.title }}
+  </span>
+</ng-container>
+
+<!-- RIGHT TOOLBAR -->
+<ng-container *ngIf="layout === 'right'">
+  <button class="toolbar-btn" disabled>➕</button>
+  <button class="toolbar-btn" disabled>✏</button>
+
+  <div class="service-menu-wrapper">
+    <button
+      class="toolbar-btn"
+      (click)="toggleServiceMenu(); $event.stopPropagation()"
+    >
+      ⋮
+    </button>
+
+    <div class="service-menu" *ngIf="serviceMenuOpen">
+      <div class="service-menu-item" (click)="closeServiceMenu()">
+        Gallery properties
+      </div>
+
+      <div class="service-menu-item danger" (click)="closeServiceMenu()">
+        Delete gallery
+      </div>
+
+      <div
+        class="service-menu-item"
+        (click)="closeServiceMenu(); properties.emit()"
+      >
+        Gallery properties
+      </div>
+    </div>
+  </div>
+</ng-container>

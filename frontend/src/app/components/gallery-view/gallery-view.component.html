@@ -1,0 +1,10 @@
+<div class="gallery-view">
+  <div class="gallery-grid">
+    <div
+      class="photo-tile"
+      *ngFor="let p of placeholders"
+      [class.large]="p.variant === 'large'"
+      [class.wide]="p.variant === 'wide'"
+    ></div>
+  </div>
+</div>

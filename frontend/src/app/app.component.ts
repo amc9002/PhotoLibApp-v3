@@ -1,19 +1,47 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import { Gallery } from './models/gallery.model';
-import { GalleryListComponent } from './components/gallery-list/gallery-list.component';
+import { GalleryApiService } from './services/gallery-api.service';
+import { CommonModule } from '@angular/common';
+import { ToolbarComponent } from './components/toolbar/toolbar.component';
+import { GalleryPropertiesComponent } from './components/gallery-properties/gallery-properties.component';
+import { GalleryViewComponent } from './components/gallery-view/gallery-view.component';
+
 @Component({
   selector: 'app-root',
-  imports: [GalleryListComponent, CommonModule],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ToolbarComponent,
+    GalleryPropertiesComponent,
+    GalleryViewComponent,
+  ],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
+  styleUrls: ['./app.component.css'],
 })
-export class AppComponent {
-  title = 'frontend';
-
+export class AppComponent implements OnInit {
+  galleries: Gallery[] = [];
   selectedGallery?: Gallery;
 
-  onGallerySelected(gallery: Gallery) {
+  constructor(private galleryApi: GalleryApiService) {}
+
+  ngOnInit(): void {
+    this.galleryApi.getAll().subscribe({
+      next: (g) => (this.galleries = g),
+      error: (e) => console.error(e),
+    });
+  }
+
+  selectGallery(gallery: Gallery) {
     this.selectedGallery = gallery;
+  }
+
+  showGalleryProperties = false;
+
+  openGalleryProperties() {
+    this.showGalleryProperties = true;
+  }
+
+  closeGalleryProperties() {
+    this.showGalleryProperties = false;
   }
 }
