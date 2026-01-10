@@ -1,6 +1,8 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Gallery } from '../../models/gallery.model';
+import { PhotoListItemDto } from '../../models/photoLisrItem.dto';
+import { PhotoApiService } from '../../services/photo-api.service';
 
 @Component({
   selector: 'app-gallery-view',
@@ -9,11 +11,26 @@ import { Gallery } from '../../models/gallery.model';
   templateUrl: './gallery-view.component.html',
   styleUrls: ['./gallery-view.component.css'],
 })
-export class GalleryViewComponent {
+export class GalleryViewComponent implements OnChanges {
   @Input() gallery!: Gallery;
 
-  // Часовыя плэйсхолдары
-  placeholders = Array.from({ length: 18 }).map((_, i) => ({
-    variant: i % 7 === 0 ? 'large' : i % 5 === 0 ? 'wide' : 'normal',
-  }));
+  photos: PhotoListItemDto[] = [];
+
+  constructor(private photoApi: PhotoApiService) {}
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['gallery'] && this.gallery?.id) {
+      this.loadPhotos();
+    }
+  }
+
+  private loadPhotos() {
+    this.photoApi.getByGallery(this.gallery.id).subscribe((photos) => {
+      this.photos = photos;
+    });
+  }
+
+  getThumbnailUrl(photoId: string): string {
+    return `/api/Photo/${photoId}/thumbnail`;
+  }
 }

@@ -40,7 +40,12 @@ export class AppComponent implements OnInit {
   }
 
   selectGallery(gallery: Gallery) {
-    this.selectedGallery = gallery;
+    // прымусова "змяняем" значэнне
+    this.selectedGallery = undefined;
+
+    setTimeout(() => {
+      this.selectedGallery = gallery;
+    });
   }
 
   showGalleryProperties = false;
@@ -67,6 +72,9 @@ export class AppComponent implements OnInit {
 
           this.photoApi.upload(photo.id, file).subscribe(() => {
             console.log('File uploaded for photo:', photo.id);
+
+            // абнаўляем галерэю
+            this.selectGallery(this.selectedGallery!);
           });
         });
     });

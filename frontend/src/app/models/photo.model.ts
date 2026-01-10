@@ -13,6 +13,8 @@ export interface Photo {
   createdAt: string;
   updatedAt?: string;
 
+  hasThumbnail?: boolean;
+
   /** Sync flags */
   isDirty?: boolean;
   isDeleted?: boolean;

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { ApiService } from '../core/api/api.service';
 import { PhotoDto } from '../models/photo.dto';
+import { PhotoListItemDto } from '../models/photoLisrItem.dto';
 
 @Injectable({
   providedIn: 'root',
@@ -14,6 +15,10 @@ export class PhotoApiService {
 
   getById(id: string) {
     return this.api.get<PhotoDto>(`photos/${id}`);
+  }
+
+  getByGallery(galleryId: string) {
+    return this.api.get<PhotoListItemDto[]>(`Photo/by-gallery/${galleryId}`);
   }
 
   create(dto: Partial<PhotoDto>) {
