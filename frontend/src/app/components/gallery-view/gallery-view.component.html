@@ -1,12 +1,18 @@
 <div class="gallery-view">
   <div class="gallery-grid">
-    <div class="photo-tile" *ngFor="let photo of photos">
-      <img
-        *ngIf="photo.hasThumbnail"
-        [src]="getThumbnailUrl(photo.id)"
-        loading="lazy"
-        alt="Photo thumbnail"
-      />
+    <div class="photo-item" *ngFor="let photo of photos">
+      <div class="photo-tile">
+        <img
+          *ngIf="photo.hasThumbnail"
+          [src]="getThumbnailUrl(photo.id)"
+          loading="lazy"
+          alt="Photo thumbnail"
+        />
+      </div>
+
+      <div class="photo-title">
+        {{ photo.title }}
+      </div>
     </div>
   </div>
 </div>

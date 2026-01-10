@@ -1,21 +1,35 @@
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  grid-auto-rows: 120px;
   gap: 12px;
 }
 
 .photo-tile {
-  background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
+  aspect-ratio: 1 / 1; /* усе тамбы аднолькавыя */
+  background: linear-gradient(135deg, #f0f0f0, #e2e2e2);
   border-radius: 6px;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* Варыянты */
-
-.photo-tile.large {
-  grid-row: span 2;
+.photo-tile img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain; /* 🔑 ВАЖНА */
+  display: block;
 }
 
-.photo-tile.wide {
-  grid-column: span 2;
+.photo-title {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1.2;
+  color: #555;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

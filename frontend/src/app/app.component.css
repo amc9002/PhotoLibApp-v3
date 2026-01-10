@@ -1,11 +1,21 @@
 .app-header {
+  position: fixed; /* 🔑 мёртва */
+  top: 0;
+  left: 0;
+  right: 0;
+
   height: 40px;
   display: flex;
-  flex-direction: row;
   align-items: center;
   padding: 0 12px;
+
   background-color: #111;
   color: #fff;
+  .app-header {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  }
+
+  z-index: 1000; /* каб нічога не накрывала */
 }
 
 app-toolbar {
@@ -36,4 +46,16 @@ app-toolbar {
 
 .hidden-file-input {
   display: none;
+}
+
+.app-content {
+  padding: 40px;
+}
+
+.gallery-view {
+  padding: 16px 12px 12px;
+}
+
+.app-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }

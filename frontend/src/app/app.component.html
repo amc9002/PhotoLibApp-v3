@@ -25,14 +25,16 @@
   </div>
 </header>
 
-<app-gallery-view
-  *ngIf="selectedGallery"
-  [gallery]="selectedGallery"
-></app-gallery-view>
+<main class="app-content">
+  <app-gallery-view
+    *ngIf="selectedGallery"
+    [gallery]="selectedGallery"
+  ></app-gallery-view>
 
-<div *ngIf="!selectedGallery" class="empty-state">
-  Select a gallery to view photos
-</div>
+  <div *ngIf="!selectedGallery" class="empty-state">
+    Select a gallery to view photos
+  </div>
+</main>
 
 <input
   #fileInput
