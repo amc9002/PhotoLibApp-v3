@@ -5,9 +5,16 @@ body {
   padding: 0;
   height: 100%;
 }
+
 body {
   font-family: Roboto, "Helvetica Neue", sans-serif;
   color: #eee;
 
   background: linear-gradient(180deg, #3a3434 0%, #2e2929 100%);
+}
+
+:root {
+  --ui-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --ui-fast: 120ms;
+  --ui-normal: 200ms;
 }

@@ -16,7 +16,12 @@
     </div>
   </div>
 
-  <div class="photo-viewer-overlay" *ngIf="viewerOpen" (click)="closeViewer()">
+  <div
+    class="photo-viewer-overlay"
+    *ngIf="viewerOpen"
+    [class.open]="viewerOpen"
+    (click)="closeViewer()"
+  >
     <div class="photo-viewer-layout" (click)="$event.stopPropagation()">
       <!-- КАРУСЕЛЬ ЗВЕРХУ -->
       <div class="photo-viewer-carousel">
@@ -33,7 +38,11 @@
               alt=""
             />
 
-            <div class="carousel-title">
+            <div
+              class="carousel-title"
+              [attr.data-title]="photo.title"
+              [class.active]="photo.id === viewerPhotoId"
+            >
               {{ photo.title }}
             </div>
           </div>

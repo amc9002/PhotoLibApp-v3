@@ -1,3 +1,9 @@
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -47,6 +53,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
+  opacity: 0;
+  transition: opacity var(--ui-normal) var(--ui-ease);
+}
+
+.photo-viewer-overlay.open {
+  opacity: 1;
 }
 
 .photo-viewer-layout {
@@ -82,16 +95,17 @@
 
 .carousel-strip {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   padding: 8px;
 
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible; /* ✅ ДАЗВАЛЯЕМ TOOLTIP */
 }
 
 .carousel-item {
   width: 72px;
   flex: 0 0 auto;
+  position: relative;
 
   display: flex;
   flex-direction: column;
@@ -100,34 +114,65 @@
   cursor: pointer;
 }
 
+.carousel-title-tooltip {
+  position: absolute;
+  bottom: 100%; /* з’яўляецца НАД тамбам */
+  left: 50%;
+  transform: translateX(-50%);
+
+  max-width: 200px;
+  padding: 4px 8px;
+
+  background: rgba(0, 0, 0, 0.85);
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+
+  border-radius: 4px;
+  pointer-events: none;
+
+  opacity: 0;
+  transition: opacity var(--ui-fast) var(--ui-ease);
+  z-index: 10;
+}
+
 .carousel-item img {
-  width: 100%;
+  width: 72px;
   height: 48px;
 
   object-fit: contain;
-  background: #2a2a2a;
-  border-radius: 4px;
+  display: block;
+
+  transition: box-shadow var(--ui-fast) var(--ui-ease);
+}
+
+.carousel-item.active img {
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.carousel-item.active .carousel-title {
+  color: #fff;
+}
+
+.carousel-item:hover img {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.carousel-item:hover .carousel-title-tooltip {
+  opacity: 1;
 }
 
 .carousel-title {
   margin-top: 4px;
+  width: 72px;
 
   font-size: 11px;
   color: #ccc;
   text-align: center;
 
-  width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.carousel-item.active img {
-  outline: 2px solid #fff;
-}
-
-.carousel-item.active .carousel-title {
-  color: #fff;
 }
 
 .carousel-titles {
@@ -138,19 +183,31 @@
   overflow: hidden;
 }
 
-.carousel-title {
-  width: 72px;
-  font-size: 11px;
-  color: #ccc;
-  text-align: center;
-
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .carousel-title.active {
   color: #fff;
+}
+
+.carousel-title:not(.active):hover::after {
+  content: attr(data-title);
+
+  position: fixed; /* 🔑 не залежыць ад overflow */
+  left: 50%;
+  bottom: 140px; /* крыху над каруселлю */
+  transform: translateX(-50%);
+
+  max-width: 320px;
+  padding: 6px 10px;
+
+  background: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 10000;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .photo-viewer-main {
@@ -167,6 +224,17 @@
   width: auto;
   height: auto;
   display: block;
+
+  transform: scale(0.96);
+  opacity: 0;
+  transition:
+    transform var(--ui-normal) var(--ui-ease),
+    opacity var(--ui-normal) var(--ui-ease);
+}
+
+.photo-viewer-overlay.open .photo-viewer-main img {
+  transform: scale(1);
+  opacity: 1;
 }
 
 .viewer-close {
