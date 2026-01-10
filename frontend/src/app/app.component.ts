@@ -24,6 +24,7 @@ import { PhotoApiService } from './services/photo-api.service';
 export class AppComponent implements OnInit {
   galleries: Gallery[] = [];
   selectedGallery?: Gallery;
+  isViewerOpen = false;
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 

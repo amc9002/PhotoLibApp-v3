@@ -1,4 +1,4 @@
-<header class="app-header">
+<header class="app-header" *ngIf="!isViewerOpen">
   <div class="header-left">
     <span class="app-title">PhotoLib</span>
 
@@ -29,6 +29,8 @@
   <app-gallery-view
     *ngIf="selectedGallery"
     [gallery]="selectedGallery"
+    (viewerOpened)="isViewerOpen = true"
+    (viewerClosed)="isViewerOpen = false"
   ></app-gallery-view>
 
   <div *ngIf="!selectedGallery" class="empty-state">

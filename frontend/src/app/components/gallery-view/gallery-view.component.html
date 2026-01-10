@@ -1,7 +1,7 @@
 <div class="gallery-view">
   <div class="gallery-grid">
     <div class="photo-item" *ngFor="let photo of photos">
-      <div class="photo-tile">
+      <div class="photo-tile" (click)="openViewer(photo.id)">
         <img
           *ngIf="photo.hasThumbnail"
           [src]="getThumbnailUrl(photo.id)"
@@ -13,6 +13,18 @@
       <div class="photo-title">
         {{ photo.title }}
       </div>
+    </div>
+  </div>
+
+  <div class="photo-viewer-overlay" *ngIf="viewerOpen" (click)="closeViewer()">
+    <div class="photo-viewer" (click)="$event.stopPropagation()">
+      <img
+        *ngIf="viewerPhotoId"
+        [src]="'/api/Photo/' + viewerPhotoId + '/file'"
+        alt="Photo"
+      />
+
+      <button class="viewer-close" (click)="closeViewer()">✕</button>
     </div>
   </div>
 </div>
