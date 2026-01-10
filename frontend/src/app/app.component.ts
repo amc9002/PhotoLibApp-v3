@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { Gallery } from './models/gallery.model';
 import { GalleryApiService } from './services/gallery-api.service';
 import { CommonModule } from '@angular/common';
@@ -6,6 +6,7 @@ import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { GalleryPropertiesComponent } from './components/gallery-properties/gallery-properties.component';
 import { GalleryViewComponent } from './components/gallery-view/gallery-view.component';
 import { CreateGalleryComponent } from './components/create-gallery/create-gallery.component';
+import { PhotoApiService } from './services/photo-api.service';
 
 @Component({
   selector: 'app-root',
@@ -24,7 +25,12 @@ export class AppComponent implements OnInit {
   galleries: Gallery[] = [];
   selectedGallery?: Gallery;
 
-  constructor(private galleryApi: GalleryApiService) {}
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
+  constructor(
+    private galleryApi: GalleryApiService,
+    private photoApi: PhotoApiService,
+  ) {}
 
   ngOnInit(): void {
     this.galleryApi.getAll().subscribe({
@@ -38,6 +44,35 @@ export class AppComponent implements OnInit {
   }
 
   showGalleryProperties = false;
+
+  openFilePicker() {
+    if (!this.selectedGallery) return;
+    this.fileInput.nativeElement.click();
+  }
+
+  onFilesSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || !this.selectedGallery) return;
+
+    const files = Array.from(input.files);
+
+    files.forEach((file) => {
+      this.photoApi
+        .create({
+          galleryId: this.selectedGallery!.id,
+          title: file.name,
+        })
+        .subscribe((photo) => {
+          console.log('Photo metadata created:', photo);
+
+          this.photoApi.upload(photo.id, file).subscribe(() => {
+            console.log('File uploaded for photo:', photo.id);
+          });
+        });
+    });
+
+    input.value = '';
+  }
 
   openGalleryProperties() {
     this.showGalleryProperties = true;

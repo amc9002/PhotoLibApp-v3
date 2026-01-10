@@ -14,6 +14,7 @@
       layout="right"
       [selectedGallery]="selectedGallery"
       (newGallery)="openCreateGallery()"
+      (addPhotos)="openFilePicker()"
       (properties)="openGalleryProperties()"
     ></app-toolbar>
     <app-gallery-properties
@@ -32,6 +33,16 @@
 <div *ngIf="!selectedGallery" class="empty-state">
   Select a gallery to view photos
 </div>
+
+<input
+  #fileInput
+  type="file"
+  multiple
+  accept="image/*"
+  class="hidden-file-input"
+  aria-label="Add photos to gallery"
+  (change)="onFilesSelected($event)"
+/>
 
 <app-create-gallery
   *ngIf="showCreateGallery"

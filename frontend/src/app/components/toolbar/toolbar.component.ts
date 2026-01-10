@@ -22,6 +22,7 @@ export class ToolbarComponent {
 
   @Input() layout: 'left' | 'right' = 'left';
   @Output() gallerySelected = new EventEmitter<Gallery>();
+  @Output() addPhotos = new EventEmitter<void>();
   @Output() properties = new EventEmitter<void>();
   @Output() newGallery = new EventEmitter<void>();
 
@@ -46,6 +47,11 @@ export class ToolbarComponent {
   select(gallery: Gallery) {
     this.gallerySelected.emit(gallery);
     this.dropdownOpen = false;
+  }
+
+  onAddPhotos() {
+    this.closeServiceMenu();
+    this.addPhotos.emit();
   }
 
   onNewGallery() {

@@ -17,7 +17,14 @@ export class PhotoApiService {
   }
 
   create(dto: Partial<PhotoDto>) {
-    return this.api.post<PhotoDto>('photos', dto);
+    return this.api.post<PhotoDto>('Photo', dto);
+  }
+
+  upload(photoId: string, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.api.post<void>(`Photo/${photoId}/upload`, formData);
   }
 
   update(id: string, dto: Partial<PhotoDto>) {

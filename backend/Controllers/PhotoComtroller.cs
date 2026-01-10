@@ -256,48 +256,58 @@ namespace PhotoLibApi.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Upload(Guid id, IFormFile file)
+        public async Task<IActionResult> Upload(Guid id, [FromForm] IFormFile file)
         {
-            // Validate file
-            if (file == null || file.Length == 0)
-                return BadRequest("File is required.");
-
-            // Check: photo exists in DB
-            var photo = await _db.Photos.FindAsync(id);
-            if (photo == null)
-                return NotFound();
-
-            // Ensure originals directory exists
-            Directory.CreateDirectory(_filePathHelper.GetOriginalsDirectory());
-            var filePath = _filePathHelper.GetOriginalFilePath(id);
-
-            // Save file to disk
-            await using var stream = System.IO.File.Create(filePath);
-            await file.CopyToAsync(stream);
-
-            // mark original as existing
-            photo.HasOriginal = true;
-
-            // Generate and save thumbnail
-            Directory.CreateDirectory(_filePathHelper.GetThumbnailsDirectory());
-            var thumbnailPath = _filePathHelper.GetThumbnailFilePath(id);
-            // Generate thumbnail
-            using (var image = Image.Load(filePath))
+            try
             {
-                image.Mutate(x => x.Resize(new ResizeOptions
-                {
-                    Size = new Size(300, 300),
-                    Mode = ResizeMode.Max
-                }));
+                // Validate file
+                if (file == null || file.Length == 0)
+                    return BadRequest("File is required.");
 
-                image.Save(thumbnailPath);
+                // Check: photo exists in DB
+                var photo = await _db.Photos.FindAsync(id);
+                if (photo == null)
+                    return NotFound();
+
+                // Ensure originals directory exists
+                Directory.CreateDirectory(_filePathHelper.GetOriginalsDirectory());
+                var filePath = _filePathHelper.GetOriginalFilePath(id);
+
+                // Save file to disk
+                await using (var stream = System.IO.File.Create(filePath))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                // mark original as existing
+                photo.HasOriginal = true;
+
+                // Generate and save thumbnail
+                Directory.CreateDirectory(_filePathHelper.GetThumbnailsDirectory());
+                var thumbnailPath = _filePathHelper.GetThumbnailFilePath(id);
+                // Generate thumbnail
+                using (var image = Image.Load(filePath))
+                {
+                    image.Mutate(x => x.Resize(new ResizeOptions
+                    {
+                        Size = new Size(300, 300),
+                        Mode = ResizeMode.Max
+                    }));
+
+                    image.Save(thumbnailPath);
+                }
+
+                // mark thumbnail as existing
+                photo.HasThumbnail = true;
+                await _db.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
             }
 
-            // mark thumbnail as existing
-            photo.HasThumbnail = true;
-            await _db.SaveChangesAsync();
-
-            return NoContent();
         }
 
         /// <summary>

@@ -33,3 +33,7 @@ app-toolbar {
   gap: 6px;
   margin-left: auto;
 }
+
+.hidden-file-input {
+  display: none;
+}

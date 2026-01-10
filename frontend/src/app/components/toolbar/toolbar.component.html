@@ -41,6 +41,13 @@
     <div class="service-menu" *ngIf="serviceMenuOpen">
       <div
         class="service-menu-item"
+        (click)="onAddPhotos(); $event.stopPropagation()"
+      >
+        Add photos
+      </div>
+
+      <div
+        class="service-menu-item"
         (click)="onNewGallery(); $event.stopPropagation()"
       >
         New gallery
