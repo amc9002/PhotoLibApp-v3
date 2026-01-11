@@ -1,65 +1,14 @@
 <div class="gallery-view">
-  <div class="gallery-grid">
-    <div class="photo-item" *ngFor="let photo of photos">
-      <div class="photo-tile" (click)="openViewer(photo.id)">
-        <img
-          *ngIf="photo.hasThumbnail"
-          [src]="getThumbnailUrl(photo.id)"
-          loading="lazy"
-          alt="Photo thumbnail"
-        />
-      </div>
+  <app-gallery-grid
+    [photos]="photos"
+    (photoClicked)="openViewer($event)"
+  ></app-gallery-grid>
 
-      <div class="photo-title">
-        {{ photo.title }}
-      </div>
-    </div>
-  </div>
-
-  <div
-    class="photo-viewer-overlay"
-    *ngIf="viewerOpen"
-    [class.open]="viewerOpen"
-    (click)="closeViewer()"
-  >
-    <div class="photo-viewer-layout" (click)="$event.stopPropagation()">
-      <!-- КАРУСЕЛЬ ЗВЕРХУ -->
-      <div class="photo-viewer-carousel">
-        <div class="carousel-strip">
-          <div
-            class="carousel-item"
-            *ngFor="let photo of photos"
-            [class.active]="photo.id === viewerPhotoId"
-            (click)="openViewer(photo.id)"
-          >
-            <img
-              *ngIf="photo.hasThumbnail"
-              [src]="getThumbnailUrl(photo.id)"
-              alt=""
-            />
-
-            <div
-              class="carousel-title"
-              [attr.data-title]="photo.title"
-              [class.active]="photo.id === viewerPhotoId"
-            >
-              {{ photo.title }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ФОТА -->
-      <div class="photo-viewer-main">
-        <img
-          *ngIf="viewerPhotoId"
-          [src]="'/api/Photo/' + viewerPhotoId + '/file'"
-          alt="Photo"
-        />
-      </div>
-
-      <!-- КНОПКА ЗАКРЫЦЦЯ -->
-      <button class="viewer-close" (click)="closeViewer()">✕</button>
-    </div>
-  </div>
+  <app-photo-viewer
+    *ngIf="viewerOpen && viewerPhotoId"
+    [photos]="photos"
+    [activePhotoId]="viewerPhotoId"
+    (close)="closeViewer()"
+    (photoSelected)="openViewer($event)"
+  ></app-photo-viewer>
 </div>

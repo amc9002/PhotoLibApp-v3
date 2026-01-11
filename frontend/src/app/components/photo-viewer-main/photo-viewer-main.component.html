@@ -1,0 +1,8 @@
+<div class="photo-viewer-main">
+  <img
+    *ngIf="photoId"
+    [class.open]="open"
+    [src]="getPhotoUrl(photoId)"
+    alt="Photo"
+  />
+</div>

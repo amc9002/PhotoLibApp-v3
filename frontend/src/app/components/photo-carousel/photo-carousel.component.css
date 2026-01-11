@@ -1,0 +1,124 @@
+.photo-viewer-carousel {
+  height: 120px;
+  background: #2b2b2b; /* 🔑 solid, не rgba */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.carousel-strip {
+  height: 100%; /* 🔑 */
+  display: flex; /* 🔑 */
+  align-items: center; /* 🔑 цэнтраванне па вертыкалі */
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+.carousel-items {
+  display: flex;
+  gap: 12px;
+
+  margin: 0 auto; /* 🔑 цэнтруе, калі месца хапае */
+  padding: 0 12px;
+
+  align-items: center;
+}
+
+.carousel-thumb {
+  width: 72px;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carousel-thumb app-photo-thumbnail {
+  width: 100%;
+  height: 100%;
+}
+
+.carousel-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.carousel-item {
+  width: 72px;
+  flex: 0 0 auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  cursor: pointer;
+}
+
+.carousel-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+
+  transition: box-shadow var(--ui-fast) var(--ui-ease);
+}
+
+.carousel-item app-photo-thumbnail {
+  width: 100%;
+  height: 100%;
+}
+
+.carousel-item.active img {
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.carousel-item.active .carousel-title {
+  color: #fff;
+}
+
+.carousel-item:hover img {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.carousel-title {
+  margin-top: 4px;
+  width: 72px;
+
+  font-size: 11px;
+  color: #ccc;
+  text-align: center;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.carousel-title.active {
+  color: #fff;
+}
+
+.carousel-title:not(.active):hover::after {
+  content: attr(data-title);
+
+  position: fixed;
+  left: 50%;
+  bottom: 140px;
+  transform: translateX(-50%);
+
+  max-width: 320px;
+  padding: 6px 10px;
+
+  background: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 10000;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}

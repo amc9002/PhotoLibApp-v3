@@ -1,0 +1,18 @@
+<div class="photo-viewer-overlay open" (click)="onBackdropClick()">
+  <div class="photo-viewer-layout" (click)="$event.stopPropagation()">
+    <!-- КАРУСЕЛЬ -->
+    <app-photo-carousel
+      [photos]="photos"
+      [activePhotoId]="activePhotoId"
+      (photoSelected)="photoSelected.emit($event)"
+    ></app-photo-carousel>
+
+    <!-- ФОТА -->
+    <app-photo-viewer-main
+      [photoId]="activePhotoId"
+      [open]="true"
+    ></app-photo-viewer-main>
+
+    <button class="viewer-close" (click)="close.emit()">✕</button>
+  </div>
+</div>

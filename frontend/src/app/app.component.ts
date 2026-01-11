@@ -7,6 +7,7 @@ import { GalleryPropertiesComponent } from './components/gallery-properties/gall
 import { GalleryViewComponent } from './components/gallery-view/gallery-view.component';
 import { CreateGalleryComponent } from './components/create-gallery/create-gallery.component';
 import { PhotoApiService } from './services/photo-api.service';
+import { PhotoListItemDto } from './models/photoLisrItem.dto';
 
 @Component({
   selector: 'app-root',
@@ -25,6 +26,8 @@ export class AppComponent implements OnInit {
   galleries: Gallery[] = [];
   selectedGallery?: Gallery;
   isViewerOpen = false;
+  viewerPhotoId?: string;
+  photos: PhotoListItemDto[] = [];
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
