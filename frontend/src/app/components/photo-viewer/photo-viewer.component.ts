@@ -19,14 +19,14 @@ export class PhotoViewerComponent {
   @Output() close = new EventEmitter<void>();
   @Output() photoSelected = new EventEmitter<string>();
 
-  @HostListener('document:keydown', ['$event'])
   controlsVisible = false;
   controlsHovered = false;
 
   private hideControlsTimer?: number;
 
+  @HostListener('window:keydown', ['$event'])
   onKeydown(event: KeyboardEvent) {
-    // 1️⃣ Закрыццё па ESC
+    console.log('keydown in viewer:', event.key);
     if (event.key === 'Escape') {
       event.preventDefault();
       event.stopPropagation();
@@ -98,7 +98,6 @@ export class PhotoViewerComponent {
     }
 
     this.hideControlsTimer = window.setTimeout(() => {
-      // 🔑 ХАВАЕМ ТОЛЬКІ, КАЛІ НЕ НА КНОПКАХ
       if (!this.controlsHovered) {
         this.controlsVisible = false;
       }
