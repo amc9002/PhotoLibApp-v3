@@ -1,5 +1,5 @@
 .photo-viewer-carousel {
-  height: 120px;
+  height: 80px;
   background: #2b2b2b; /* 🔑 solid, не rgba */
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -12,7 +12,7 @@
   overflow-x: auto;
   overflow-y: hidden;
 
-  padding: 8px;
+  padding: 4px 8px;
   box-sizing: border-box;
 }
 

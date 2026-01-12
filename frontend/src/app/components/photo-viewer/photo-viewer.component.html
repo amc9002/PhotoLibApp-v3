@@ -12,7 +12,29 @@
       [photoId]="activePhotoId"
       [open]="true"
     ></app-photo-viewer-main>
-
-    <button class="viewer-close" (click)="close.emit()">✕</button>
   </div>
+</div>
+
+<div
+  class="viewer-controls"
+  [class.visible]="controlsVisible || controlsHovered"
+  (mouseenter)="controlsHovered = true"
+  (mouseleave)="controlsHovered = false"
+>
+  <button class="viewer-close" (click)="close.emit()">✕</button>
+
+  <button
+    class="nav-arrow left"
+    (click)="selectPrev()"
+    aria-label="Previous photo"
+  >
+    ‹
+  </button>
+  <button
+    class="nav-arrow right"
+    (click)="selectNext()"
+    aria-label="Next photo"
+  >
+    ›
+  </button>
 </div>
