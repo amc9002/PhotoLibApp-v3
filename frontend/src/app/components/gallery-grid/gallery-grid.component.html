@@ -1,6 +1,6 @@
 <div class="gallery-grid">
   <div class="photo-item" *ngFor="let photo of photos">
-    <div class="photo-tile" (click)="onPhotoClick(photo.id)">
+    <div class="photo-tile thumb" (click)="onPhotoClick(photo.id)">
       <app-photo-thumbnail
         [photoId]="photo.id"
         [hasThumbnail]="photo.hasThumbnail"

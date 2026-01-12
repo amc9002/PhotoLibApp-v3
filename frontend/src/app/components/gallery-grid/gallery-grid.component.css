@@ -22,14 +22,56 @@
   display: block;
 }
 
+.thumb {
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.thumb:hover {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+}
+
 .photo-title {
   margin-top: 4px;
   font-size: 12px;
-  font-weight: bold;
-  line-height: 1.2;
-  color: #aca8a8;
+  color: #999;
 
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.thumb.active {
+  transform: scale(1.06);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+  z-index: 5;
+}
+
+.thumb:hover app-photo-thumbnail {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+}
+
+.carousel-title {
+  margin-top: 4px;
+  width: 72px;
+
+  font-size: 11px;
+  color: #aaa;
+
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.carousel-item.active .carousel-title {
+  color: #fff; /* ярчэй */
+  font-weight: 600;
+  font-size: 12px; /* крыху больш */
+  margin-top: 8px; /* НІЖЭЙ за тамб */
+}
+
+.thumb:hover .thumb-title {
+  opacity: 1;
 }

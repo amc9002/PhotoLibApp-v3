@@ -10,6 +10,7 @@ import { CommonModule } from '@angular/common';
 })
 export class PhotoThumbnailComponent {
   @Input({ required: true }) photoId!: string;
+  @Input() title = '';
   @Input() hasThumbnail = true;
   @Input() alt = 'Photo thumbnail';
   @Input() loading: 'lazy' | 'eager' = 'lazy';

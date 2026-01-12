@@ -2,7 +2,7 @@
   <div class="carousel-strip">
     <div class="carousel-items">
       <div
-        class="carousel-item"
+        class="carousel-item thumb"
         *ngFor="let photo of photos"
         [class.active]="photo.id === activePhotoId"
         (click)="selectPhoto(photo.id)"
@@ -11,16 +11,11 @@
           <app-photo-thumbnail
             [photoId]="photo.id"
             [hasThumbnail]="photo.hasThumbnail"
-            alt=""
-            loading="eager"
+            [title]="photo.title"
           ></app-photo-thumbnail>
         </div>
 
-        <div
-          class="carousel-title"
-          [class.active]="photo.id === activePhotoId"
-          [attr.data-title]="photo.title"
-        >
+        <div class="carousel-title">
           {{ photo.title }}
         </div>
       </div>

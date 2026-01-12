@@ -1,13 +1,17 @@
+/* ===== CAROUSEL CONTAINER ===== */
+
 .photo-viewer-carousel {
   height: 80px;
-  background: #2b2b2b; /* 🔑 solid, не rgba */
+  background: #2b2b2b;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* ===== STRIP ===== */
+
 .carousel-strip {
-  height: 100%; /* 🔑 */
-  display: flex; /* 🔑 */
-  align-items: center; /* 🔑 цэнтраванне па вертыкалі */
+  height: 100%;
+  display: flex;
+  align-items: center;
 
   overflow-x: auto;
   overflow-y: hidden;
@@ -16,35 +20,18 @@
   box-sizing: border-box;
 }
 
+/* ===== ITEMS WRAPPER ===== */
+
 .carousel-items {
   display: flex;
+  align-items: center;
   gap: 12px;
 
-  margin: 0 auto; /* 🔑 цэнтруе, калі месца хапае */
+  margin: 0 auto;
   padding: 0 12px;
-
-  align-items: center;
 }
 
-.carousel-thumb {
-  width: 72px;
-  height: 48px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.carousel-thumb app-photo-thumbnail {
-  width: 100%;
-  height: 100%;
-}
-
-.carousel-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
+/* ===== SINGLE ITEM ===== */
 
 .carousel-item {
   width: 72px;
@@ -57,68 +44,88 @@
   cursor: pointer;
 }
 
-.carousel-item img {
+/* ===== THUMB ===== */
+
+.carousel-thumb {
+  width: 72px;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 4px;
+
+  transition: background 160ms ease;
+}
+
+.carousel-thumb app-photo-thumbnail {
+  width: 100%;
+  height: 100%;
+}
+
+.carousel-thumb img {
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
 
-  transition: box-shadow var(--ui-fast) var(--ui-ease);
+  transition: filter 160ms ease;
 }
 
-.carousel-item app-photo-thumbnail {
-  width: 100%;
-  height: 100%;
-}
-
-.carousel-item.active img {
-  box-shadow: 0 0 0 2px #fff;
-}
-
-.carousel-item.active .carousel-title {
-  color: #fff;
-}
-
-.carousel-item:hover img {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
-}
+/* ===== TITLE ===== */
 
 .carousel-title {
+  height: 16px; /* 🔑 пастаянная вышыня */
+  line-height: 16px;
+
   margin-top: 4px;
-  width: 72px;
+  width: 100%;
 
   font-size: 11px;
-  color: #ccc;
-  text-align: center;
+  color: #aaa;
 
+  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  transition:
+    margin-top 160ms ease,
+    font-size 160ms ease,
+    color 160ms ease;
+
+  position: relative; /* 🔑 */
+  z-index: 1;
 }
 
-.carousel-title.active {
-  color: #fff;
-}
+/* ===== ACTIVE STATE ===== */
 
-.carousel-title:not(.active):hover::after {
-  content: attr(data-title);
+.carousel-item.active .carousel-thumb {
+  background: rgba(255, 255, 255, 0.08);
 
-  position: fixed;
-  left: 50%;
-  bottom: 140px;
-  transform: translateX(-50%);
-
-  max-width: 320px;
-  padding: 6px 10px;
-
-  background: rgba(0, 0, 0, 0.9);
-  color: #fff;
-  font-size: 12px;
-  white-space: nowrap;
+  outline: 1px solid rgba(255, 255, 255, 0.45);
+  outline-offset: -1px;
 
   border-radius: 4px;
-  pointer-events: none;
-  z-index: 10000;
+}
 
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+.carousel-item.active .carousel-thumb img {
+  filter: brightness(1.08) contrast(1.05);
+}
+
+.carousel-item.active .carousel-title {
+  font-weight: 600;
+  color: #fff;
+  z-index: 3;
+}
+
+/* ===== HOVER STATE (SUBTLE) ===== */
+
+.carousel-item:hover:not(.active) .carousel-thumb {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.carousel-item:hover:not(.active) .carousel-thumb img {
+  filter: brightness(1.03);
 }
