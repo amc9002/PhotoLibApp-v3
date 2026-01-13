@@ -13,8 +13,15 @@
       [open]="true"
     ></app-photo-viewer-main>
   </div>
+
+  <!-- 🔑 ВОСЬ ТУТ, НА ТЫМ ЖА ЎЗРОЎНІ, ШТО І layout -->
+  <app-photo-actions
+    class="viewer-actions"
+    (editMetadata)="openEditMetadata()"
+  ></app-photo-actions>
 </div>
 
+<!-- viewer-controls -->
 <div
   class="viewer-controls"
   [class.visible]="controlsVisible || controlsHovered"
@@ -38,3 +45,8 @@
     ›
   </button>
 </div>
+
+<app-edit-photo-metadata-modal
+  *ngIf="editMetadataOpen"
+  (close)="closeEditMetadata()"
+></app-edit-photo-metadata-modal>

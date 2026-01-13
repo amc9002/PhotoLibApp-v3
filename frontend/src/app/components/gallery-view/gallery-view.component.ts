@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
 import { Gallery } from '../../models/gallery.model';
 import { PhotoListItemDto } from '../../models/photoLisrItem.dto';
 import { PhotoApiService } from '../../services/photo-api.service';
-import { GalleryGridComponent } from '../gallery-grid/gallery-grid.component';
+import { GalleryGridComponent } from './gallery-grid/gallery-grid.component';
 import { PhotoViewerComponent } from '../photo-viewer/photo-viewer.component';
 
 @Component({

@@ -1,14 +1,22 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PhotoListItemDto } from '../../models/photoLisrItem.dto';
-import { PhotoCarouselComponent } from '../photo-carousel/photo-carousel.component';
-import { PhotoViewerMainComponent } from '../photo-viewer-main/photo-viewer-main.component';
+import { PhotoCarouselComponent } from './photo-carousel/photo-carousel.component';
+import { PhotoViewerMainComponent } from './photo-viewer-main/photo-viewer-main.component';
 import { HostListener } from '@angular/core';
+import { PhotoActionsComponent } from './photo-actions/photo-actions.component';
+import { EditPhotoMetadataModalComponent } from '../edit-photo-metadata-modal/edit-photo-metadata-modal.component';
 
 @Component({
   selector: 'app-photo-viewer',
   standalone: true,
-  imports: [CommonModule, PhotoCarouselComponent, PhotoViewerMainComponent],
+  imports: [
+    CommonModule,
+    PhotoCarouselComponent,
+    PhotoViewerMainComponent,
+    PhotoActionsComponent,
+    EditPhotoMetadataModalComponent,
+  ],
   templateUrl: './photo-viewer.component.html',
   styleUrls: ['./photo-viewer.component.css'],
 })
@@ -21,6 +29,7 @@ export class PhotoViewerComponent {
 
   controlsVisible = false;
   controlsHovered = false;
+  photoMenuOpen = false;
 
   private hideControlsTimer?: number;
 
@@ -67,8 +76,24 @@ export class PhotoViewerComponent {
     }
   }
 
+  // Backdrop closes viewer; overlay actions must stop event bubbling
   onBackdropClick() {
     this.close.emit();
+  }
+
+  togglePhotoMenu() {
+    this.photoMenuOpen = !this.photoMenuOpen;
+  }
+
+  editMetadataOpen = false;
+
+  openEditMetadata() {
+    console.log('OPEN EDIT MODAL');
+    this.editMetadataOpen = true;
+  }
+
+  closeEditMetadata() {
+    this.editMetadataOpen = false;
   }
 
   selectNext() {

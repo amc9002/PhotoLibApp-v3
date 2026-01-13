@@ -1,3 +1,6 @@
+/* =========================================================
+   Viewer overlay & layout
+   ========================================================= */
 .photo-viewer-overlay {
   position: fixed;
   inset: 0;
@@ -30,7 +33,11 @@
 
   background: rgba(0, 0, 0, 0.9);
 }
+/* ... */
 
+/* =========================================================
+   Carousel
+   ========================================================= */
 .carousel-title-tooltip {
   position: absolute;
   bottom: 100%; /* з’яўляецца НАД тамбам */
@@ -60,18 +67,35 @@
 
   overflow: hidden;
 }
+/* ... */
 
+/* =========================================================
+   Viewer controls
+   ========================================================= */
+.viewer-controls {
+  position: absolute; /* 🔑 цяпер OK */
+  inset: 0;
+  pointer-events: none;
+}
+
+/* 🔼 кнопка закрыцця */
 .viewer-close {
-  position: fixed;
-  top: calc(120px + 16px);
-  right: 36px;
+  position: absolute;
+  top: calc(80px + 16px);
+  right: 23px;
 
-  background: none;
+  width: 40px;
+  height: 40px;
+
+  background: rgba(0, 0, 0, 0.35);
   border: none;
+  border-radius: 50%;
+
   color: white;
-  font-size: 20px;
+  font-size: 18px;
+
   cursor: pointer;
-  opacity: 0.8;
+  z-index: 10002;
 }
 
 .viewer-close:hover {
@@ -127,12 +151,6 @@
   background: rgba(0, 0, 0, 0.55);
 }
 
-.viewer-controls {
-  position: absolute; /* 🔑 цяпер OK */
-  inset: 0;
-  pointer-events: none;
-}
-
 .viewer-controls.visible {
   pointer-events: auto;
 }
@@ -147,23 +165,18 @@
 .viewer-controls.visible button {
   opacity: 1;
 }
+/* ... */
 
-/* 🔼 кнопка закрыцця */
-.viewer-close {
+/* =========================================================
+   Viewer actions (permanent photo actions)
+   ========================================================= */
+.viewer-actions {
   position: absolute;
-  top: calc(80px + 16px);
+  top: calc(80px + 56px); /* пад close */
   right: 23px;
-
-  width: 40px;
-  height: 40px;
+  z-index: 20002;
 
   background: rgba(0, 0, 0, 0.35);
-  border: none;
-  border-radius: 50%;
-
-  color: white;
-  font-size: 18px;
-
-  cursor: pointer;
-  z-index: 10002;
+  border-radius: 8px;
+  padding: 4px;
 }

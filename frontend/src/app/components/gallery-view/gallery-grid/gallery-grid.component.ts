@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PhotoListItemDto } from '../../models/photoLisrItem.dto';
-import { PhotoThumbnailComponent } from '../photo-thumbnail/photo-thumbnail.component';
+import { PhotoListItemDto } from '../../../models/photoLisrItem.dto';
+import { PhotoThumbnailComponent } from '../../photo-thumbnail/photo-thumbnail.component';
 
 @Component({
   selector: 'app-gallery-grid',

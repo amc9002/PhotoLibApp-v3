@@ -336,6 +336,7 @@ namespace PhotoLibApi.Controllers
 
             photo.Title = request.Title;
             photo.Description = request.Description;
+            photo.UpdatedAtUtc = DateTime.UtcNow;
 
             await _db.SaveChangesAsync();
 

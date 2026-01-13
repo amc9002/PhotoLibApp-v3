@@ -1,0 +1,13 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Рэдагаваць імя і апісанне</h2>
+      <button class="modal-close" (click)="close.emit()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- форма будзе пазней -->
+      <p style="color: #888; font-size: 13px">Тут будзе форма рэдагавання</p>
+    </div>
+  </div>
+</div>

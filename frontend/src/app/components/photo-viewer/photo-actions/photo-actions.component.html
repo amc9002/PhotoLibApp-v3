@@ -1,0 +1,19 @@
+<!--
+  IMPORTANT:
+  stopPropagation is required to prevent viewer backdrop click
+-->
+<div class="photo-actions" (click)="$event.stopPropagation()">
+  <button
+    class="photo-action-btn"
+    aria-label="Photo actions"
+    (click)="toggleMenu()"
+  >
+    ⋮
+  </button>
+
+  <div class="photo-action-menu" *ngIf="menuOpen">
+    <button class="photo-action-item" (click)="onEditMetadataClick()">
+      Рэдагаваць імя і апісаньне
+    </button>
+  </div>
+</div>
