@@ -1,117 +1,66 @@
 /* =========================================================
-   Viewer overlay & layout
+   Viewer grid layout
    ========================================================= */
 .photo-viewer-overlay {
   position: fixed;
   inset: 0;
-
   background: rgba(0, 0, 0, 0.9);
   z-index: 9999;
 
-  margin: 0;
-  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+}
 
+.photo-viewer-grid {
+  width: 100%;
+  height: 100%;
+
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-columns: 80px 1fr 80px;
+
+  grid-template-areas:
+    "carousel carousel carousel"
+    "left center right";
+}
+
+/* =========================================================
+   Areas
+   ========================================================= */
+.viewer-carousel {
+  grid-area: carousel;
+}
+
+.viewer-left {
+  grid-area: left;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  opacity: 0;
-  transition: opacity var(--ui-normal) var(--ui-ease);
 }
 
-.photo-viewer-overlay.open {
-  opacity: 1;
+.viewer-center {
+  grid-area: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.photo-viewer-layout {
-  position: fixed;
-  inset: 0;
+.viewer-right {
+  grid-area: right;
 
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  align-items: center;
+  gap: 12px;
 
-  background: rgba(0, 0, 0, 0.9);
+  padding-top: 16px;
 }
-/* ... */
 
 /* =========================================================
-   Carousel
+   Controls
    ========================================================= */
-.carousel-title-tooltip {
-  position: absolute;
-  bottom: 100%; /* з’яўляецца НАД тамбам */
-  left: 50%;
-  transform: translateX(-50%);
-
-  max-width: 200px;
-  padding: 4px 8px;
-
-  background: rgba(0, 0, 0, 0.85);
-  color: #fff;
-  font-size: 12px;
-  white-space: nowrap;
-
-  border-radius: 4px;
-  pointer-events: none;
-
-  opacity: 0;
-  transition: opacity var(--ui-fast) var(--ui-ease);
-  z-index: 10;
-}
-
-.carousel-titles {
-  display: flex;
-  gap: 8px;
-  padding: 0 8px 6px;
-
-  overflow: hidden;
-}
-/* ... */
-
-/* =========================================================
-   Viewer controls
-   ========================================================= */
-.viewer-controls {
-  position: absolute; /* 🔑 цяпер OK */
-  inset: 0;
-  pointer-events: none;
-}
-
-/* 🔼 кнопка закрыцця */
-.viewer-close {
-  position: absolute;
-  top: calc(80px + 16px);
-  right: 23px;
-
-  width: 40px;
-  height: 40px;
-
-  background: rgba(0, 0, 0, 0.35);
-  border: none;
-  border-radius: 50%;
-
-  color: white;
-  font-size: 18px;
-
-  cursor: pointer;
-  z-index: 10002;
-}
-
-.viewer-close:hover {
-  opacity: 1;
-}
-
-:host {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-}
-
 .nav-arrow {
-  position: fixed;
-  top: calc(50% + 60px); /* 🔑 улічваем карусель */
-
   width: 56px;
   height: 56px;
 
@@ -121,62 +70,56 @@
 
   color: white;
   font-size: 32px;
-  line-height: 1;
-
   cursor: pointer;
-  z-index: 10001;
 
   display: flex;
   align-items: center;
   justify-content: center;
-
-  transition:
-    background 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.nav-arrow.left {
-  position: absolute;
-  left: 16px;
-  top: calc(50% + 60px);
-}
-
-.nav-arrow.right {
-  position: absolute;
-  right: 16px;
-  top: calc(50% + 60px);
 }
 
 .nav-arrow:hover {
   background: rgba(0, 0, 0, 0.55);
 }
 
-.viewer-controls.visible {
-  pointer-events: auto;
-}
-
-/* агульная анімацыя */
-.viewer-controls button {
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
-/* калі бачна */
-.viewer-controls.visible button {
-  opacity: 1;
-}
-/* ... */
-
-/* =========================================================
-   Viewer actions (permanent photo actions)
-   ========================================================= */
-.viewer-actions {
-  position: absolute;
-  top: calc(80px + 56px); /* пад close */
-  right: 23px;
-  z-index: 20002;
+.viewer-close {
+  width: 40px;
+  height: 40px;
 
   background: rgba(0, 0, 0, 0.35);
-  border-radius: 8px;
-  padding: 4px;
+  border: none;
+  border-radius: 50%;
+
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+/* === Fix stacking order: controls above photo === */
+.viewer-left,
+.viewer-right {
+  position: relative;
+}
+
+/* Top area (utilities) */
+.viewer-side-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+/* Center area (navigation) */
+.viewer-side-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* === Navigation arrows: centered to photo area === */
+.viewer-left .nav-arrow,
+.viewer-right .nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
 }

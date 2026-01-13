@@ -1,49 +1,58 @@
 <div class="photo-viewer-overlay open" (click)="onBackdropClick()">
-  <div class="photo-viewer-layout" (click)="$event.stopPropagation()">
-    <!-- КАРУСЕЛЬ -->
-    <app-photo-carousel
-      [photos]="photos"
-      [activePhotoId]="activePhotoId"
-      (photoSelected)="photoSelected.emit($event)"
-    ></app-photo-carousel>
+  <div class="photo-viewer-grid" (click)="$event.stopPropagation()">
+    <!-- CAROUSEL -->
+    <div class="viewer-carousel">
+      <app-photo-carousel
+        [photos]="photos"
+        [activePhotoId]="activePhotoId"
+        (photoSelected)="photoSelected.emit($event)"
+      ></app-photo-carousel>
+    </div>
 
-    <!-- ФОТА -->
-    <app-photo-viewer-main
-      [photoId]="activePhotoId"
-      [open]="true"
-    ></app-photo-viewer-main>
+    <!-- LEFT -->
+    <div class="viewer-left">
+      <div class="viewer-side-top"></div>
+
+      <div class="viewer-side-center">
+        <button
+          class="nav-arrow"
+          (click)="selectPrev()"
+          aria-label="Previous photo"
+        >
+          ‹
+        </button>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="viewer-center">
+      <app-photo-viewer-main
+        [photoId]="activePhotoId"
+        [open]="true"
+      ></app-photo-viewer-main>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="viewer-right">
+      <div class="viewer-side-top">
+        <button class="viewer-close" (click)="close.emit()">✕</button>
+
+        <app-photo-actions
+          (editMetadata)="openEditMetadata()"
+        ></app-photo-actions>
+      </div>
+
+      <div class="viewer-side-center">
+        <button
+          class="nav-arrow"
+          (click)="selectNext()"
+          aria-label="Next photo"
+        >
+          ›
+        </button>
+      </div>
+    </div>
   </div>
-
-  <!-- 🔑 ВОСЬ ТУТ, НА ТЫМ ЖА ЎЗРОЎНІ, ШТО І layout -->
-  <app-photo-actions
-    class="viewer-actions"
-    (editMetadata)="openEditMetadata()"
-  ></app-photo-actions>
-</div>
-
-<!-- viewer-controls -->
-<div
-  class="viewer-controls"
-  [class.visible]="controlsVisible || controlsHovered"
-  (mouseenter)="controlsHovered = true"
-  (mouseleave)="controlsHovered = false"
->
-  <button class="viewer-close" (click)="close.emit()">✕</button>
-
-  <button
-    class="nav-arrow left"
-    (click)="selectPrev()"
-    aria-label="Previous photo"
-  >
-    ‹
-  </button>
-  <button
-    class="nav-arrow right"
-    (click)="selectNext()"
-    aria-label="Next photo"
-  >
-    ›
-  </button>
 </div>
 
 <app-edit-photo-metadata-modal
