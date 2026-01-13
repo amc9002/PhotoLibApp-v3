@@ -1,6 +1,7 @@
 <div class="gallery-view">
   <app-gallery-grid
     [photos]="photos"
+    [activePhotoId]="activePhotoId"
     (photoClicked)="openViewer($event)"
   ></app-gallery-grid>
 

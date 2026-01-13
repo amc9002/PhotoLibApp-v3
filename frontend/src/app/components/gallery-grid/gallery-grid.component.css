@@ -38,8 +38,23 @@
   transition: opacity 150ms ease;
 }
 
+.photo-item.active {
+  z-index: 2;
+}
+
 .photo-item:hover::after {
   opacity: 1;
+}
+
+.photo-item.active .photo-tile {
+  box-shadow:
+    0 0 0 4px rgba(0, 160, 255, 1),
+    0 0 22px rgba(0, 160, 255, 0.55);
+}
+
+.photo-item.active .photo-title {
+  color: #f2f6ff;
+  font-weight: 500;
 }
 
 .photo-tile {
@@ -81,6 +96,12 @@
   transition: transform 180ms ease;
 }
 
+.photo-item.active:hover .photo-tile {
+  box-shadow:
+    0 0 0 2px rgba(0, 180, 255, 1),
+    0 0 26px rgba(0, 180, 255, 0.7);
+}
+
 .photo-title {
   margin-top: 6px;
   font-size: 12px;
@@ -100,19 +121,4 @@
 
 .photo-item:hover .photo-tile > * {
   transform: scale(1.06);
-}
-
-.photo-item.active .photo-tile {
-  box-shadow: 0 0 0 2px rgba(0, 120, 215, 0.9); /* або любы акцэнт */
-}
-
-.photo-item.active .photo-title {
-  background: none;
-  color: #999;
-
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  padding: 0;
 }

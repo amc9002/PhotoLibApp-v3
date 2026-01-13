@@ -28,6 +28,7 @@ export class GalleryViewComponent implements OnChanges {
   photos: PhotoListItemDto[] = [];
   viewerOpen = false;
   viewerPhotoId?: string;
+  activePhotoId: string | null = null;
 
   constructor(private photoApi: PhotoApiService) {}
 
@@ -44,7 +45,8 @@ export class GalleryViewComponent implements OnChanges {
   }
 
   openViewer(photoId: string) {
-    this.viewerPhotoId = photoId;
+    this.activePhotoId = photoId;
+    this.viewerPhotoId = this.activePhotoId;
     this.viewerOpen = true;
     this.viewerOpened.emit();
   }
