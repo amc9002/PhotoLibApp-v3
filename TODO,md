@@ -16,6 +16,7 @@ It is intentionally incomplete and evolves with the project.
 - [ ] Implement soft delete logic (IsDeleted)
 - [ ] Handle file cleanup on hard delete (if used)
 - [ ] Add metadata-only GET /photo/{id}
+- [ ] Add PUT /photo/{id} for updating title & description
 
 ### Galleries
 
@@ -34,12 +35,13 @@ It is intentionally incomplete and evolves with the project.
 
 ---
 
-## Frontend – Angular
+## Frontend – Angular (Core)
 
 - [ ] Align gallery view with thumbnail-only API
 - [ ] Lazy-load thumbnails
 - [ ] Fetch original image only on user interaction
 - [ ] Offline-first sync UI states
+- [ ] Centralize photo viewer state (active photo, mode, fullscreen)
 
 ---
 
@@ -52,31 +54,37 @@ It is intentionally incomplete and evolves with the project.
 
 ---
 
-## Non-Functional
-
-- [ ] Authentication & authorization
-- [ ] Basic logging
-- [ ] Error handling strategy
-- [ ] Prepare for CI/CD
-
----
-
 ## Frontend – Gallery & Photo Viewing
 
-- [ ] Gallery grid view (thumbnail-only, masonry / quilt layout)
-- [ ] Photo viewer mode (single photo focus)
-- [ ] Next / previous navigation
-- [ ] Thumbnail carousel in viewer mode
-- [ ] Full-size / original photo overlay
-- [ ] Autoplay (ordered)
-- [ ] Autoplay (random)
+- [x] Gallery grid view (masonry / quilt-style layout)
+- [x] Photo viewer mode (single photo focus)
+- [x] Next / previous navigation
+- [x] Thumbnail carousel in viewer mode
 - [ ] Empty gallery state (no photos yet)
+
+### Viewer Modes
+
+- [ ] Standard viewer mode (utility-focused, current default)
+- [ ] Presentation / postcard viewer mode
+  - [ ] Layout: photo on the left
+  - [ ] Title below the photo
+  - [ ] Description on the right
+  - [ ] Visually elegant, non-utility look (illustration / postcard feel)
+- [ ] Toggle button to switch between viewer modes
+- [ ] Remember last used viewer mode per session
+
+### Fullscreen
+
+- [ ] Fullscreen photo viewing mode
+- [ ] Toggle fullscreen on/off from viewer controls
+- [ ] Hide non-essential UI in fullscreen mode
+- [ ] Restore previous viewer mode after exiting fullscreen
 
 ---
 
 ## Frontend – Gallery Presentation & Sharing
 
-- [x] Gallery grid view (masonry / quilt-style layout) <!-- толькі што зроблена -->
+- [x] Gallery grid view (masonry / quilt-style layout)
 - [ ] Gallery view as photo album (album-like presentation mode)
 - [ ] Allow creating virtual photo albums from selected photos
 - [ ] Allow sharing:
@@ -106,13 +114,17 @@ It is intentionally incomplete and evolves with the project.
 - [ ] Photo animation using neural networks
 - [ ] Define AI-generated media as derived content (not original)
 
+---
+
 ## Ideas / Notes
 
 - Cloud storage support (Blob / S3) – future version
 - Multiple thumbnail sizes
 - EXIF parsing on backend
 - Distinct UI modes:
-- Gallery overview (grid / masonry)
-- Photo viewer (focused)
-- Overlay windows (properties, full-size)
+  - Gallery overview (grid / masonry)
+  - Photo viewer (utility-focused)
+  - Photo presentation / postcard mode
+  - Fullscreen viewer
+  - Overlay windows (properties, full-size)
 - Consider enforcing gallery creation only together with first photo upload

@@ -1,13 +1,37 @@
 <div class="modal-backdrop" (click)="close.emit()">
   <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Рэдагаваць імя і апісанне</h2>
+      <h2>Edit details</h2>
       <button class="modal-close" (click)="close.emit()">✕</button>
     </div>
 
     <div class="modal-body">
-      <!-- форма будзе пазней -->
-      <p style="color: #888; font-size: 13px">Тут будзе форма рэдагавання</p>
+      <div class="form-field">
+        <label for="title">Title</label>
+        <input
+          id="title"
+          type="text"
+          placeholder="Title"
+          [value]="title"
+          (input)="title = $any($event.target).value"
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          rows="4"
+          placeholder="Description"
+          (input)="description = $any($event.target).value"
+          >{{ description }}</textarea
+        >
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="close.emit()">Cancel</button>
+      <button class="btn primary" (click)="debugSave()">Save</button>
     </div>
   </div>
 </div>

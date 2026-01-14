@@ -42,3 +42,58 @@
 .modal-body {
   margin-top: 12px;
 }
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.form-field label {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.form-field input,
+.form-field textarea {
+  background: #2a2a2a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 8px;
+
+  color: white;
+  font-size: 13px;
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+  outline: none;
+  border-color: #4da3ff;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.btn {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: #4da3ff;
+  border: none;
+  color: black;
+}
+
+.btn.secondary {
+  background: transparent;
+  border: 1px solid #444;
+  color: #ccc;
+}

@@ -76,6 +76,14 @@ export class PhotoViewerComponent {
     }
   }
 
+  get activePhoto() {
+    if (!this.photos || !this.activePhotoId) {
+      return null;
+    }
+
+    return this.photos.find((p) => p.id === this.activePhotoId);
+  }
+
   // Backdrop closes viewer; overlay actions must stop event bubbling
   onBackdropClick() {
     this.close.emit();
@@ -94,6 +102,11 @@ export class PhotoViewerComponent {
 
   closeEditMetadata() {
     this.editMetadataOpen = false;
+  }
+
+  onSaveMetadata(data: { title: string; description: string }) {
+    console.log('SAVE METADATA:', data);
+    this.closeEditMetadata();
   }
 
   selectNext() {
