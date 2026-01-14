@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 export class EditPhotoMetadataModalComponent {
   @Input() title = '';
   @Input() description = '';
-
+  @Input() isSaving = false;
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<{
     title: string;

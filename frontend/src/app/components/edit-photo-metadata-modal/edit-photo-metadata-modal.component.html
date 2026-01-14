@@ -31,7 +31,13 @@
 
     <div class="modal-footer">
       <button class="btn secondary" (click)="close.emit()">Cancel</button>
-      <button class="btn primary" (click)="debugSave()">Save</button>
+      <button
+        class="btn primary"
+        [disabled]="isSaving"
+        (click)="save.emit({ title, description })"
+      >
+        {{ isSaving ? "Saving…" : "Save" }}
+      </button>
     </div>
   </div>
 </div>

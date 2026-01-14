@@ -62,6 +62,12 @@ It is intentionally incomplete and evolves with the project.
 - [x] Thumbnail carousel in viewer mode
 - [ ] Empty gallery state (no photos yet)
 
+### Edit Photo Metadata UX
+
+- [ ] Disable Save button until title or description is changed
+- [ ] Detect dirty state by comparing initial vs current values
+- [ ] Show subtle visual hint when form has unsaved changes
+
 ### Viewer Modes
 
 - [ ] Standard viewer mode (utility-focused, current default)

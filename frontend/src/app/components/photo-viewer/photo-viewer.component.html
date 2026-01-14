@@ -58,6 +58,7 @@
 <ng-container *ngIf="activePhoto as photo">
   <app-edit-photo-metadata-modal
     *ngIf="editMetadataOpen"
+    [isSaving]="isSavingMetadata"
     [title]="photo.title"
     [description]="photo.description ?? ''"
     (save)="onSaveMetadata($event)"

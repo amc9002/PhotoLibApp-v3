@@ -6,6 +6,7 @@ import { PhotoViewerMainComponent } from './photo-viewer-main/photo-viewer-main.
 import { HostListener } from '@angular/core';
 import { PhotoActionsComponent } from './photo-actions/photo-actions.component';
 import { EditPhotoMetadataModalComponent } from '../edit-photo-metadata-modal/edit-photo-metadata-modal.component';
+import { PhotoApiService } from '../../services/photo-api.service';
 
 @Component({
   selector: 'app-photo-viewer',
@@ -30,6 +31,8 @@ export class PhotoViewerComponent {
   controlsVisible = false;
   controlsHovered = false;
   photoMenuOpen = false;
+  editMetadataOpen = false;
+  isSavingMetadata = false;
 
   private hideControlsTimer?: number;
 
@@ -57,24 +60,28 @@ export class PhotoViewerComponent {
       return;
     }
 
-    // 4️⃣ Наступнае фота (→)
-    if (event.key === 'ArrowRight') {
-      event.preventDefault();
+    if (!this.editMetadataOpen) {
+      // 4️⃣ Наступнае фота (→)
+      if (event.key === 'ArrowRight') {
+        event.preventDefault();
 
-      const nextIndex = Math.min(currentIndex + 1, this.photos.length - 1);
+        const nextIndex = Math.min(currentIndex + 1, this.photos.length - 1);
 
-      this.photoSelected.emit(this.photos[nextIndex].id);
-    }
+        this.photoSelected.emit(this.photos[nextIndex].id);
+      }
 
-    // 5️⃣ Папярэдняе фота (←)
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
+      // 5️⃣ Папярэдняе фота (←)
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
 
-      const prevIndex = Math.max(currentIndex - 1, 0);
+        const prevIndex = Math.max(currentIndex - 1, 0);
 
-      this.photoSelected.emit(this.photos[prevIndex].id);
+        this.photoSelected.emit(this.photos[prevIndex].id);
+      }
     }
   }
+
+  constructor(private photoApi: PhotoApiService) {}
 
   get activePhoto() {
     if (!this.photos || !this.activePhotoId) {
@@ -93,8 +100,6 @@ export class PhotoViewerComponent {
     this.photoMenuOpen = !this.photoMenuOpen;
   }
 
-  editMetadataOpen = false;
-
   openEditMetadata() {
     console.log('OPEN EDIT MODAL');
     this.editMetadataOpen = true;
@@ -104,9 +109,36 @@ export class PhotoViewerComponent {
     this.editMetadataOpen = false;
   }
 
+  private applyLocalPhotoUpdate(
+    photoId: string,
+    data: { title: string; description: string },
+  ) {
+    const photo = this.photos.find((p) => p.id === photoId);
+    if (!photo) {
+      return;
+    }
+
+    photo.title = data.title;
+    photo.description = data.description;
+  }
+
   onSaveMetadata(data: { title: string; description: string }) {
-    console.log('SAVE METADATA:', data);
-    this.closeEditMetadata();
+    if (!this.activePhotoId) {
+      return;
+    }
+    this.isSavingMetadata = true;
+
+    this.photoApi.update(this.activePhotoId, data).subscribe({
+      next: () => {
+        this.applyLocalPhotoUpdate(this.activePhotoId!, data);
+        this.isSavingMetadata = false;
+        this.closeEditMetadata();
+      },
+      error: (err) => {
+        console.error('Failed to update photo metadata', err);
+        this.isSavingMetadata = false;
+      },
+    });
   }
 
   selectNext() {

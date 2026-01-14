@@ -32,8 +32,8 @@ export class PhotoApiService {
     return this.api.post<void>(`Photo/${photoId}/upload`, formData);
   }
 
-  update(id: string, dto: Partial<PhotoDto>) {
-    return this.api.put<PhotoDto>(`photos/${id}`, dto);
+  update(id: string, dto: { title: string; description?: string }) {
+    return this.api.put<PhotoDto>(`photo/${id}`, dto);
   }
 
   delete(id: string) {
