@@ -45,3 +45,11 @@
 
   cursor: pointer;
 }
+
+.photo-action-item.danger {
+  color: #ff6b6b;
+}
+
+.photo-action-item.danger:hover {
+  background: rgba(255, 80, 80, 0.15);
+}

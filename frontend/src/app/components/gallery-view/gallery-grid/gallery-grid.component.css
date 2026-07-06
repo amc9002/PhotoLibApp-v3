@@ -1,7 +1,18 @@
 .gallery-grid {
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(var(--thumb-size, 160px), 1fr));
   gap: 12px;
+  transition: grid-template-columns 150ms ease;
+  user-select: none;
+}
+
+.marquee {
+  position: absolute;
+  border: 1px solid rgba(0, 160, 255, 0.9);
+  background: rgba(0, 160, 255, 0.15);
+  pointer-events: none;
+  z-index: 50;
 }
 
 .photo-item {
@@ -55,6 +66,38 @@
 .photo-item.active .photo-title {
   color: #f2f6ff;
   font-weight: 500;
+}
+
+.photo-item.selected {
+  z-index: 3;
+}
+
+.photo-item.selected .photo-tile {
+  box-shadow:
+    0 0 0 3px rgba(46, 204, 113, 0.95),
+    0 0 16px rgba(46, 204, 113, 0.5);
+}
+
+.photo-item.selected::before {
+  content: "✓";
+
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  background: rgba(46, 204, 113, 0.95);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+
+  z-index: 11;
 }
 
 .photo-tile {
@@ -111,6 +154,25 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.photo-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+
+  margin-top: 4px;
+}
+
+.tag-chip {
+  padding: 1px 6px;
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.12);
+  color: #bbb;
+  font-size: 10px;
+  line-height: 1.5;
 }
 
 .photo-item:hover .photo-tile {

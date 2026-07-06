@@ -1,0 +1,82 @@
+.info-modal {
+  min-width: 320px;
+  max-width: 420px;
+  transition: max-width 150ms ease;
+}
+
+.info-modal.expanded {
+  max-width: 760px;
+  width: 100%;
+}
+
+.modal-body.two-col {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 16px;
+  align-items: start;
+}
+
+.info-facts {
+  margin-bottom: 12px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.label {
+  display: inline-block;
+  min-width: 90px;
+  color: #999;
+}
+
+.muted {
+  color: #888;
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.info-map {
+  margin-bottom: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.info-map iframe {
+  display: block;
+  width: 100%;
+  border: 0;
+}
+
+.coords {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #999;
+  text-align: center;
+}
+
+.map-col {
+  position: sticky;
+  top: 0;
+}
+
+.toggle-exif {
+  margin-bottom: 8px;
+}
+
+.full-exif {
+  max-height: 320px;
+  overflow-y: auto;
+
+  font-size: 12px;
+  border-top: 1px solid #333;
+  padding-top: 8px;
+}
+
+.exif-group-name {
+  font-weight: 600;
+  margin-top: 8px;
+  color: #ccc;
+}
+
+.exif-tag-name {
+  color: #999;
+}

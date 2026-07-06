@@ -1,4 +1,4 @@
-<header class="app-header" *ngIf="!isViewerOpen">
+<header class="app-header">
   <div class="header-left">
     <span class="app-title">PhotoLib</span>
 
@@ -16,6 +16,11 @@
       (newGallery)="openCreateGallery()"
       (addPhotos)="openFilePicker()"
       (properties)="openGalleryProperties()"
+      (deleteGallery)="openDeleteGalleryConfirm()"
+      (editGallery)="openEditGallery()"
+      (copySelected)="onCopySelected()"
+      (moveSelected)="onMoveSelected()"
+      (deleteSelected)="onDeleteSelected()"
     ></app-toolbar>
     <app-gallery-properties
       *ngIf="showGalleryProperties && selectedGallery"
@@ -26,12 +31,13 @@
 </header>
 
 <main class="app-content">
-  <app-gallery-view
+  <app-gallery-page
     *ngIf="selectedGallery"
     [gallery]="selectedGallery"
-    (viewerOpened)="isViewerOpen = true"
-    (viewerClosed)="isViewerOpen = false"
-  ></app-gallery-view>
+    [allGalleries]="galleries"
+    (galleryEmptied)="onGalleryEmptied()"
+    (galleryCreated)="onGalleryCreatedElsewhere($event)"
+  ></app-gallery-page>
 
   <div *ngIf="!selectedGallery" class="empty-state">
     Select a gallery to view photos
@@ -53,3 +59,24 @@
   (create)="createGallery($event)"
   (cancel)="closeCreateGallery()"
 ></app-create-gallery>
+
+<app-confirm-modal
+  *ngIf="deleteGalleryConfirmOpen"
+  [title]="deleteGalleryTitle"
+  [message]="deleteGalleryMessage"
+  confirmText="Delete"
+  [isBusy]="isDeletingGallery"
+  (confirm)="confirmDeleteGallery()"
+  (cancel)="closeDeleteGalleryConfirm()"
+></app-confirm-modal>
+
+<app-edit-metadata-modal
+  *ngIf="editGalleryOpen && selectedGallery"
+  heading="Edit gallery"
+  [title]="selectedGallery.title"
+  [description]="selectedGallery.description ?? ''"
+  [tags]="selectedGallery.tags"
+  [isSaving]="isSavingGallery"
+  (save)="saveGalleryEdit($event)"
+  (close)="closeEditGallery()"
+></app-edit-metadata-modal>

@@ -14,7 +14,7 @@ export class PhotoApiService {
   }
 
   getById(id: string) {
-    return this.api.get<PhotoDto>(`photos/${id}`);
+    return this.api.get<PhotoDto>(`Photo/${id}`);
   }
 
   getByGallery(galleryId: string) {
@@ -37,6 +37,18 @@ export class PhotoApiService {
   }
 
   delete(id: string) {
-    return this.api.delete<void>(`photos/${id}`);
+    return this.api.delete<void>(`Photo/${id}`);
+  }
+
+  move(id: string, galleryId: string) {
+    return this.api.post<void>(`Photo/${id}/move`, { galleryId });
+  }
+
+  copy(id: string, galleryId: string) {
+    return this.api.post<PhotoDto>(`Photo/${id}/copy`, { galleryId });
+  }
+
+  setTags(id: string, tagNames: string[]) {
+    return this.api.put<string[]>(`Photo/${id}/tags`, { tagNames });
   }
 }

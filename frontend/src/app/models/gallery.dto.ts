@@ -5,4 +5,5 @@ export interface GalleryDto {
   createdAtUtc: string;
   updatedAtUtc: string;
   isDeleted: boolean;
+  tags: string[];
 }

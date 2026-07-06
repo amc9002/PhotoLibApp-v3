@@ -12,6 +12,7 @@ import { PhotoListItemDto } from '../../models/photoLisrItem.dto';
 import { PhotoApiService } from '../../services/photo-api.service';
 import { GalleryGridComponent } from './gallery-grid/gallery-grid.component';
 import { PhotoViewerComponent } from '../photo-viewer/photo-viewer.component';
+import { PhotoSelectionService } from '../../services/photo-selection.service';
 
 @Component({
   selector: 'app-gallery-view',
@@ -22,18 +23,19 @@ import { PhotoViewerComponent } from '../photo-viewer/photo-viewer.component';
 })
 export class GalleryViewComponent implements OnChanges {
   @Input() gallery!: Gallery;
-  @Output() viewerOpened = new EventEmitter<void>();
-  @Output() viewerClosed = new EventEmitter<void>();
+  @Output() photoSelected = new EventEmitter<string>();
+  @Output() photosLoaded = new EventEmitter<PhotoListItemDto[]>();
 
   photos: PhotoListItemDto[] = [];
-  viewerOpen = false;
-  viewerPhotoId?: string;
-  activePhotoId: string | null = null;
 
-  constructor(private photoApi: PhotoApiService) {}
+  constructor(
+    private photoApi: PhotoApiService,
+    private photoSelection: PhotoSelectionService,
+  ) {}
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['gallery'] && this.gallery?.id) {
+      this.photoSelection.clear();
       this.loadPhotos();
     }
   }
@@ -41,19 +43,16 @@ export class GalleryViewComponent implements OnChanges {
   private loadPhotos() {
     this.photoApi.getByGallery(this.gallery.id).subscribe((photos) => {
       this.photos = photos.slice().reverse();
+      this.photosLoaded.emit(this.photos);
     });
   }
 
-  openViewer(photoId: string) {
-    this.activePhotoId = photoId;
-    this.viewerPhotoId = this.activePhotoId;
-    this.viewerOpen = true;
-    this.viewerOpened.emit();
+  onPhotoClicked(photoId: string) {
+    this.photoSelected.emit(photoId);
   }
 
-  closeViewer() {
-    this.viewerOpen = false;
-    this.viewerPhotoId = undefined;
-    this.viewerClosed.emit();
+  removePhoto(photoId: string) {
+    this.photos = this.photos.filter((p) => p.id !== photoId);
+    this.photosLoaded.emit(this.photos);
   }
 }

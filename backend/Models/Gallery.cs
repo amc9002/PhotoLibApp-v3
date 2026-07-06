@@ -6,7 +6,7 @@ namespace PhotoLibApi.Models
     /// <summary>
     /// Represents a user-created gallery that groups photos together.
     /// </summary>
-    public class Gallery
+    public class Gallery : ITaggable
     {
         /// <summary>
         /// Unique identifier of the gallery.
@@ -20,6 +20,11 @@ namespace PhotoLibApi.Models
         /// </summary>
         [Required]
         public string Title { get; set; } = "";
+
+        /// <summary>
+        /// Optional text description of the gallery.
+        /// </summary>
+        public string? Description { get; set; }
 
         /// <summary>
         /// Identifier of the user who owns this gallery.
@@ -42,6 +47,11 @@ namespace PhotoLibApi.Models
         /// Used to detect changes during synchronization.
         /// </summary>
         public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// Tags attached to this gallery.
+        /// </summary>
+        public ICollection<Tag> Tags { get; set; } = new List<Tag>();
     }
 }
 

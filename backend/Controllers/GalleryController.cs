@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhotoLibApi.Data;
 using PhotoLibApi.Models;
+using PhotoLibApi.Services;
 
 namespace PhotoLibApi.Controllers
 {
@@ -13,10 +14,12 @@ namespace PhotoLibApi.Controllers
     public class GalleryController : ControllerBase
     {
         private readonly PhotoDbContext _db;
+        private readonly TagResolver _tagResolver;
 
-        public GalleryController(PhotoDbContext db)
+        public GalleryController(PhotoDbContext db, TagResolver tagResolver)
         {
             _db = db;
+            _tagResolver = tagResolver;
         }
 
         /// <summary>
@@ -36,6 +39,7 @@ namespace PhotoLibApi.Controllers
 
             var galleries = await _db.Galleries
                 .AsNoTracking()
+                .Include(g => g.Tags)
                 .Where(g => g.OwnerId == ownerId && !g.IsDeleted)
                 .OrderBy(g => g.CreatedAtUtc)
                 .ToListAsync();
@@ -115,8 +119,10 @@ namespace PhotoLibApi.Controllers
                 {
                     g.Id,
                     g.Title,
+                    g.Description,
                     g.CreatedAtUtc,
-                    g.UpdatedAtUtc
+                    g.UpdatedAtUtc,
+                    Tags = g.Tags.Select(t => t.Name)
                 })
                 .FirstOrDefaultAsync();
 
@@ -157,6 +163,64 @@ namespace PhotoLibApi.Controllers
             await _db.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetAll), gallery);
+        }
+
+        /// <summary>
+        /// Updates gallery metadata.
+        /// </summary>
+        /// <param name="id">Gallery identifier.</param>
+        /// <param name="request"></param>
+        /// <response code="204">Gallery updated successfully.</response>
+        /// <response code="400">Invalid request data.</response>
+        /// <response code="404">Gallery not found.</response>
+        [HttpPut("{id:guid}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Update(
+            Guid id,
+            [FromBody] UpdateGalleryRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var gallery = await _db.Galleries.FindAsync(id);
+
+            if (gallery == null || gallery.IsDeleted)
+                return NotFound();
+
+            gallery.Title = request.Title;
+            gallery.Description = request.Description;
+            gallery.UpdatedAtUtc = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Replaces the full tag set of a gallery.
+        /// </summary>
+        /// <param name="id">Gallery identifier.</param>
+        /// <param name="request">The complete list of tag names to attach.</param>
+        /// <response code="200">Updated tag names.</response>
+        /// <response code="404">Gallery not found.</response>
+        [HttpPut("{id:guid}/tags")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> SetTags(Guid id, [FromBody] SetTagsRequest request)
+        {
+            var gallery = await _db.Galleries
+                .Include(g => g.Tags)
+                .FirstOrDefaultAsync(g => g.Id == id);
+
+            if (gallery == null || gallery.IsDeleted)
+                return NotFound();
+
+            await _tagResolver.ApplyAsync(gallery, request.TagNames);
+            await _db.SaveChangesAsync();
+
+            return Ok(gallery.Tags.Select(t => t.Name));
         }
 
         /// <summary>

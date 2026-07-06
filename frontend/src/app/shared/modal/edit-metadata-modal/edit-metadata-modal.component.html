@@ -1,15 +1,15 @@
 <div class="modal-backdrop" (click)="close.emit()">
   <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Edit details</h2>
+      <h2>{{ heading }}</h2>
       <button class="modal-close" (click)="close.emit()">✕</button>
     </div>
 
     <div class="modal-body">
       <div class="form-field">
-        <label for="title">Title</label>
+        <label for="edit-title">Title</label>
         <input
-          id="title"
+          id="edit-title"
           type="text"
           placeholder="Title"
           [value]="title"
@@ -18,24 +18,34 @@
       </div>
 
       <div class="form-field">
-        <label for="description">Description</label>
+        <label for="edit-description">Description</label>
         <textarea
-          id="description"
+          id="edit-description"
           rows="4"
           placeholder="Description"
           (input)="description = $any($event.target).value"
           >{{ description }}</textarea
         >
       </div>
+
+      <div class="form-field">
+        <label for="edit-tags">Tags</label>
+        <input
+          id="edit-tags"
+          type="text"
+          placeholder="e.g. ships, vintage"
+          list="edit-tag-options"
+          [(ngModel)]="tagsText"
+        />
+        <datalist id="edit-tag-options">
+          <option *ngFor="let t of availableTags" [value]="t"></option>
+        </datalist>
+      </div>
     </div>
 
-    <div class="modal-footer">
+    <div class="modal-footer" appButtonGroupNav>
       <button class="btn secondary" (click)="close.emit()">Cancel</button>
-      <button
-        class="btn primary"
-        [disabled]="isSaving"
-        (click)="save.emit({ title, description })"
-      >
+      <button class="btn primary" [disabled]="isSaving" (click)="onSave()">
         {{ isSaving ? "Saving…" : "Save" }}
       </button>
     </div>

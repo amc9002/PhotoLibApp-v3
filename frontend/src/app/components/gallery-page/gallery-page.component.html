@@ -1,0 +1,37 @@
+<app-gallery-view
+  [gallery]="gallery"
+  (photoSelected)="openViewer($event)"
+  (photosLoaded)="onPhotosLoaded($event)"
+></app-gallery-view>
+
+<app-photo-viewer
+  *ngIf="viewerOpen && viewerPhotoId"
+  [photos]="photos"
+  [activePhotoId]="viewerPhotoId"
+  (close)="closeViewer()"
+  (photoSelected)="openViewer($event)"
+  (requestDelete)="openDeleteConfirm($event)"
+  (requestCopy)="requestCopyOrMove([$event], 'copy')"
+  (requestMove)="requestCopyOrMove([$event], 'move')"
+></app-photo-viewer>
+
+<app-confirm-modal
+  *ngIf="deleteConfirmOpen"
+  title="Delete photo?"
+  [message]="deleteConfirmMessage"
+  confirmText="Delete"
+  [isBusy]="isDeletingPhoto"
+  (confirm)="confirmDelete()"
+  (cancel)="closeDeleteConfirm()"
+></app-confirm-modal>
+
+<app-gallery-select-modal
+  *ngIf="gallerySelectOpen"
+  [mode]="gallerySelectMode"
+  [galleries]="otherGalleries"
+  [count]="photoIdsToMoveOrCopy.length"
+  [isBusy]="isMovingOrCopying"
+  (selectExisting)="onGallerySelected($event)"
+  (createNew)="onCreateGalleryForMoveOrCopy($event)"
+  (cancel)="closeGallerySelect()"
+></app-gallery-select-modal>

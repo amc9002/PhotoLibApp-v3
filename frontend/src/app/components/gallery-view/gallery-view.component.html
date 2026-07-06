@@ -1,15 +1,6 @@
 <div class="gallery-view">
   <app-gallery-grid
     [photos]="photos"
-    [activePhotoId]="activePhotoId"
-    (photoClicked)="openViewer($event)"
+    (photoClicked)="onPhotoClicked($event)"
   ></app-gallery-grid>
-
-  <app-photo-viewer
-    *ngIf="viewerOpen && viewerPhotoId"
-    [photos]="photos"
-    [activePhotoId]="viewerPhotoId"
-    (close)="closeViewer()"
-    (photoSelected)="openViewer($event)"
-  ></app-photo-viewer>
 </div>

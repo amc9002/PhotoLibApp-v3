@@ -12,17 +12,34 @@ It is intentionally incomplete and evolves with the project.
 - [x] Separate photo metadata from file endpoints
 - [x] Store originals and thumbnails separately
 - [x] Add thumbnail endpoint
+- [x] Implement PUT endpoint for updating photo title and description
 - [ ] Decide on delete strategy (soft vs hard)
 - [ ] Implement soft delete logic (IsDeleted)
 - [ ] Handle file cleanup on hard delete (if used)
 - [ ] Add metadata-only GET /photo/{id}
-- [ ] Add PUT /photo/{id} for updating title & description
+
+### Photos – CRUD Completion
+
+- [ ] Implement DELETE /photo/{id} (soft delete)
+- [ ] Define photo delete strategy (soft vs hard)
+- [ ] Add IsDeleted + DeletedAt fields
+- [ ] Exclude soft-deleted photos from default queries
+- [ ] Handle hard delete (internal / maintenance only)
 
 ### Galleries
 
 - [ ] Review GalleryController endpoints
 - [ ] Decide gallery delete behavior
 - [ ] Add gallery-level sync support
+
+### Galleries – CRUD Completion
+
+- [ ] Implement PUT /gallery/{id} (rename / metadata)
+- [ ] Implement DELETE /gallery/{id}
+- [ ] Define gallery delete behavior:
+  - cascade delete photos?
+  - forbid delete if not empty?
+  - soft delete gallery?
 
 ---
 
@@ -35,13 +52,69 @@ It is intentionally incomplete and evolves with the project.
 
 ---
 
-## Frontend – Angular (Core)
+## Frontend – Angular (General)
 
 - [ ] Align gallery view with thumbnail-only API
 - [ ] Lazy-load thumbnails
 - [ ] Fetch original image only on user interaction
 - [ ] Offline-first sync UI states
-- [ ] Centralize photo viewer state (active photo, mode, fullscreen)
+
+---
+
+## Frontend – Gallery & Photo Actions (Planned)
+
+- [ ] Define unified photo actions (single & batch)
+- [ ] Add selection mode in gallery (multi-select)
+- [ ] Implement group actions (delete, add to album)
+- [ ] Add context menu (right-click) for photo actions
+
+## Frontend – Gallery & Photo Viewing
+
+- [x] Gallery grid view (thumbnail-only, masonry / quilt-style layout)
+- [x] Photo viewer mode (single photo focus)
+- [x] Next / previous navigation (keyboard + buttons)
+- [x] Thumbnail carousel in viewer mode
+- [x] Keyboard handling with proper focus awareness
+- [ ] Full-size / original photo overlay
+- [ ] Autoplay (ordered)
+- [ ] Autoplay (random)
+- [ ] Empty gallery state (no photos yet)
+
+---
+
+## Frontend – Photo Metadata Editing
+
+- [x] Edit photo title and description via modal
+- [x] PUT metadata integration
+- [x] Disable Save button while saving
+- [x] Show “Saving…” state during PUT request
+- [x] Prevent viewer keyboard navigation while editing text
+- [ ] Disable Save button until metadata is actually changed (dirty state)
+- [ ] Show inline error message on failed save
+- [ ] Add subtle button press / saving animation
+
+---
+
+## Frontend – Viewer UX Modes (Planned)
+
+- [ ] Toggle presentation mode:
+  - left: photo
+  - bottom: title
+  - right: description
+  - postcard / illustration-style layout
+- [ ] Toggle back to utility-focused viewer mode
+- [ ] Fullscreen toggle (viewer-only, no browser UI)
+
+---
+
+## Frontend – Gallery Presentation & Sharing
+
+- [ ] Gallery view as photo album (album-like presentation mode)
+- [ ] Allow creating virtual photo albums from selected photos
+- [ ] Allow sharing:
+  - [ ] individual photos
+  - [ ] photo albums
+- [ ] Define album as a virtual collection (not a physical gallery)
 
 ---
 
@@ -51,52 +124,9 @@ It is intentionally incomplete and evolves with the project.
 - [ ] Soft delete propagation
 - [ ] Conflict resolution strategy
 - [ ] Retry logic for file upload
-
----
-
-## Frontend – Gallery & Photo Viewing
-
-- [x] Gallery grid view (masonry / quilt-style layout)
-- [x] Photo viewer mode (single photo focus)
-- [x] Next / previous navigation
-- [x] Thumbnail carousel in viewer mode
-- [ ] Empty gallery state (no photos yet)
-
-### Edit Photo Metadata UX
-
-- [ ] Disable Save button until title or description is changed
-- [ ] Detect dirty state by comparing initial vs current values
-- [ ] Show subtle visual hint when form has unsaved changes
-
-### Viewer Modes
-
-- [ ] Standard viewer mode (utility-focused, current default)
-- [ ] Presentation / postcard viewer mode
-  - [ ] Layout: photo on the left
-  - [ ] Title below the photo
-  - [ ] Description on the right
-  - [ ] Visually elegant, non-utility look (illustration / postcard feel)
-- [ ] Toggle button to switch between viewer modes
-- [ ] Remember last used viewer mode per session
-
-### Fullscreen
-
-- [ ] Fullscreen photo viewing mode
-- [ ] Toggle fullscreen on/off from viewer controls
-- [ ] Hide non-essential UI in fullscreen mode
-- [ ] Restore previous viewer mode after exiting fullscreen
-
----
-
-## Frontend – Gallery Presentation & Sharing
-
-- [x] Gallery grid view (masonry / quilt-style layout)
-- [ ] Gallery view as photo album (album-like presentation mode)
-- [ ] Allow creating virtual photo albums from selected photos
-- [ ] Allow sharing:
-  - [ ] individual photos
-  - [ ] photo albums
-- [ ] Define album as a virtual collection (not a physical gallery)
+- [ ] Propagate photo delete via sync
+- [ ] Handle gallery delete in offline mode
+- [ ] Resolve delete vs update conflicts
 
 ---
 
@@ -110,7 +140,7 @@ It is intentionally incomplete and evolves with the project.
 
 ## Media Types – Future Vision
 
-- [ ] Support short video clips inside galleries (inspired by Harry Potter moving photos)
+- [ ] Support short video clips inside galleries
 - [ ] Define unified media model (photo / video)
 
 ---
@@ -129,8 +159,6 @@ It is intentionally incomplete and evolves with the project.
 - EXIF parsing on backend
 - Distinct UI modes:
   - Gallery overview (grid / masonry)
-  - Photo viewer (utility-focused)
-  - Photo presentation / postcard mode
-  - Fullscreen viewer
+  - Photo viewer (focused)
   - Overlay windows (properties, full-size)
 - Consider enforcing gallery creation only together with first photo upload

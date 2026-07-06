@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using PhotoLibApi.Data;
+using PhotoLibApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +29,8 @@ var conn = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<PhotoDbContext>(options =>
     options.UseSqlite(conn));
+
+builder.Services.AddScoped<TagResolver>();
 
 var app = builder.Build();
 

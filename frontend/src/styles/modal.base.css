@@ -1,0 +1,61 @@
+/* === MODAL BACKDROP === */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+}
+
+/* === MODAL CONTAINER === */
+.modal {
+  background: #222;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 300px;
+}
+
+/* === MODAL HEADER === */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  margin-bottom: 12px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+/* === MODAL BODY === */
+.modal-body {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* === MODAL FOOTER === */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  margin-top: 16px;
+}
+
+/* === CLOSE BUTTON === */
+.modal-close {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  color: #fff;
+}

@@ -6,12 +6,27 @@
     </div>
 
     <div class="window-content">
-      <input type="text" placeholder="Gallery title" [(ngModel)]="title" />
+      <input
+        type="text"
+        placeholder="Gallery title"
+        [(ngModel)]="title"
+        (keyup.enter)="requestCreate()"
+      />
 
       <div class="actions">
-        <button (click)="submit()">Create</button>
+        <button (click)="requestCreate()">Create</button>
         <button (click)="cancel.emit()">Cancel</button>
       </div>
     </div>
   </div>
 </div>
+
+<app-confirm-modal
+  *ngIf="confirmOpen"
+  title="Create gallery?"
+  [message]="'Create a new gallery &quot;' + title.trim() + '&quot;?'"
+  confirmText="Create"
+  variant="primary"
+  (confirm)="confirmCreate()"
+  (cancel)="cancelConfirm()"
+></app-confirm-modal>

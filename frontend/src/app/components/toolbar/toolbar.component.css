@@ -133,3 +133,17 @@
 .service-menu-item.danger {
   color: #ff6b6b;
 }
+
+.service-menu-label {
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.service-menu-divider {
+  height: 1px;
+  margin: 4px 0;
+  background: rgba(255, 255, 255, 0.15);
+}

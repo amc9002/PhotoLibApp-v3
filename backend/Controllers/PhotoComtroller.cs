@@ -17,11 +17,13 @@ namespace PhotoLibApi.Controllers
     {
         private readonly PhotoDbContext _db;
         private readonly PhotoFilePathHelper _filePathHelper;
+        private readonly TagResolver _tagResolver;
 
 
-        public PhotoController(PhotoDbContext db, IConfiguration configuration)
+        public PhotoController(PhotoDbContext db, IConfiguration configuration, TagResolver tagResolver)
         {
             _db = db;
+            _tagResolver = tagResolver;
 
             var photosRoot = Path.Combine(
                 Directory.GetCurrentDirectory(),
@@ -49,7 +51,8 @@ namespace PhotoLibApi.Controllers
                 {
                     p.Id,
                     p.Title,
-                    p.HasThumbnail
+                    p.HasThumbnail,
+                    Tags = p.Tags.Select(t => t.Name)
                 })
                 .ToListAsync();
 
@@ -128,7 +131,11 @@ namespace PhotoLibApi.Controllers
                     p.UpdatedAtUtc,
                     p.HasOriginal,
                     p.HasThumbnail,
-                    p.IsDeleted
+                    p.IsDeleted,
+                    p.ExifJson,
+                    p.Latitude,
+                    p.Longitude,
+                    Tags = p.Tags.Select(t => t.Name)
                 })
                 .FirstOrDefaultAsync();
 
@@ -217,11 +224,7 @@ namespace PhotoLibApi.Controllers
                 return BadRequest("GalleryId must not be empty.");
 
             // 2️⃣ Check that the gallery exists
-            var galleryExists = await _db.Galleries
-                .AsNoTracking()
-                .AnyAsync(g => g.Id == request.GalleryId);
-
-            if (!galleryExists)
+            if (!await GalleryExistsAsync(request.GalleryId))
                 return NotFound($"Gallery with id '{request.GalleryId}' not found.");
 
             var photo = new Photo
@@ -299,6 +302,13 @@ namespace PhotoLibApi.Controllers
 
                 // mark thumbnail as existing
                 photo.HasThumbnail = true;
+
+                // Read EXIF metadata (camera info, date, GPS location) from the original file
+                var exif = ExifReader.Read(filePath);
+                photo.ExifJson = exif.Json;
+                photo.Latitude = exif.Latitude;
+                photo.Longitude = exif.Longitude;
+
                 await _db.SaveChangesAsync();
 
                 return NoContent();
@@ -341,6 +351,122 @@ namespace PhotoLibApi.Controllers
             await _db.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Replaces the full tag set of a photo.
+        /// </summary>
+        /// <param name="id">Photo identifier.</param>
+        /// <param name="request">The complete list of tag names to attach.</param>
+        /// <response code="200">Updated tag names.</response>
+        /// <response code="404">Photo not found.</response>
+        [HttpPut("{id:guid}/tags")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> SetTags(Guid id, [FromBody] SetTagsRequest request)
+        {
+            var photo = await _db.Photos
+                .Include(p => p.Tags)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (photo == null || photo.IsDeleted)
+                return NotFound();
+
+            await _tagResolver.ApplyAsync(photo, request.TagNames);
+            await _db.SaveChangesAsync();
+
+            return Ok(photo.Tags.Select(t => t.Name));
+        }
+
+        /// <summary>
+        /// Moves a photo into another gallery.
+        /// </summary>
+        /// <param name="id">Photo identifier.</param>
+        /// <param name="request">Destination gallery.</param>
+        /// <response code="204">Photo moved successfully.</response>
+        /// <response code="400">Invalid request data.</response>
+        /// <response code="404">Photo or destination gallery not found.</response>
+        [HttpPost("{id:guid}/move")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Move(Guid id, [FromBody] MovePhotoRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var photo = await _db.Photos.FindAsync(id);
+            if (photo == null || photo.IsDeleted)
+                return NotFound();
+
+            if (!await GalleryExistsAsync(request.GalleryId))
+                return NotFound($"Gallery with id '{request.GalleryId}' not found.");
+
+            photo.GalleryId = request.GalleryId;
+            photo.UpdatedAtUtc = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Copies a photo (metadata and files) into another gallery.
+        /// </summary>
+        /// <param name="id">Photo identifier.</param>
+        /// <param name="request">Destination gallery.</param>
+        /// <response code="201">Photo copied successfully.</response>
+        /// <response code="400">Invalid request data.</response>
+        /// <response code="404">Photo or destination gallery not found.</response>
+        [HttpPost("{id:guid}/copy")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<Photo>> Copy(Guid id, [FromBody] MovePhotoRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var source = await _db.Photos.FindAsync(id);
+            if (source == null || source.IsDeleted)
+                return NotFound();
+
+            if (!await GalleryExistsAsync(request.GalleryId))
+                return NotFound($"Gallery with id '{request.GalleryId}' not found.");
+
+            var copy = new Photo
+            {
+                Id = Guid.NewGuid(),
+                GalleryId = request.GalleryId,
+                Title = source.Title,
+                Description = source.Description,
+                ExifJson = source.ExifJson,
+                CreatedAtUtc = DateTime.UtcNow,
+                UpdatedAtUtc = DateTime.UtcNow,
+            };
+
+            if (source.HasOriginal)
+            {
+                Directory.CreateDirectory(_filePathHelper.GetOriginalsDirectory());
+                System.IO.File.Copy(
+                    _filePathHelper.GetOriginalFilePath(source.Id),
+                    _filePathHelper.GetOriginalFilePath(copy.Id));
+                copy.HasOriginal = true;
+            }
+
+            if (source.HasThumbnail)
+            {
+                Directory.CreateDirectory(_filePathHelper.GetThumbnailsDirectory());
+                System.IO.File.Copy(
+                    _filePathHelper.GetThumbnailFilePath(source.Id),
+                    _filePathHelper.GetThumbnailFilePath(copy.Id));
+                copy.HasThumbnail = true;
+            }
+
+            _db.Photos.Add(copy);
+            await _db.SaveChangesAsync();
+
+            return StatusCode(StatusCodes.Status201Created, copy);
         }
 
         /// <summary>
@@ -393,7 +519,14 @@ namespace PhotoLibApi.Controllers
 
             return NoContent();
         }
-#endif  
+#endif
 
+        /// <summary>Checks that a (non-deleted) gallery with this id exists.</summary>
+        private Task<bool> GalleryExistsAsync(Guid galleryId)
+        {
+            return _db.Galleries
+                .AsNoTracking()
+                .AnyAsync(g => g.Id == galleryId && !g.IsDeleted);
+        }
     }
 }

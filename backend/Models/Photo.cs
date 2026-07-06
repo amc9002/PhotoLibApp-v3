@@ -17,7 +17,7 @@ namespace PhotoLibApi.Models
     /// to reference external storage (e.g., Blob/S3) using storage keys
     /// instead of direct URLs.
     /// </remarks>
-    public class Photo
+    public class Photo : ITaggable
     {
         /// <summary>
         /// Permanent unique identifier generated on the server.
@@ -52,8 +52,19 @@ namespace PhotoLibApi.Models
 
         /// <summary>
         /// Optional metadata in JSON form (e.g., EXIF information).
+        /// Shape: a list of {name, tags:[{name, description}]} groups, as read by MetadataExtractor.
         /// </summary>
         public string? ExifJson { get; set; }
+
+        /// <summary>
+        /// GPS latitude in decimal degrees, read from EXIF, if present.
+        /// </summary>
+        public double? Latitude { get; set; }
+
+        /// <summary>
+        /// GPS longitude in decimal degrees, read from EXIF, if present.
+        /// </summary>
+        public double? Longitude { get; set; }
 
         /// <summary>
         /// Marks the photo as deleted without removing it from the database.
@@ -89,5 +100,9 @@ namespace PhotoLibApi.Models
         /// </summary>
         public bool HasThumbnail { get; set; } = false;
 
+        /// <summary>
+        /// Tags attached to this photo.
+        /// </summary>
+        public ICollection<Tag> Tags { get; set; } = new List<Tag>();
     }
 }

@@ -1,12 +1,15 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { forkJoin } from 'rxjs';
 import { PhotoListItemDto } from '../../models/photoLisrItem.dto';
 import { PhotoCarouselComponent } from './photo-carousel/photo-carousel.component';
 import { PhotoViewerMainComponent } from './photo-viewer-main/photo-viewer-main.component';
 import { HostListener } from '@angular/core';
 import { PhotoActionsComponent } from './photo-actions/photo-actions.component';
-import { EditPhotoMetadataModalComponent } from '../edit-photo-metadata-modal/edit-photo-metadata-modal.component';
+import { EditMetadataModalComponent } from '../../shared/modal/edit-metadata-modal/edit-metadata-modal.component';
+import { PhotoInfoModalComponent } from './photo-actions/photo-info-modal/photo-info-modal.component';
 import { PhotoApiService } from '../../services/photo-api.service';
+import { PhotoDto } from '../../models/photo.dto';
 
 @Component({
   selector: 'app-photo-viewer',
@@ -16,30 +19,38 @@ import { PhotoApiService } from '../../services/photo-api.service';
     PhotoCarouselComponent,
     PhotoViewerMainComponent,
     PhotoActionsComponent,
-    EditPhotoMetadataModalComponent,
+    EditMetadataModalComponent,
+    PhotoInfoModalComponent,
   ],
   templateUrl: './photo-viewer.component.html',
   styleUrls: ['./photo-viewer.component.css'],
 })
-export class PhotoViewerComponent {
+export class PhotoViewerComponent implements OnDestroy {
   @Input({ required: true }) photos!: PhotoListItemDto[];
   @Input({ required: true }) activePhotoId!: string;
 
   @Output() close = new EventEmitter<void>();
   @Output() photoSelected = new EventEmitter<string>();
+  @Output() requestDelete = new EventEmitter<string>();
+  @Output() requestCopy = new EventEmitter<string>();
+  @Output() requestMove = new EventEmitter<string>();
 
   controlsVisible = false;
   controlsHovered = false;
   photoMenuOpen = false;
   editMetadataOpen = false;
   isSavingMetadata = false;
+  infoOpen = false;
+  infoPhoto?: PhotoDto;
 
   private hideControlsTimer?: number;
 
   @HostListener('window:keydown', ['$event'])
   onKeydown(event: KeyboardEvent) {
-    console.log('keydown in viewer:', event.key);
     if (event.key === 'Escape') {
+      if (this.editMetadataOpen || this.infoOpen) {
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
       this.close.emit();
@@ -60,7 +71,7 @@ export class PhotoViewerComponent {
       return;
     }
 
-    if (!this.editMetadataOpen) {
+    if (!this.editMetadataOpen && !this.infoOpen) {
       // 4️⃣ Наступнае фота (→)
       if (event.key === 'ArrowRight') {
         event.preventDefault();
@@ -83,6 +94,12 @@ export class PhotoViewerComponent {
 
   constructor(private photoApi: PhotoApiService) {}
 
+  ngOnDestroy() {
+    if (this.hideControlsTimer) {
+      clearTimeout(this.hideControlsTimer);
+    }
+  }
+
   get activePhoto() {
     if (!this.photos || !this.activePhotoId) {
       return null;
@@ -93,6 +110,9 @@ export class PhotoViewerComponent {
 
   // Backdrop closes viewer; overlay actions must stop event bubbling
   onBackdropClick() {
+    if (this.editMetadataOpen || this.infoOpen) {
+      return;
+    }
     this.close.emit();
   }
 
@@ -101,7 +121,6 @@ export class PhotoViewerComponent {
   }
 
   openEditMetadata() {
-    console.log('OPEN EDIT MODAL');
     this.editMetadataOpen = true;
   }
 
@@ -111,7 +130,7 @@ export class PhotoViewerComponent {
 
   private applyLocalPhotoUpdate(
     photoId: string,
-    data: { title: string; description: string },
+    data: { title: string; description: string; tags: string[] },
   ) {
     const photo = this.photos.find((p) => p.id === photoId);
     if (!photo) {
@@ -120,15 +139,19 @@ export class PhotoViewerComponent {
 
     photo.title = data.title;
     photo.description = data.description;
+    photo.tags = data.tags;
   }
 
-  onSaveMetadata(data: { title: string; description: string }) {
+  onSaveMetadata(data: { title: string; description: string; tags: string[] }) {
     if (!this.activePhotoId) {
       return;
     }
     this.isSavingMetadata = true;
 
-    this.photoApi.update(this.activePhotoId, data).subscribe({
+    forkJoin([
+      this.photoApi.update(this.activePhotoId, data),
+      this.photoApi.setTags(this.activePhotoId, data.tags),
+    ]).subscribe({
       next: () => {
         this.applyLocalPhotoUpdate(this.activePhotoId!, data);
         this.isSavingMetadata = false;
@@ -139,6 +162,35 @@ export class PhotoViewerComponent {
         this.isSavingMetadata = false;
       },
     });
+  }
+
+  onShowInfo() {
+    if (!this.activePhotoId) return;
+
+    this.photoApi.getById(this.activePhotoId).subscribe({
+      next: (photo) => {
+        this.infoPhoto = photo;
+        this.infoOpen = true;
+      },
+      error: (err) => console.error('Failed to load photo info', err),
+    });
+  }
+
+  closeInfo() {
+    this.infoOpen = false;
+    this.infoPhoto = undefined;
+  }
+
+  onDeleteRequested() {
+    this.requestDelete.emit(this.activePhotoId);
+  }
+
+  onCopyRequested() {
+    this.requestCopy.emit(this.activePhotoId);
+  }
+
+  onMoveRequested() {
+    this.requestMove.emit(this.activePhotoId);
   }
 
   selectNext() {

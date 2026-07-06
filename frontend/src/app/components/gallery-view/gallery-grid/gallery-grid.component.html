@@ -1,11 +1,17 @@
-<div class="gallery-grid">
+<div
+  class="gallery-grid"
+  [style.--thumb-size.px]="thumbnailSize.size"
+  (mousedown)="onGridMouseDown($event)"
+>
   <div
     class="photo-item"
     *ngFor="let photo of photos; trackBy: trackById"
     [attr.data-title]="photo.title"
+    [attr.data-photo-id]="photo.id"
     [class.active]="photo.id === activePhotoId"
+    [class.selected]="selection.isSelected(photo.id)"
   >
-    <div class="photo-tile thumb" (click)="onPhotoClick(photo.id)">
+    <div class="photo-tile thumb" (click)="onPhotoClick($event, photo.id)">
       <app-photo-thumbnail
         [photoId]="photo.id"
         [hasThumbnail]="photo.hasThumbnail"
@@ -15,5 +21,11 @@
     <div class="photo-title">
       {{ photo.title }}
     </div>
+
+    <div class="photo-tags" *ngIf="photo.tags.length">
+      <span class="tag-chip" *ngFor="let t of photo.tags">{{ t }}</span>
+    </div>
   </div>
+
+  <div class="marquee" *ngIf="dragging" [ngStyle]="marqueeStyle"></div>
 </div>

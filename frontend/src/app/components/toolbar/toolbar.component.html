@@ -27,8 +27,22 @@
 
 <!-- RIGHT TOOLBAR -->
 <ng-container *ngIf="layout === 'right'">
-  <button class="toolbar-btn" disabled>➕</button>
-  <button class="toolbar-btn" disabled>✏</button>
+  <button
+    class="toolbar-btn"
+    [disabled]="!thumbnailSize.canIncrease"
+    (click)="thumbnailSize.increase()"
+    title="Increase thumbnail size"
+  >
+    ➕
+  </button>
+  <button
+    class="toolbar-btn"
+    [disabled]="!thumbnailSize.canDecrease"
+    (click)="thumbnailSize.decrease()"
+    title="Decrease thumbnail size"
+  >
+    ➖
+  </button>
 
   <div class="service-menu-wrapper">
     <button
@@ -39,6 +53,38 @@
     </button>
 
     <div class="service-menu" *ngIf="serviceMenuOpen">
+      <ng-container *ngIf="photoSelection.count > 0">
+        <div class="service-menu-label">
+          {{ photoSelection.count }} photo{{
+            photoSelection.count > 1 ? "s" : ""
+          }}
+          selected
+        </div>
+
+        <div
+          class="service-menu-item"
+          (click)="onCopySelected(); $event.stopPropagation()"
+        >
+          Copy selected to gallery
+        </div>
+
+        <div
+          class="service-menu-item"
+          (click)="onMoveSelected(); $event.stopPropagation()"
+        >
+          Move selected to gallery
+        </div>
+
+        <div
+          class="service-menu-item danger"
+          (click)="onDeleteSelected(); $event.stopPropagation()"
+        >
+          Delete selected
+        </div>
+
+        <div class="service-menu-divider"></div>
+      </ng-container>
+
       <div
         class="service-menu-item"
         (click)="onAddPhotos(); $event.stopPropagation()"
@@ -60,7 +106,17 @@
         Gallery properties
       </div>
 
-      <div class="service-menu-item danger" (click)="closeServiceMenu()">
+      <div
+        class="service-menu-item"
+        (click)="onEditGallery(); $event.stopPropagation()"
+      >
+        Edit gallery
+      </div>
+
+      <div
+        class="service-menu-item danger"
+        (click)="onDeleteGallery(); $event.stopPropagation()"
+      >
         Delete gallery
       </div>
     </div>

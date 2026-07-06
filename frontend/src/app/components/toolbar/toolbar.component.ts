@@ -8,6 +8,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Gallery } from '../../models/gallery.model';
+import { ThumbnailSizeService } from '../../services/thumbnail-size.service';
+import { PhotoSelectionService } from '../../services/photo-selection.service';
 
 @Component({
   selector: 'app-toolbar',
@@ -25,8 +27,17 @@ export class ToolbarComponent {
   @Output() addPhotos = new EventEmitter<void>();
   @Output() properties = new EventEmitter<void>();
   @Output() newGallery = new EventEmitter<void>();
+  @Output() deleteGallery = new EventEmitter<void>();
+  @Output() editGallery = new EventEmitter<void>();
+  @Output() copySelected = new EventEmitter<void>();
+  @Output() moveSelected = new EventEmitter<void>();
+  @Output() deleteSelected = new EventEmitter<void>();
 
-  constructor(private elementRef: ElementRef) {}
+  constructor(
+    private elementRef: ElementRef,
+    public thumbnailSize: ThumbnailSizeService,
+    public photoSelection: PhotoSelectionService,
+  ) {}
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -67,5 +78,35 @@ export class ToolbarComponent {
 
   closeServiceMenu() {
     this.serviceMenuOpen = false;
+  }
+
+  onDeleteGallery() {
+    this.closeServiceMenu();
+    if (!this.selectedGallery) return;
+    this.deleteGallery.emit();
+  }
+
+  onEditGallery() {
+    this.closeServiceMenu();
+    if (!this.selectedGallery) return;
+    this.editGallery.emit();
+  }
+
+  onCopySelected() {
+    this.closeServiceMenu();
+    if (this.photoSelection.count === 0) return;
+    this.copySelected.emit();
+  }
+
+  onMoveSelected() {
+    this.closeServiceMenu();
+    if (this.photoSelection.count === 0) return;
+    this.moveSelected.emit();
+  }
+
+  onDeleteSelected() {
+    this.closeServiceMenu();
+    if (this.photoSelection.count === 0) return;
+    this.deleteSelected.emit();
   }
 }

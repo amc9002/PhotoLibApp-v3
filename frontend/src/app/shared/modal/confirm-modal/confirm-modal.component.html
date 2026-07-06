@@ -1,0 +1,25 @@
+<div class="modal-backdrop" (click)="cancel.emit()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ title }}</h2>
+      <button class="modal-close" (click)="cancel.emit()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <p>{{ message }}</p>
+    </div>
+
+    <div class="modal-footer" appButtonGroupNav>
+      <button class="btn secondary" (click)="cancel.emit()">Cancel</button>
+      <button
+        class="btn"
+        [class.danger]="variant === 'danger'"
+        [class.primary]="variant === 'primary'"
+        [disabled]="isBusy"
+        (click)="confirm.emit()"
+      >
+        {{ isBusy ? "Working…" : confirmText }}
+      </button>
+    </div>
+  </div>
+</div>

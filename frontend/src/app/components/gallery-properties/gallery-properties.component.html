@@ -6,6 +6,11 @@
 
   <div class="window-content">
     <div><strong>Title:</strong> {{ gallery.title }}</div>
+    <div><strong>Description:</strong> {{ gallery.description || "—" }}</div>
+    <div>
+      <strong>Tags:</strong>
+      {{ gallery.tags.length ? gallery.tags.join(", ") : "—" }}
+    </div>
     <div><strong>ID:</strong> {{ gallery.id }}</div>
     <div>
       <strong>Created:</strong> {{ gallery.createdAtUtc | date: "medium" }}

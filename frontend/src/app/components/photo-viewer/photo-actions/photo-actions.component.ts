@@ -11,6 +11,10 @@ import { CommonModule } from '@angular/common';
 export class PhotoActionsComponent {
   @Output() actionClick = new EventEmitter<void>();
   @Output() editMetadata = new EventEmitter<void>();
+  @Output() deletePhoto = new EventEmitter<void>();
+  @Output() copyPhoto = new EventEmitter<void>();
+  @Output() movePhoto = new EventEmitter<void>();
+  @Output() showInfo = new EventEmitter<void>();
 
   menuOpen = false;
 
@@ -25,5 +29,25 @@ export class PhotoActionsComponent {
   onEditMetadataClick() {
     this.menuOpen = false;
     this.editMetadata.emit();
+  }
+
+  onShowInfoClick() {
+    this.menuOpen = false;
+    this.showInfo.emit();
+  }
+
+  onCopyClick() {
+    this.menuOpen = false;
+    this.copyPhoto.emit();
+  }
+
+  onMoveClick() {
+    this.menuOpen = false;
+    this.movePhoto.emit();
+  }
+
+  onDeleteClick() {
+    this.menuOpen = false;
+    this.deletePhoto.emit();
   }
 }

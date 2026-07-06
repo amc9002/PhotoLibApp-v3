@@ -1,0 +1,44 @@
+<div class="modal-backdrop" (click)="cancel.emit()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ title }}</h2>
+      <button class="modal-close" (click)="cancel.emit()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="gallery-picker-list">
+        <div
+          *ngFor="let g of galleries"
+          class="gallery-picker-item"
+          (click)="pick(g.id)"
+        >
+          {{ g.title }}
+        </div>
+
+        <div *ngIf="galleries.length === 0" class="gallery-picker-empty">
+          No other galleries yet
+        </div>
+      </div>
+
+      <div class="gallery-picker-new">
+        <input
+          type="text"
+          placeholder="Or create a new gallery…"
+          [(ngModel)]="newTitle"
+          (keyup.enter)="submitNew()"
+        />
+        <button
+          class="btn secondary"
+          [disabled]="!newTitle.trim() || isBusy"
+          (click)="submitNew()"
+        >
+          {{ isBusy ? "Working…" : "Create & " + actionLabel }}
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="cancel.emit()">Cancel</button>
+    </div>
+  </div>
+</div>

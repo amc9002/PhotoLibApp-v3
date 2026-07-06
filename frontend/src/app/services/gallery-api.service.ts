@@ -22,7 +22,15 @@ export class GalleryApiService {
     return this.api.post<GalleryDto>('Gallery', dto);
   }
 
+  update(id: string, dto: { title: string; description?: string }) {
+    return this.api.put<void>(`Gallery/${id}`, dto);
+  }
+
   delete(id: string) {
-    return this.api.delete<void>(`galleries/${id}`);
+    return this.api.delete<void>(`Gallery/${id}`);
+  }
+
+  setTags(id: string, tagNames: string[]) {
+    return this.api.put<string[]>(`Gallery/${id}/tags`, { tagNames });
   }
 }

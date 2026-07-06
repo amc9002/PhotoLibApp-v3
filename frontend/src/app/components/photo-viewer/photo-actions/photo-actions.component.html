@@ -6,14 +6,45 @@
   <button
     class="photo-action-btn"
     aria-label="Photo actions"
-    (click)="toggleMenu()"
+    (click)="toggleMenu(); $event.stopPropagation()"
   >
     ⋮
   </button>
 
   <div class="photo-action-menu" *ngIf="menuOpen">
-    <button class="photo-action-item" (click)="onEditMetadataClick()">
+    <button
+      class="photo-action-item"
+      (click)="onEditMetadataClick(); $event.stopPropagation()"
+    >
       Edit info
+    </button>
+
+    <button
+      class="photo-action-item"
+      (click)="onShowInfoClick(); $event.stopPropagation()"
+    >
+      Photo info
+    </button>
+
+    <button
+      class="photo-action-item"
+      (click)="onCopyClick(); $event.stopPropagation()"
+    >
+      Copy to gallery
+    </button>
+
+    <button
+      class="photo-action-item"
+      (click)="onMoveClick(); $event.stopPropagation()"
+    >
+      Move to gallery
+    </button>
+
+    <button
+      class="photo-action-item danger"
+      (click)="onDeleteClick(); $event.stopPropagation()"
+    >
+      Delete photo
     </button>
   </div>
 </div>
