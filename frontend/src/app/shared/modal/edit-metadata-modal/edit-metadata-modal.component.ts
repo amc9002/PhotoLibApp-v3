@@ -29,6 +29,7 @@ export class EditMetadataModalComponent implements OnInit {
   @Input() description = '';
   @Input() tags: string[] = [];
   @Input() isSaving = false;
+  @Input() saveError: string | null = null;
 
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<{
@@ -40,14 +41,37 @@ export class EditMetadataModalComponent implements OnInit {
   tagsText = '';
   availableTags: string[] = [];
 
+  private initialTitle = '';
+  private initialDescription = '';
+  private initialTags: string[] = [];
+
   constructor(private tagApi: TagApiService) {}
 
   ngOnInit() {
     this.tagsText = this.tags.join(', ');
+    this.initialTitle = this.title;
+    this.initialDescription = this.description;
+    this.initialTags = [...this.tags];
+
     this.tagApi.getAll().subscribe({
       next: (tags) => (this.availableTags = tags.map((t) => t.name)),
       error: () => {},
     });
+  }
+
+  get isDirty(): boolean {
+    return (
+      this.title !== this.initialTitle ||
+      this.description !== this.initialDescription ||
+      !this.sameTags(parseTagsInput(this.tagsText), this.initialTags)
+    );
+  }
+
+  private sameTags(a: string[], b: string[]): boolean {
+    if (a.length !== b.length) return false;
+    const sortedA = [...a].sort();
+    const sortedB = [...b].sort();
+    return sortedA.every((tag, i) => tag === sortedB[i]);
   }
 
   @HostListener('keydown.escape')

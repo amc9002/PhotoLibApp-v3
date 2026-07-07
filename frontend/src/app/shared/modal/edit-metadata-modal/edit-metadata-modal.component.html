@@ -43,9 +43,15 @@
       </div>
     </div>
 
+    <div class="form-error" *ngIf="saveError">{{ saveError }}</div>
+
     <div class="modal-footer" appButtonGroupNav>
       <button class="btn secondary" (click)="close.emit()">Cancel</button>
-      <button class="btn primary" [disabled]="isSaving" (click)="onSave()">
+      <button
+        class="btn primary"
+        [disabled]="isSaving || !isDirty"
+        (click)="onSave()"
+      >
         {{ isSaving ? "Saving…" : "Save" }}
       </button>
     </div>

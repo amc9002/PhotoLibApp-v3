@@ -32,3 +32,9 @@ button:disabled {
   cursor: not-allowed;
   pointer-events: none;
 }
+
+.form-error {
+  color: #ff6b6b;
+  font-size: 12px;
+  margin: -4px 0 12px;
+}

@@ -40,6 +40,7 @@ export class PhotoViewerComponent implements OnDestroy {
   photoMenuOpen = false;
   editMetadataOpen = false;
   isSavingMetadata = false;
+  metadataSaveError: string | null = null;
   infoOpen = false;
   infoPhoto?: PhotoDto;
 
@@ -121,6 +122,7 @@ export class PhotoViewerComponent implements OnDestroy {
   }
 
   openEditMetadata() {
+    this.metadataSaveError = null;
     this.editMetadataOpen = true;
   }
 
@@ -147,6 +149,7 @@ export class PhotoViewerComponent implements OnDestroy {
       return;
     }
     this.isSavingMetadata = true;
+    this.metadataSaveError = null;
 
     forkJoin([
       this.photoApi.update(this.activePhotoId, data),
@@ -160,6 +163,7 @@ export class PhotoViewerComponent implements OnDestroy {
       error: (err) => {
         console.error('Failed to update photo metadata', err);
         this.isSavingMetadata = false;
+        this.metadataSaveError = 'Failed to save changes. Please try again.';
       },
     });
   }

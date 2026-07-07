@@ -32,16 +32,25 @@ namespace PhotoLibApi.Controllers
         /// <response code="200">A list of galleries belonging to the user.</response>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<Gallery>>> GetAll()
+        public async Task<IActionResult> GetAll()
         {
             // simple owner resolution: use authenticated user name or null for local testing
             var ownerId = User?.Identity?.Name;
 
             var galleries = await _db.Galleries
                 .AsNoTracking()
-                .Include(g => g.Tags)
                 .Where(g => g.OwnerId == ownerId && !g.IsDeleted)
                 .OrderBy(g => g.CreatedAtUtc)
+                .Select(g => new
+                {
+                    g.Id,
+                    g.Title,
+                    g.Description,
+                    g.IsDeleted,
+                    g.CreatedAtUtc,
+                    g.UpdatedAtUtc,
+                    Tags = g.Tags.Select(t => t.Name)
+                })
                 .ToListAsync();
 
             return Ok(galleries);

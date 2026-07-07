@@ -64,6 +64,7 @@
     *ngIf="editMetadataOpen"
     heading="Edit details"
     [isSaving]="isSavingMetadata"
+    [saveError]="metadataSaveError"
     [title]="photo.title"
     [description]="photo.description ?? ''"
     [tags]="photo.tags"

@@ -12,6 +12,7 @@ import { GalleryPageComponent } from './components/gallery-page/gallery-page.com
 import { ConfirmModalComponent } from './shared/modal/confirm-modal/confirm-modal.component';
 import { EditMetadataModalComponent } from './shared/modal/edit-metadata-modal/edit-metadata-modal.component';
 import { PhotoSelectionService } from './services/photo-selection.service';
+import { ThumbnailSizeService } from './services/thumbnail-size.service';
 
 @Component({
   selector: 'app-root',
@@ -42,6 +43,7 @@ export class AppComponent implements OnInit {
     private galleryApi: GalleryApiService,
     private photoApi: PhotoApiService,
     public photoSelection: PhotoSelectionService,
+    private thumbnailSize: ThumbnailSizeService,
   ) {}
 
   ngOnInit(): void {
@@ -57,6 +59,7 @@ export class AppComponent implements OnInit {
 
     setTimeout(() => {
       this.selectedGallery = gallery;
+      this.thumbnailSize.setGallery(gallery.id);
     });
   }
 
@@ -117,6 +120,7 @@ export class AppComponent implements OnInit {
       next: (gallery) => {
         this.galleries = [...this.galleries, gallery];
         this.selectedGallery = gallery;
+        this.thumbnailSize.setGallery(gallery.id);
         this.showCreateGallery = false;
       },
       error: (err) => {
@@ -160,6 +164,7 @@ export class AppComponent implements OnInit {
       next: () => {
         this.galleries = this.galleries.filter((g) => g.id !== galleryId);
         this.selectedGallery = undefined;
+        this.thumbnailSize.setGallery(null);
         this.isDeletingGallery = false;
         this.deleteGalleryConfirmOpen = false;
       },
@@ -172,9 +177,11 @@ export class AppComponent implements OnInit {
 
   editGalleryOpen = false;
   isSavingGallery = false;
+  gallerySaveError: string | null = null;
 
   openEditGallery() {
     if (!this.selectedGallery) return;
+    this.gallerySaveError = null;
     this.editGalleryOpen = true;
   }
 
@@ -187,6 +194,7 @@ export class AppComponent implements OnInit {
 
     const galleryId = this.selectedGallery.id;
     this.isSavingGallery = true;
+    this.gallerySaveError = null;
 
     forkJoin([
       this.galleryApi.update(galleryId, data),
@@ -211,6 +219,7 @@ export class AppComponent implements OnInit {
       error: (err) => {
         console.error('update gallery error:', err);
         this.isSavingGallery = false;
+        this.gallerySaveError = 'Failed to save changes. Please try again.';
       },
     });
   }
