@@ -12,6 +12,11 @@ namespace PhotoLibApi.Models
         /// </summary>
         [Required]
         public string Title { get; set; } = "";
+
+        /// <summary>
+        /// Optional client-generated id for idempotent offline-sync replay.
+        /// </summary>
+        public string? ClientTempId { get; set; }
     }
 }
 

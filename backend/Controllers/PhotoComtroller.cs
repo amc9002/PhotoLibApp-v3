@@ -62,6 +62,7 @@ namespace PhotoLibApi.Controllers
                     p.Id,
                     p.Title,
                     p.HasThumbnail,
+                    p.UpdatedAtUtc,
                     Tags = p.Tags.Select(t => t.Name)
                 })
                 .ToListAsync();
@@ -237,12 +238,26 @@ namespace PhotoLibApi.Controllers
             if (!await GalleryExistsAsync(request.GalleryId))
                 return NotFound($"Gallery with id '{request.GalleryId}' not found.");
 
+            // Idempotent replay: a sync retry with the same ClientTempId
+            // returns the row that already exists instead of duplicating it.
+            if (!string.IsNullOrEmpty(request.ClientTempId))
+            {
+                var existing = await _db.Photos.FirstOrDefaultAsync(p =>
+                    p.GalleryId == request.GalleryId &&
+                    p.ClientTempId == request.ClientTempId &&
+                    !p.IsDeleted);
+
+                if (existing != null)
+                    return StatusCode(StatusCodes.Status201Created, existing);
+            }
+
             var photo = new Photo
             {
                 Id = Guid.NewGuid(),
                 GalleryId = request.GalleryId,
                 Title = request.Title,
                 Description = request.Description,
+                ClientTempId = request.ClientTempId,
                 CreatedAtUtc = DateTime.UtcNow,
                 SortOrder = await NextSortOrderAsync(request.GalleryId),
             };

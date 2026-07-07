@@ -1,0 +1,101 @@
+.modal.sync-review-modal {
+  width: 480px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-body {
+  overflow-y: auto;
+}
+
+.sync-intro {
+  margin: 0 0 16px;
+  color: #aaa;
+  font-size: 13px;
+}
+
+.sync-section {
+  margin-bottom: 20px;
+}
+
+.sync-section h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #999;
+}
+
+.sync-section h3.conflict-heading {
+  color: #f5a623;
+}
+
+.sync-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: #999;
+}
+
+.sync-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #333;
+}
+
+.sync-item:last-child {
+  border-bottom: none;
+}
+
+.sync-item ::ng-deep app-photo-thumbnail {
+  display: block;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #2a2a2a;
+}
+
+.sync-item ::ng-deep app-photo-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sync-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sync-item-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.conflict-reason {
+  font-size: 11px;
+  color: #f5a623;
+}
+
+.sync-item-actions {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.sync-item.conflict {
+  background: rgba(245, 166, 35, 0.08);
+  border-radius: 6px;
+  padding: 8px;
+}

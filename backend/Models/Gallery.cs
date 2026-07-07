@@ -38,6 +38,13 @@ namespace PhotoLibApi.Models
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
         /// <summary>
+        /// Client-generated identifier used to make offline-queued creates
+        /// idempotent: replaying the same create twice (e.g. after a sync
+        /// retry) returns the existing row instead of inserting a duplicate.
+        /// </summary>
+        public string? ClientTempId { get; set; }
+
+        /// <summary>
         /// Manual display order among the user's galleries (ascending).
         /// New galleries are appended after the current highest value;
         /// drag-and-drop reordering rewrites this for the affected galleries.

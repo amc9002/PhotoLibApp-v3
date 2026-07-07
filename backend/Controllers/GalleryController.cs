@@ -146,6 +146,13 @@ namespace PhotoLibApi.Controllers
         /// <summary>
         /// Returns gallery metadata by identifier.
         /// </summary>
+        /// <remarks>
+        /// Unlike the list endpoints, this does not filter out soft-deleted
+        /// galleries - it returns the row with <c>isDeleted: true</c>
+        /// instead, matching <see cref="PhotoController.GetById"/>. Offline
+        /// sync's conflict check relies on being able to tell "deleted"
+        /// apart from "never existed" for both entity types the same way.
+        /// </remarks>
         /// <param name="id">Gallery identifier.</param>
         /// <response code="200">Gallery metadata returned.</response>
         /// <response code="404">Gallery not found.</response>
@@ -158,7 +165,7 @@ namespace PhotoLibApi.Controllers
 
             var gallery = await _db.Galleries
                 .AsNoTracking()
-                .Where(g => g.Id == id && g.OwnerId == ownerId && !g.IsDeleted)
+                .Where(g => g.Id == id && g.OwnerId == ownerId)
                 .Select(g => new
                 {
                     g.Id,
@@ -166,6 +173,7 @@ namespace PhotoLibApi.Controllers
                     g.Description,
                     g.CreatedAtUtc,
                     g.UpdatedAtUtc,
+                    g.IsDeleted,
                     Tags = g.Tags.Select(t => t.Name)
                 })
                 .FirstOrDefaultAsync();
@@ -195,6 +203,21 @@ namespace PhotoLibApi.Controllers
                 return BadRequest(ModelState);
 
             var ownerId = User?.Identity?.Name;
+
+            // Idempotent replay: a sync retry with the same ClientTempId
+            // returns the row that already exists instead of duplicating it.
+            if (!string.IsNullOrEmpty(request.ClientTempId))
+            {
+                var existing = await _db.Galleries
+                    .FirstOrDefaultAsync(g =>
+                        g.OwnerId == ownerId &&
+                        g.ClientTempId == request.ClientTempId &&
+                        !g.IsDeleted);
+
+                if (existing != null)
+                    return StatusCode(StatusCodes.Status201Created, existing);
+            }
+
             var nextSortOrder = await _db.Galleries
                 .Where(g => g.OwnerId == ownerId)
                 .Select(g => (int?)g.SortOrder)
@@ -205,6 +228,7 @@ namespace PhotoLibApi.Controllers
                 Id = Guid.NewGuid(),
                 Title = request.Title,
                 OwnerId = ownerId,
+                ClientTempId = request.ClientTempId,
                 CreatedAtUtc = DateTime.UtcNow,
                 UpdatedAtUtc = DateTime.UtcNow,
                 SortOrder = nextSortOrder + 1,

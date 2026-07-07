@@ -3,5 +3,6 @@ export interface PhotoListItemDto {
   title: string;
   description?: string;
   hasThumbnail: boolean;
+  updatedAtUtc: string;
   tags: string[];
 }

@@ -12,8 +12,10 @@ import { GalleryPageComponent } from './components/gallery-page/gallery-page.com
 import { ConfirmModalComponent } from './shared/modal/confirm-modal/confirm-modal.component';
 import { EditMetadataModalComponent } from './shared/modal/edit-metadata-modal/edit-metadata-modal.component';
 import { AddFromInternetModalComponent } from './shared/modal/add-from-internet-modal/add-from-internet-modal.component';
+import { SyncReviewModalComponent } from './shared/modal/sync-review-modal/sync-review-modal.component';
 import { PhotoSelectionService } from './services/photo-selection.service';
 import { ThumbnailSizeService } from './services/thumbnail-size.service';
+import { SyncCoordinatorService } from './core/offline/sync-coordinator.service';
 
 @Component({
   selector: 'app-root',
@@ -27,6 +29,7 @@ import { ThumbnailSizeService } from './services/thumbnail-size.service';
     ConfirmModalComponent,
     EditMetadataModalComponent,
     AddFromInternetModalComponent,
+    SyncReviewModalComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
@@ -46,9 +49,21 @@ export class AppComponent implements OnInit {
     private photoApi: PhotoApiService,
     public photoSelection: PhotoSelectionService,
     private thumbnailSize: ThumbnailSizeService,
+    private syncCoordinator: SyncCoordinatorService,
   ) {}
 
   ngOnInit(): void {
+    this.loadGalleries();
+
+    // Fires once a sync pass finishes, whether it ran in this tab or
+    // another one - refresh whatever's on screen either way.
+    this.syncCoordinator.syncCompleted$.subscribe(() => {
+      this.loadGalleries();
+      this.galleryPage?.refreshPhotos();
+    });
+  }
+
+  private loadGalleries(): void {
     this.galleryApi.getAll().subscribe({
       next: (g) => (this.galleries = g),
       error: (e) => console.error(e),
