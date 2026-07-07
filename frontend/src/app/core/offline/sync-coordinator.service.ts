@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Subject, filter, firstValueFrom, pairwise } from 'rxjs';
+import { BehaviorSubject, Subject, filter, firstValueFrom, pairwise, startWith } from 'rxjs';
 import { ApiService } from '../api/api.service';
 import { ConnectivityService } from './connectivity.service';
 import { LocalDbService } from './local-db.service';
@@ -42,8 +42,14 @@ export class SyncCoordinatorService {
     private localDb: LocalDbService,
     private api: ApiService,
   ) {
+    // `startWith(false)` makes the very first real emission behave like a
+    // transition too: a fresh page load that lands already-online (e.g. a
+    // reload right after reconnecting, before this tab ever ran a sync
+    // pass) still needs to notice a leftover outbox from a previous
+    // session, not just genuine offline->online flips within one session.
     this.connectivity.isOnline$
       .pipe(
+        startWith(false),
         pairwise(),
         filter(([wasOnline, isOnline]) => !wasOnline && isOnline),
       )
