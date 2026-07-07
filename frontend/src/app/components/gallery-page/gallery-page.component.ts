@@ -41,6 +41,7 @@ export class GalleryPageComponent {
 
   viewerOpen = false;
   viewerPhotoId?: string;
+  viewerAutoEdit = false;
 
   // delete (single photo from the viewer, or a bulk selection from the grid)
   deleteConfirmOpen = false;
@@ -59,14 +60,21 @@ export class GalleryPageComponent {
     public photoSelection: PhotoSelectionService,
   ) {}
 
-  openViewer(photoId: string) {
+  openViewer(photoId: string, autoEdit = false) {
     this.viewerPhotoId = photoId;
     this.viewerOpen = true;
+    this.viewerAutoEdit = autoEdit;
   }
 
   closeViewer() {
     this.viewerOpen = false;
     this.viewerPhotoId = undefined;
+    this.viewerAutoEdit = false;
+  }
+
+  /** Re-fetches this gallery's photos without a full page/view remount. */
+  refreshPhotos(onLoaded?: () => void) {
+    this.galleryView.refreshPhotos(() => onLoaded?.());
   }
 
   onPhotosLoaded(photos: PhotoListItemDto[]) {

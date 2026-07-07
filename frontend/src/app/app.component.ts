@@ -77,6 +77,7 @@ export class AppComponent implements OnInit {
     if (!input.files || !this.selectedGallery) return;
 
     const files = Array.from(input.files);
+    const singleFile = files.length === 1;
 
     files.forEach((file) => {
       this.photoApi
@@ -85,13 +86,14 @@ export class AppComponent implements OnInit {
           title: file.name,
         })
         .subscribe((photo) => {
-          console.log('Photo metadata created:', photo);
-
           this.photoApi.upload(photo.id, file).subscribe(() => {
-            console.log('File uploaded for photo:', photo.id);
-
-            // абнаўляем галерэю
-            this.selectGallery(this.selectedGallery!);
+            this.galleryPage?.refreshPhotos(() => {
+              // Only for a single upload - a batch would otherwise chain
+              // one edit modal after another.
+              if (singleFile) {
+                this.galleryPage?.openViewer(photo.id, true);
+              }
+            });
           });
         });
     });

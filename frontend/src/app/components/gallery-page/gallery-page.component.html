@@ -2,12 +2,14 @@
   [gallery]="gallery"
   (photoSelected)="openViewer($event)"
   (photosLoaded)="onPhotosLoaded($event)"
+  (singleNewPhotoDetected)="openViewer($event, true)"
 ></app-gallery-view>
 
 <app-photo-viewer
   *ngIf="viewerOpen && viewerPhotoId"
   [photos]="photos"
   [activePhotoId]="viewerPhotoId"
+  [openEditOnLoad]="viewerAutoEdit"
   (close)="closeViewer()"
   (photoSelected)="openViewer($event)"
   (requestDelete)="openDeleteConfirm($event)"

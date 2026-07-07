@@ -26,6 +26,8 @@ export class GalleryViewComponent implements OnChanges {
   @Input() gallery!: Gallery;
   @Output() photoSelected = new EventEmitter<string>();
   @Output() photosLoaded = new EventEmitter<PhotoListItemDto[]>();
+  /** Fires when a background refresh finds exactly one photo that wasn't there before. */
+  @Output() singleNewPhotoDetected = new EventEmitter<string>();
 
   photos: PhotoListItemDto[] = [];
 
@@ -44,18 +46,33 @@ export class GalleryViewComponent implements OnChanges {
   // Photos can be added from outside the app (the "Add from internet"
   // bookmarklet posts straight to the API from a page/popup we don't
   // control), so refresh whenever the tab becomes visible again rather
-  // than requiring a manual gallery switch to notice new photos.
+  // than requiring a manual gallery switch to notice new photos. If that
+  // refresh turns up exactly one new photo, offer to edit it right away -
+  // the same way a single disk upload does.
   @HostListener('document:visibilitychange')
   onVisibilityChange() {
-    if (document.visibilityState === 'visible' && this.gallery?.id) {
-      this.loadPhotos();
-    }
+    if (document.visibilityState !== 'visible' || !this.gallery?.id) return;
+
+    const previousIds = new Set(this.photos.map((p) => p.id));
+
+    this.loadPhotos((photos) => {
+      const newOnes = photos.filter((p) => !previousIds.has(p.id));
+      if (newOnes.length === 1) {
+        this.singleNewPhotoDetected.emit(newOnes[0].id);
+      }
+    });
   }
 
-  private loadPhotos() {
+  /** Re-fetches this gallery's photos without tearing down the component tree. */
+  refreshPhotos(onLoaded?: (photos: PhotoListItemDto[]) => void) {
+    this.loadPhotos(onLoaded);
+  }
+
+  private loadPhotos(onLoaded?: (photos: PhotoListItemDto[]) => void) {
     this.photoApi.getByGallery(this.gallery.id).subscribe((photos) => {
       this.photos = photos.slice().reverse();
       this.photosLoaded.emit(this.photos);
+      onLoaded?.(this.photos);
     });
   }
 

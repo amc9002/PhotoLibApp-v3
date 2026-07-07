@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { PhotoListItemDto } from '../../models/photoLisrItem.dto';
@@ -25,9 +25,11 @@ import { PhotoDto } from '../../models/photo.dto';
   templateUrl: './photo-viewer.component.html',
   styleUrls: ['./photo-viewer.component.css'],
 })
-export class PhotoViewerComponent implements OnDestroy {
+export class PhotoViewerComponent implements OnInit, OnDestroy {
   @Input({ required: true }) photos!: PhotoListItemDto[];
   @Input({ required: true }) activePhotoId!: string;
+  /** Opens the edit-details modal as soon as the viewer loads, e.g. right after a single upload. */
+  @Input() openEditOnLoad = false;
 
   @Output() close = new EventEmitter<void>();
   @Output() photoSelected = new EventEmitter<string>();
@@ -94,6 +96,12 @@ export class PhotoViewerComponent implements OnDestroy {
   }
 
   constructor(private photoApi: PhotoApiService) {}
+
+  ngOnInit() {
+    if (this.openEditOnLoad) {
+      this.openEditMetadata();
+    }
+  }
 
   ngOnDestroy() {
     if (this.hideControlsTimer) {
