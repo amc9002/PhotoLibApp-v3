@@ -15,6 +15,7 @@
       [selectedGallery]="selectedGallery"
       (newGallery)="openCreateGallery()"
       (addPhotos)="openFilePicker()"
+      (addFromInternet)="openAddFromInternet()"
       (properties)="openGalleryProperties()"
       (deleteGallery)="openDeleteGalleryConfirm()"
       (editGallery)="openEditGallery()"
@@ -81,3 +82,10 @@
   (save)="saveGalleryEdit($event)"
   (close)="closeEditGallery()"
 ></app-edit-metadata-modal>
+
+<app-add-from-internet-modal
+  *ngIf="showAddFromInternet && selectedGallery"
+  [galleryId]="selectedGallery.id"
+  [galleryTitle]="selectedGallery.title"
+  (close)="closeAddFromInternet()"
+></app-add-from-internet-modal>

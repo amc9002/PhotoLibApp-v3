@@ -11,6 +11,7 @@ import { PhotoListItemDto } from './models/photoLisrItem.dto';
 import { GalleryPageComponent } from './components/gallery-page/gallery-page.component';
 import { ConfirmModalComponent } from './shared/modal/confirm-modal/confirm-modal.component';
 import { EditMetadataModalComponent } from './shared/modal/edit-metadata-modal/edit-metadata-modal.component';
+import { AddFromInternetModalComponent } from './shared/modal/add-from-internet-modal/add-from-internet-modal.component';
 import { PhotoSelectionService } from './services/photo-selection.service';
 import { ThumbnailSizeService } from './services/thumbnail-size.service';
 
@@ -25,6 +26,7 @@ import { ThumbnailSizeService } from './services/thumbnail-size.service';
     CreateGalleryComponent,
     ConfirmModalComponent,
     EditMetadataModalComponent,
+    AddFromInternetModalComponent,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
@@ -103,6 +105,17 @@ export class AppComponent implements OnInit {
 
   closeGalleryProperties() {
     this.showGalleryProperties = false;
+  }
+
+  showAddFromInternet = false;
+
+  openAddFromInternet() {
+    if (!this.selectedGallery) return;
+    this.showAddFromInternet = true;
+  }
+
+  closeAddFromInternet() {
+    this.showAddFromInternet = false;
   }
 
   showCreateGallery = false;

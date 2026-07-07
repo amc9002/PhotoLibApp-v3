@@ -94,6 +94,13 @@
 
       <div
         class="service-menu-item"
+        (click)="onAddFromInternet(); $event.stopPropagation()"
+      >
+        Add from internet
+      </div>
+
+      <div
+        class="service-menu-item"
         (click)="onNewGallery(); $event.stopPropagation()"
       >
         New gallery

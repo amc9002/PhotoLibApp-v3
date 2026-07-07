@@ -25,6 +25,7 @@ export class ToolbarComponent {
   @Input() layout: 'left' | 'right' = 'left';
   @Output() gallerySelected = new EventEmitter<Gallery>();
   @Output() addPhotos = new EventEmitter<void>();
+  @Output() addFromInternet = new EventEmitter<void>();
   @Output() properties = new EventEmitter<void>();
   @Output() newGallery = new EventEmitter<void>();
   @Output() deleteGallery = new EventEmitter<void>();
@@ -63,6 +64,12 @@ export class ToolbarComponent {
   onAddPhotos() {
     this.closeServiceMenu();
     this.addPhotos.emit();
+  }
+
+  onAddFromInternet() {
+    this.closeServiceMenu();
+    if (!this.selectedGallery) return;
+    this.addFromInternet.emit();
   }
 
   onNewGallery() {

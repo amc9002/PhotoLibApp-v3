@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhotoLibApi.Data;
@@ -15,15 +16,24 @@ namespace PhotoLibApi.Controllers
     [Route("api/[controller]")]
     public class PhotoController : ControllerBase
     {
+        /// <summary>Upper bound on how many bytes a from-url download may use.</summary>
+        private const long MaxDownloadBytes = 25 * 1024 * 1024;
+
         private readonly PhotoDbContext _db;
         private readonly PhotoFilePathHelper _filePathHelper;
         private readonly TagResolver _tagResolver;
+        private readonly IHttpClientFactory _httpClientFactory;
 
 
-        public PhotoController(PhotoDbContext db, IConfiguration configuration, TagResolver tagResolver)
+        public PhotoController(
+            PhotoDbContext db,
+            IConfiguration configuration,
+            TagResolver tagResolver,
+            IHttpClientFactory httpClientFactory)
         {
             _db = db;
             _tagResolver = tagResolver;
+            _httpClientFactory = httpClientFactory;
 
             var photosRoot = Path.Combine(
                 Directory.GetCurrentDirectory(),
@@ -285,29 +295,7 @@ namespace PhotoLibApi.Controllers
                 // mark original as existing
                 photo.HasOriginal = true;
 
-                // Generate and save thumbnail
-                Directory.CreateDirectory(_filePathHelper.GetThumbnailsDirectory());
-                var thumbnailPath = _filePathHelper.GetThumbnailFilePath(id);
-                // Generate thumbnail
-                using (var image = Image.Load(filePath))
-                {
-                    image.Mutate(x => x.Resize(new ResizeOptions
-                    {
-                        Size = new Size(300, 300),
-                        Mode = ResizeMode.Max
-                    }));
-
-                    image.Save(thumbnailPath);
-                }
-
-                // mark thumbnail as existing
-                photo.HasThumbnail = true;
-
-                // Read EXIF metadata (camera info, date, GPS location) from the original file
-                var exif = ExifReader.Read(filePath);
-                photo.ExifJson = exif.Json;
-                photo.Latitude = exif.Latitude;
-                photo.Longitude = exif.Longitude;
+                GenerateThumbnailAndExif(photo, filePath);
 
                 await _db.SaveChangesAsync();
 
@@ -318,6 +306,202 @@ namespace PhotoLibApi.Controllers
                 return StatusCode(500, ex.Message);
             }
 
+        }
+
+        /// <summary>
+        /// Same-origin relay page for the "Add from internet" bookmarklet.
+        /// </summary>
+        /// <remarks>
+        /// The bookmarklet opens this as a popup instead of calling
+        /// from-url directly from the source page's script context, because
+        /// some sites (e.g. Facebook) set a Content-Security-Policy that
+        /// blocks a page from fetching arbitrary third-party hosts. This
+        /// page's own script runs on this app's origin, so it isn't subject
+        /// to the source page's CSP; it posts to from-url and reports the
+        /// result, then closes itself on success.
+        /// The image URL is rendered into an HTML data attribute (HTML-encoded)
+        /// rather than interpolated into inline script, so it can't be used
+        /// to break out into a script context.
+        /// </remarks>
+        [HttpGet("capture")]
+        public ContentResult Capture([FromQuery] string imageUrl, [FromQuery] Guid galleryId)
+        {
+            var encodedImageUrl = System.Net.WebUtility.HtmlEncode(imageUrl ?? "");
+
+            const string template = """
+                <!doctype html>
+                <html>
+                <head>
+                <meta charset="utf-8">
+                <title>PhotoLib</title>
+                <style>
+                  body {
+                    font-family: system-ui, sans-serif;
+                    background: #1a1a1a;
+                    color: #eee;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    margin: 0;
+                    font-size: 14px;
+                    text-align: center;
+                  }
+                </style>
+                </head>
+                <body>
+                <div id="status" data-image-url="__IMAGE_URL__" data-gallery-id="__GALLERY_ID__">
+                  Adding photo…
+                </div>
+                <script>
+                (function () {
+                  var el = document.getElementById('status');
+                  var imageUrl = el.getAttribute('data-image-url');
+                  var galleryId = el.getAttribute('data-gallery-id');
+
+                  fetch('/api/Photo/from-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ galleryId: galleryId, imageUrl: imageUrl })
+                  })
+                    .then(function (r) {
+                      el.textContent = r.ok ? 'Added ✓' : ('Failed: HTTP ' + r.status);
+                      if (r.ok) setTimeout(function () { window.close(); }, 900);
+                    })
+                    .catch(function () {
+                      el.textContent = 'Network error — is the app running?';
+                    });
+                })();
+                </script>
+                </body>
+                </html>
+                """;
+
+            // Substitute the safe (Guid-shaped) token first so that, even in
+            // the ultra-unlikely case where the encoded image URL itself
+            // contains the literal placeholder text, it can't be re-matched
+            // by a later replacement.
+            var html = template
+                .Replace("__GALLERY_ID__", galleryId.ToString())
+                .Replace("__IMAGE_URL__", encodedImageUrl);
+
+            return Content(html, "text/html");
+        }
+
+        /// <summary>
+        /// Creates a photo by downloading an image from a URL.
+        /// </summary>
+        /// <remarks>
+        /// Called by the capture relay page (see <see cref="Capture"/>).
+        /// Cross-origin CORS is enabled here too, in case a page's CSP
+        /// allows fetches but the popup was blocked and a caller posts to
+        /// this endpoint directly instead.
+        /// </remarks>
+        /// <param name="request">Destination gallery and image URL.</param>
+        /// <response code="201">Photo created and downloaded successfully.</response>
+        /// <response code="400">Invalid URL, or the URL did not return an image.</response>
+        /// <response code="404">Destination gallery not found.</response>
+        [HttpPost("from-url")]
+        [EnableCors("BookmarkletUpload")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> CreateFromUrl([FromBody] CreatePhotoFromUrlRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            if (!Uri.TryCreate(request.ImageUrl, UriKind.Absolute, out var uri) ||
+                (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            {
+                return BadRequest("imageUrl must be an absolute http(s) URL.");
+            }
+
+            if (!await GalleryExistsAsync(request.GalleryId))
+                return NotFound($"Gallery with id '{request.GalleryId}' not found.");
+
+            var client = _httpClientFactory.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(15);
+            // Some hosts (e.g. Wikimedia) reject requests with no User-Agent.
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("PhotoLibApp/1.0 (+http://localhost)");
+
+            HttpResponseMessage response;
+            try
+            {
+                response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead);
+            }
+            catch (Exception)
+            {
+                return BadRequest("Could not download the image from the given URL.");
+            }
+
+            if (!response.IsSuccessStatusCode)
+                return BadRequest($"The source returned HTTP {(int)response.StatusCode}.");
+
+            var contentType = response.Content.Headers.ContentType?.MediaType;
+            if (contentType == null || !contentType.StartsWith("image/"))
+                return BadRequest("The URL does not point to an image.");
+
+            if (response.Content.Headers.ContentLength is long declaredLength &&
+                declaredLength > MaxDownloadBytes)
+            {
+                return BadRequest("Image is too large.");
+            }
+
+            var bytes = await response.Content.ReadAsByteArrayAsync();
+            if (bytes.Length == 0 || bytes.Length > MaxDownloadBytes)
+                return BadRequest("Image is empty or too large.");
+
+            var fileName = Path.GetFileName(uri.LocalPath);
+            var photo = new Photo
+            {
+                Id = Guid.NewGuid(),
+                GalleryId = request.GalleryId,
+                Title = !string.IsNullOrWhiteSpace(request.Title)
+                    ? request.Title!
+                    : (!string.IsNullOrWhiteSpace(fileName) ? fileName : "Untitled"),
+                CreatedAtUtc = DateTime.UtcNow,
+            };
+
+            Directory.CreateDirectory(_filePathHelper.GetOriginalsDirectory());
+            var filePath = _filePathHelper.GetOriginalFilePath(photo.Id);
+            await System.IO.File.WriteAllBytesAsync(filePath, bytes);
+            photo.HasOriginal = true;
+
+            GenerateThumbnailAndExif(photo, filePath);
+
+            _db.Photos.Add(photo);
+            await _db.SaveChangesAsync();
+
+            return StatusCode(StatusCodes.Status201Created, photo);
+        }
+
+        /// <summary>
+        /// Generates a thumbnail and reads EXIF metadata for an original file
+        /// already saved on disk, updating the given photo's flags in place.
+        /// </summary>
+        private void GenerateThumbnailAndExif(Photo photo, string originalFilePath)
+        {
+            Directory.CreateDirectory(_filePathHelper.GetThumbnailsDirectory());
+            var thumbnailPath = _filePathHelper.GetThumbnailFilePath(photo.Id);
+
+            using (var image = Image.Load(originalFilePath))
+            {
+                image.Mutate(x => x.Resize(new ResizeOptions
+                {
+                    Size = new Size(300, 300),
+                    Mode = ResizeMode.Max
+                }));
+
+                image.Save(thumbnailPath);
+            }
+
+            photo.HasThumbnail = true;
+
+            var exif = ExifReader.Read(originalFilePath);
+            photo.ExifJson = exif.Json;
+            photo.Latitude = exif.Latitude;
+            photo.Longitude = exif.Longitude;
         }
 
         /// <summary>

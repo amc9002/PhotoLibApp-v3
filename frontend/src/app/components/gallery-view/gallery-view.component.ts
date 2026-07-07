@@ -1,6 +1,7 @@
 import {
   Component,
   EventEmitter,
+  HostListener,
   Input,
   OnChanges,
   Output,
@@ -36,6 +37,17 @@ export class GalleryViewComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['gallery'] && this.gallery?.id) {
       this.photoSelection.clear();
+      this.loadPhotos();
+    }
+  }
+
+  // Photos can be added from outside the app (the "Add from internet"
+  // bookmarklet posts straight to the API from a page/popup we don't
+  // control), so refresh whenever the tab becomes visible again rather
+  // than requiring a manual gallery switch to notice new photos.
+  @HostListener('document:visibilitychange')
+  onVisibilityChange() {
+    if (document.visibilityState === 'visible' && this.gallery?.id) {
       this.loadPhotos();
     }
   }
