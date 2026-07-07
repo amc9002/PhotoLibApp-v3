@@ -6,8 +6,18 @@
   >
     Галерэя ▼
   </button>
-  <div class="dropdown" *ngIf="dropdownOpen">
-    <div class="dropdown-item" *ngFor="let g of galleries" (click)="select(g)">
+  <div
+    class="dropdown"
+    *ngIf="dropdownOpen"
+    cdkDropList
+    (cdkDropListDropped)="onGalleryDropped($event)"
+  >
+    <div
+      class="dropdown-item"
+      *ngFor="let g of galleries"
+      cdkDrag
+      (click)="select(g)"
+    >
       {{ g.title }}
     </div>
 

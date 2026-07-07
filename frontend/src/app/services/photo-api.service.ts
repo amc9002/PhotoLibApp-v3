@@ -51,4 +51,8 @@ export class PhotoApiService {
   setTags(id: string, tagNames: string[]) {
     return this.api.put<string[]>(`Photo/${id}/tags`, { tagNames });
   }
+
+  reorder(galleryId: string, photoIds: string[]) {
+    return this.api.put<void>('Photo/reorder', { galleryId, photoIds });
+  }
 }

@@ -40,7 +40,7 @@ namespace PhotoLibApi.Controllers
             var galleries = await _db.Galleries
                 .AsNoTracking()
                 .Where(g => g.OwnerId == ownerId && !g.IsDeleted)
-                .OrderBy(g => g.CreatedAtUtc)
+                .OrderBy(g => g.SortOrder)
                 .Select(g => new
                 {
                     g.Id,
@@ -54,6 +54,41 @@ namespace PhotoLibApi.Controllers
                 .ToListAsync();
 
             return Ok(galleries);
+        }
+
+        /// <summary>
+        /// Persists a new drag-and-drop display order for the user's galleries.
+        /// </summary>
+        /// <param name="request">Gallery identifiers in the desired order.</param>
+        /// <response code="204">Order saved.</response>
+        /// <response code="400">Invalid request data.</response>
+        [HttpPut("reorder")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Reorder([FromBody] ReorderGalleriesRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var ownerId = User?.Identity?.Name;
+
+            var galleries = await _db.Galleries
+                .Where(g => g.OwnerId == ownerId && request.GalleryIds.Contains(g.Id))
+                .ToListAsync();
+
+            var galleryById = galleries.ToDictionary(g => g.Id);
+
+            for (var i = 0; i < request.GalleryIds.Count; i++)
+            {
+                if (galleryById.TryGetValue(request.GalleryIds[i], out var gallery))
+                {
+                    gallery.SortOrder = i;
+                }
+            }
+
+            await _db.SaveChangesAsync();
+
+            return NoContent();
         }
 
 #if DEBUG
@@ -159,13 +194,20 @@ namespace PhotoLibApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            var ownerId = User?.Identity?.Name;
+            var nextSortOrder = await _db.Galleries
+                .Where(g => g.OwnerId == ownerId)
+                .Select(g => (int?)g.SortOrder)
+                .MaxAsync() ?? -1;
+
             var gallery = new Gallery
             {
                 Id = Guid.NewGuid(),
                 Title = request.Title,
-                OwnerId = User?.Identity?.Name,
+                OwnerId = ownerId,
                 CreatedAtUtc = DateTime.UtcNow,
-                UpdatedAtUtc = DateTime.UtcNow
+                UpdatedAtUtc = DateTime.UtcNow,
+                SortOrder = nextSortOrder + 1,
             };
 
             _db.Galleries.Add(gallery);

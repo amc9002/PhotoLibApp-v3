@@ -17,6 +17,23 @@
 
 .photo-item {
   position: relative;
+  cursor: grab;
+}
+
+.photo-item.cdk-drag-preview {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  border-radius: 6px;
+  opacity: 0.9;
+  cursor: grabbing;
+}
+
+.photo-item.cdk-drag-placeholder {
+  opacity: 0.3;
+}
+
+.photo-item.cdk-drag-animating,
+.gallery-grid.cdk-drop-list-dragging .photo-item:not(.cdk-drag-placeholder) {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
 }
 
 .photo-item::after {

@@ -33,4 +33,8 @@ export class GalleryApiService {
   setTags(id: string, tagNames: string[]) {
     return this.api.put<string[]>(`Gallery/${id}/tags`, { tagNames });
   }
+
+  reorder(galleryIds: string[]) {
+    return this.api.put<void>('Gallery/reorder', { galleryIds });
+  }
 }

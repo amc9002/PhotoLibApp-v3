@@ -243,6 +243,12 @@ export class AppComponent implements OnInit {
     this.galleries = [...this.galleries, gallery];
   }
 
+  onGalleriesReordered(galleries: Gallery[]) {
+    this.galleryApi.reorder(galleries.map((g) => g.id)).subscribe({
+      error: (err) => console.error('Failed to save gallery order', err),
+    });
+  }
+
   onCopySelected() {
     this.galleryPage?.requestCopyOrMove(this.photoSelection.ids, 'copy');
   }

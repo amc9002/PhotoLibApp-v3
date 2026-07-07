@@ -7,6 +7,7 @@ import {
   Output,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { PhotoListItemDto } from '../../../models/photoLisrItem.dto';
 import { PhotoThumbnailComponent } from '../../../shared/ui/photo-thumbnail/photo-thumbnail.component';
 import { ThumbnailSizeService } from '../../../services/thumbnail-size.service';
@@ -17,13 +18,14 @@ const MIN_DRAG_DISTANCE = 4;
 @Component({
   selector: 'app-gallery-grid',
   standalone: true,
-  imports: [CommonModule, PhotoThumbnailComponent],
+  imports: [CommonModule, DragDropModule, PhotoThumbnailComponent],
   templateUrl: './gallery-grid.component.html',
   styleUrls: ['./gallery-grid.component.css'],
 })
 export class GalleryGridComponent {
   @Input({ required: true }) photos!: PhotoListItemDto[];
   @Output() photoClicked = new EventEmitter<string>();
+  @Output() photosReordered = new EventEmitter<PhotoListItemDto[]>();
   @Input() activePhotoId: string | null = null;
 
   dragging = false;
@@ -61,6 +63,13 @@ export class GalleryGridComponent {
 
   trackById(index: number, photo: PhotoListItemDto): string {
     return photo.id;
+  }
+
+  onPhotoDropped(event: CdkDragDrop<PhotoListItemDto[]>) {
+    if (event.previousIndex === event.currentIndex) return;
+
+    moveItemInArray(this.photos, event.previousIndex, event.currentIndex);
+    this.photosReordered.emit(this.photos);
   }
 
   onGridMouseDown(event: MouseEvent) {

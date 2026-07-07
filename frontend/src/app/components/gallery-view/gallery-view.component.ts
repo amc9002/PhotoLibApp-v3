@@ -80,6 +80,18 @@ export class GalleryViewComponent implements OnChanges {
     this.photoSelected.emit(photoId);
   }
 
+  onPhotosReordered(photos: PhotoListItemDto[]) {
+    // The API stores/returns chronological (ascending) order; this
+    // component displays the reverse of that (newest first), so the drop
+    // order has to be un-reversed before it's persisted - otherwise a
+    // drag-to-front would come back as drag-to-back after a reload.
+    const chronological = [...photos].reverse().map((p) => p.id);
+
+    this.photoApi.reorder(this.gallery.id, chronological).subscribe({
+      error: (err) => console.error('Failed to save photo order', err),
+    });
+  }
+
   removePhoto(photoId: string) {
     this.photos = this.photos.filter((p) => p.id !== photoId);
     this.photosLoaded.emit(this.photos);

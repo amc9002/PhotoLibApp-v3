@@ -38,6 +38,13 @@ namespace PhotoLibApi.Models
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
         /// <summary>
+        /// Manual display order among the user's galleries (ascending).
+        /// New galleries are appended after the current highest value;
+        /// drag-and-drop reordering rewrites this for the affected galleries.
+        /// </summary>
+        public int SortOrder { get; set; }
+
+        /// <summary>
         /// Marks the gallery as deleted without removing it from the database.
         /// </summary>
         public bool IsDeleted { get; set; } = false;

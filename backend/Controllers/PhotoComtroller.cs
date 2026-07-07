@@ -54,7 +54,7 @@ namespace PhotoLibApi.Controllers
             var photos = await _db.Photos
                 .AsNoTracking()
                 .Where(p => p.GalleryId == galleryId && !p.IsDeleted)
-                .OrderBy(p => p.CreatedAtUtc)
+                .OrderBy(p => p.SortOrder)
                 // Minimal projection for gallery view:
                 // only data required to render thumbnails list
                 .Select(p => new
@@ -243,7 +243,8 @@ namespace PhotoLibApi.Controllers
                 GalleryId = request.GalleryId,
                 Title = request.Title,
                 Description = request.Description,
-                CreatedAtUtc = DateTime.UtcNow
+                CreatedAtUtc = DateTime.UtcNow,
+                SortOrder = await NextSortOrderAsync(request.GalleryId),
             };
 
             _db.Photos.Add(photo);
@@ -461,6 +462,7 @@ namespace PhotoLibApi.Controllers
                     ? request.Title!
                     : (!string.IsNullOrWhiteSpace(fileName) ? fileName : "Untitled"),
                 CreatedAtUtc = DateTime.UtcNow,
+                SortOrder = await NextSortOrderAsync(request.GalleryId),
             };
 
             Directory.CreateDirectory(_filePathHelper.GetOriginalsDirectory());
@@ -586,6 +588,7 @@ namespace PhotoLibApi.Controllers
             if (!await GalleryExistsAsync(request.GalleryId))
                 return NotFound($"Gallery with id '{request.GalleryId}' not found.");
 
+            photo.SortOrder = await NextSortOrderAsync(request.GalleryId);
             photo.GalleryId = request.GalleryId;
             photo.UpdatedAtUtc = DateTime.UtcNow;
 
@@ -627,6 +630,7 @@ namespace PhotoLibApi.Controllers
                 ExifJson = source.ExifJson,
                 CreatedAtUtc = DateTime.UtcNow,
                 UpdatedAtUtc = DateTime.UtcNow,
+                SortOrder = await NextSortOrderAsync(request.GalleryId),
             };
 
             if (source.HasOriginal)
@@ -677,6 +681,39 @@ namespace PhotoLibApi.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Persists a new drag-and-drop display order for the photos within a gallery.
+        /// </summary>
+        /// <param name="request">Gallery and photo identifiers in the desired order.</param>
+        /// <response code="204">Order saved.</response>
+        /// <response code="400">Invalid request data.</response>
+        [HttpPut("reorder")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Reorder([FromBody] ReorderPhotosRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var photos = await _db.Photos
+                .Where(p => p.GalleryId == request.GalleryId && request.PhotoIds.Contains(p.Id))
+                .ToListAsync();
+
+            var photoById = photos.ToDictionary(p => p.Id);
+
+            for (var i = 0; i < request.PhotoIds.Count; i++)
+            {
+                if (photoById.TryGetValue(request.PhotoIds[i], out var photo))
+                {
+                    photo.SortOrder = i;
+                }
+            }
+
+            await _db.SaveChangesAsync();
+
+            return NoContent();
+        }
+
 #if DEBUG
         /// <summary>
         /// ADMIN: Permanently deletes a photo and its files.
@@ -711,6 +748,17 @@ namespace PhotoLibApi.Controllers
             return _db.Galleries
                 .AsNoTracking()
                 .AnyAsync(g => g.Id == galleryId && !g.IsDeleted);
+        }
+
+        /// <summary>The SortOrder a newly added/moved photo should get to land at the end of the gallery.</summary>
+        private async Task<int> NextSortOrderAsync(Guid galleryId)
+        {
+            var max = await _db.Photos
+                .Where(p => p.GalleryId == galleryId)
+                .Select(p => (int?)p.SortOrder)
+                .MaxAsync() ?? -1;
+
+            return max + 1;
         }
     }
 }

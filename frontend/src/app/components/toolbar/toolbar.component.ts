@@ -7,6 +7,7 @@ import {
   HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Gallery } from '../../models/gallery.model';
 import { ThumbnailSizeService } from '../../services/thumbnail-size.service';
 import { PhotoSelectionService } from '../../services/photo-selection.service';
@@ -14,7 +15,7 @@ import { PhotoSelectionService } from '../../services/photo-selection.service';
 @Component({
   selector: 'app-toolbar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DragDropModule],
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.css'],
 })
@@ -24,6 +25,7 @@ export class ToolbarComponent {
 
   @Input() layout: 'left' | 'right' = 'left';
   @Output() gallerySelected = new EventEmitter<Gallery>();
+  @Output() galleriesReordered = new EventEmitter<Gallery[]>();
   @Output() addPhotos = new EventEmitter<void>();
   @Output() addFromInternet = new EventEmitter<void>();
   @Output() properties = new EventEmitter<void>();
@@ -59,6 +61,13 @@ export class ToolbarComponent {
   select(gallery: Gallery) {
     this.gallerySelected.emit(gallery);
     this.dropdownOpen = false;
+  }
+
+  onGalleryDropped(event: CdkDragDrop<Gallery[]>) {
+    if (event.previousIndex === event.currentIndex) return;
+
+    moveItemInArray(this.galleries, event.previousIndex, event.currentIndex);
+    this.galleriesReordered.emit(this.galleries);
   }
 
   onAddPhotos() {

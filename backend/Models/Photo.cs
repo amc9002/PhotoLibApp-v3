@@ -78,6 +78,14 @@ namespace PhotoLibApi.Models
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
         /// <summary>
+        /// Manual display order among this photo's gallery siblings
+        /// (ascending). New photos are appended after the current highest
+        /// value within the gallery; drag-and-drop reordering rewrites this
+        /// for the affected photos.
+        /// </summary>
+        public int SortOrder { get; set; }
+
+        /// <summary>
         /// Timestamp of the latest update (in UTC).
         /// Used to detect changes during synchronization.
         /// </summary>

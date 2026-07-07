@@ -1,11 +1,15 @@
 <div
   class="gallery-grid"
+  cdkDropList
+  cdkDropListOrientation="mixed"
   [style.--thumb-size.px]="thumbnailSize.size"
   (mousedown)="onGridMouseDown($event)"
+  (cdkDropListDropped)="onPhotoDropped($event)"
 >
   <div
     class="photo-item"
     *ngFor="let photo of photos; trackBy: trackById"
+    cdkDrag
     [attr.data-title]="photo.title"
     [attr.data-photo-id]="photo.id"
     [class.active]="photo.id === activePhotoId"
