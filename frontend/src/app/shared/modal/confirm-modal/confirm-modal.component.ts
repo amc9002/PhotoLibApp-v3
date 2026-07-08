@@ -20,8 +20,11 @@ export class ConfirmModalComponent {
   @Output() confirm = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
 
-  @HostListener('keydown.escape')
-  onEscape() {
+  @HostListener('keydown.escape', ['$event'])
+  onEscape(event: KeyboardEvent) {
+    // Also rendered as a sibling of app-photo-viewer in some flows - stop
+    // propagation so Escape doesn't also close the viewer underneath.
+    event.stopPropagation();
     this.cancel.emit();
   }
 }

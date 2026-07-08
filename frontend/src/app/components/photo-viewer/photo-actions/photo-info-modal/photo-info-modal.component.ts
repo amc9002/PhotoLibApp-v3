@@ -29,8 +29,9 @@ export class PhotoInfoModalComponent implements OnChanges {
 
   constructor(private sanitizer: DomSanitizer) {}
 
-  @HostListener('keydown.escape')
-  onEscape() {
+  @HostListener('keydown.escape', ['$event'])
+  onEscape(event: KeyboardEvent) {
+    event.stopPropagation();
     this.close.emit();
   }
 

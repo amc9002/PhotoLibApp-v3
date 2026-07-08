@@ -48,7 +48,10 @@ export class PhotoApiService {
     return defer(() => from(this.resolveUpload(photoId, file)));
   }
 
-  update(id: string, dto: { title: string; description?: string }): Observable<PhotoDto | void> {
+  update(
+    id: string,
+    dto: { title: string; description?: string },
+  ): Observable<{ updatedAtUtc: string } | void> {
     return defer(() => from(this.resolveUpdate(id, dto)));
   }
 
@@ -161,11 +164,17 @@ export class PhotoApiService {
   private async resolveUpdate(
     id: string,
     dto: { title: string; description?: string },
-  ): Promise<PhotoDto | void> {
+  ): Promise<{ updatedAtUtc: string } | void> {
     if (this.connectivity.isOnline) {
       try {
-        const result = await firstValueFrom(this.api.put<PhotoDto>(`photo/${id}`, dto));
-        await this.patchMirroredPhoto(id, { title: dto.title, description: dto.description });
+        const result = await firstValueFrom(
+          this.api.put<{ updatedAtUtc: string }>(`photo/${id}`, dto),
+        );
+        await this.patchMirroredPhoto(id, {
+          title: dto.title,
+          description: dto.description,
+          updatedAtUtc: result.updatedAtUtc,
+        });
         return result;
       } catch (err) {
         if (!isConnectivityError(err)) throw err;
@@ -183,7 +192,7 @@ export class PhotoApiService {
 
     if (isPendingCreate) return;
 
-    await this.localDb.appendOutboxEntry({
+    await this.localDb.upsertOutboxEntry({
       type: 'update',
       entityType: 'photo',
       entityId: id,
@@ -252,7 +261,7 @@ export class PhotoApiService {
       return;
     }
 
-    await this.localDb.appendOutboxEntry({
+    await this.localDb.upsertOutboxEntry({
       type: 'move',
       entityType: 'photo',
       entityId: id,
@@ -298,9 +307,14 @@ export class PhotoApiService {
   private async resolveSetTags(id: string, tagNames: string[]): Promise<string[]> {
     if (this.connectivity.isOnline) {
       try {
-        const result = await firstValueFrom(this.api.put<string[]>(`Photo/${id}/tags`, { tagNames }));
-        await this.patchMirroredPhoto(id, { tags: result });
-        return result;
+        const result = await firstValueFrom(
+          this.api.put<{ tagNames: string[]; updatedAtUtc: string }>(`Photo/${id}/tags`, { tagNames }),
+        );
+        await this.patchMirroredPhoto(id, {
+          tags: result.tagNames,
+          updatedAtUtc: result.updatedAtUtc,
+        });
+        return result.tagNames;
       } catch (err) {
         if (!isConnectivityError(err)) throw err;
       }
@@ -312,7 +326,7 @@ export class PhotoApiService {
     await this.patchMirroredPhoto(id, { tags: tagNames }, isPendingCreate ? 'create' : 'update');
 
     if (!isPendingCreate) {
-      await this.localDb.appendOutboxEntry({
+      await this.localDb.upsertOutboxEntry({
         type: 'setTags',
         entityType: 'photo',
         entityId: id,

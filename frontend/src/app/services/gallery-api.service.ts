@@ -32,7 +32,10 @@ export class GalleryApiService {
     return defer(() => from(this.resolveCreate(dto)));
   }
 
-  update(id: string, dto: { title: string; description?: string }): Observable<void> {
+  update(
+    id: string,
+    dto: { title: string; description?: string },
+  ): Observable<{ updatedAtUtc: string } | void> {
     return defer(() => from(this.resolveUpdate(id, dto)));
   }
 
@@ -101,20 +104,25 @@ export class GalleryApiService {
     return draft;
   }
 
-  private async resolveUpdate(id: string, dto: { title: string; description?: string }): Promise<void> {
+  private async resolveUpdate(
+    id: string,
+    dto: { title: string; description?: string },
+  ): Promise<{ updatedAtUtc: string } | void> {
     if (this.connectivity.isOnline) {
       try {
-        await firstValueFrom(this.api.put<void>(`Gallery/${id}`, dto));
+        const result = await firstValueFrom(
+          this.api.put<{ updatedAtUtc: string }>(`Gallery/${id}`, dto),
+        );
         const existing = await this.localDb.getMirroredGallery(id);
         if (existing) {
           await this.localDb.upsertMirroredGallery({
             ...existing,
             title: dto.title,
             description: dto.description,
-            updatedAtUtc: new Date().toISOString(),
+            updatedAtUtc: result.updatedAtUtc,
           });
         }
-        return;
+        return result;
       } catch (err) {
         if (!isConnectivityError(err)) throw err;
       }
@@ -137,7 +145,7 @@ export class GalleryApiService {
     // place - no separate "update" to replay once it's eventually created.
     if (isPendingCreate) return;
 
-    await this.localDb.appendOutboxEntry({
+    await this.localDb.upsertOutboxEntry({
       type: 'update',
       entityType: 'gallery',
       entityId: id,
@@ -182,13 +190,17 @@ export class GalleryApiService {
     if (this.connectivity.isOnline) {
       try {
         const result = await firstValueFrom(
-          this.api.put<string[]>(`Gallery/${id}/tags`, { tagNames }),
+          this.api.put<{ tagNames: string[]; updatedAtUtc: string }>(`Gallery/${id}/tags`, { tagNames }),
         );
         const existing = await this.localDb.getMirroredGallery(id);
         if (existing) {
-          await this.localDb.upsertMirroredGallery({ ...existing, tags: result });
+          await this.localDb.upsertMirroredGallery({
+            ...existing,
+            tags: result.tagNames,
+            updatedAtUtc: result.updatedAtUtc,
+          });
         }
-        return result;
+        return result.tagNames;
       } catch (err) {
         if (!isConnectivityError(err)) throw err;
       }
@@ -203,7 +215,7 @@ export class GalleryApiService {
     );
 
     if (!isPendingCreate) {
-      await this.localDb.appendOutboxEntry({
+      await this.localDb.upsertOutboxEntry({
         type: 'setTags',
         entityType: 'gallery',
         entityId: id,

@@ -74,8 +74,12 @@ export class EditMetadataModalComponent implements OnInit {
     return sortedA.every((tag, i) => tag === sortedB[i]);
   }
 
-  @HostListener('keydown.escape')
-  onEscape() {
+  @HostListener('keydown.escape', ['$event'])
+  onEscape(event: KeyboardEvent) {
+    // Stop the key from bubbling to any window/document-level shortcut
+    // handler (e.g. the photo viewer's Escape-to-close) - only this modal
+    // should react to it.
+    event.stopPropagation();
     this.close.emit();
   }
 

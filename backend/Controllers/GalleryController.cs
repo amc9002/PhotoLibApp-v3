@@ -249,7 +249,7 @@ namespace PhotoLibApi.Controllers
         /// <response code="400">Invalid request data.</response>
         /// <response code="404">Gallery not found.</response>
         [HttpPut("{id:guid}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update(
@@ -270,7 +270,10 @@ namespace PhotoLibApi.Controllers
 
             await _db.SaveChangesAsync();
 
-            return NoContent();
+            // Callers (in particular the offline mirror) need the server's
+            // authoritative UpdatedAtUtc to avoid caching a stale/guessed
+            // value that would later trip a false sync conflict.
+            return Ok(new { updatedAtUtc = gallery.UpdatedAtUtc });
         }
 
         /// <summary>
@@ -295,7 +298,11 @@ namespace PhotoLibApi.Controllers
             await _tagResolver.ApplyAsync(gallery, request.TagNames);
             await _db.SaveChangesAsync();
 
-            return Ok(gallery.Tags.Select(t => t.Name));
+            return Ok(new
+            {
+                tagNames = gallery.Tags.Select(t => t.Name),
+                updatedAtUtc = gallery.UpdatedAtUtc,
+            });
         }
 
         /// <summary>

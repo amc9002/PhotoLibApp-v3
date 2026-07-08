@@ -22,8 +22,12 @@ export class GallerySelectModalComponent {
 
   newTitle = '';
 
-  @HostListener('keydown.escape')
-  onEscape() {
+  @HostListener('keydown.escape', ['$event'])
+  onEscape(event: KeyboardEvent) {
+    // This modal is rendered as a sibling of app-photo-viewer, not nested
+    // inside it - without stopping propagation here, Escape would also
+    // bubble to the viewer's window:keydown handler and close it too.
+    event.stopPropagation();
     this.cancel.emit();
   }
 

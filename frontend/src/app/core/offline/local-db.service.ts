@@ -422,6 +422,35 @@ export class LocalDbService {
     await db.add('outbox', entry as OutboxEntry);
   }
 
+  /**
+   * Queues an `update`/`setTags`/`move` entry, replacing any earlier
+   * not-yet-synced entry of the same type for the same entity instead of
+   * piling up redundant ones - only the final payload matters. Without
+   * this, repeated offline edits of one entity produced multiple
+   * indistinguishable rows in the sync review, and discarding one left
+   * the other queued to silently reapply part of the "discarded" edit.
+   */
+  async upsertOutboxEntry(entry: Omit<OutboxEntry, 'opId'>): Promise<void> {
+    const db = await this.dbPromise;
+    const tx = db.transaction('outbox', 'readwrite');
+
+    let cursor = await tx.store.openCursor();
+    while (cursor) {
+      const existing = cursor.value;
+      if (
+        existing.type === entry.type &&
+        existing.entityType === entry.entityType &&
+        existing.entityId === entry.entityId
+      ) {
+        await cursor.delete();
+      }
+      cursor = await cursor.continue();
+    }
+
+    await tx.store.add(entry as OutboxEntry);
+    await tx.done;
+  }
+
   /** In insertion (chronological) order, since the key is an autoincrement counter. */
   async getOutboxEntries(): Promise<OutboxEntry[]> {
     const db = await this.dbPromise;

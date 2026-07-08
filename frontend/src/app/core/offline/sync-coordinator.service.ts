@@ -130,6 +130,29 @@ export class SyncCoordinatorService {
     }
   }
 
+  /**
+   * After a successful `update`/`setTags` replay, refreshes just the
+   * mirror's `updatedAtUtc` to the server's authoritative value. Without
+   * this, the mirror keeps the pre-sync timestamp, and the next offline
+   * edit of the same entity would queue a stale `baseUpdatedAtUtc` and
+   * trip a false conflict on the sync review after it.
+   */
+  private async patchMirrorUpdatedAt(
+    entityType: 'gallery' | 'photo',
+    id: string,
+    updatedAtUtc: string,
+  ): Promise<void> {
+    if (entityType === 'gallery') {
+      const existing = await this.localDb.getMirroredGallery(id);
+      if (existing) await this.localDb.upsertMirroredGallery({ ...existing, updatedAtUtc });
+    } else {
+      const existing = await this.localDb.getMirroredPhoto(id);
+      if (existing) {
+        await this.localDb.upsertMirroredPhoto({ ...existing, updatedAtUtc }, existing.galleryId);
+      }
+    }
+  }
+
   // ---------------- leader election + orchestration ----------------
 
   private async onReconnect(): Promise<void> {
@@ -309,9 +332,15 @@ export class SyncCoordinatorService {
       }
       case 'update':
         if (entry.entityType === 'gallery') {
-          await firstValueFrom(this.api.put<void>(`Gallery/${entry.entityId}`, entry.payload));
+          const result = await firstValueFrom(
+            this.api.put<{ updatedAtUtc: string }>(`Gallery/${entry.entityId}`, entry.payload),
+          );
+          await this.patchMirrorUpdatedAt('gallery', entry.entityId, result.updatedAtUtc);
         } else {
-          await firstValueFrom(this.api.put<PhotoDto>(`photo/${entry.entityId}`, entry.payload));
+          const result = await firstValueFrom(
+            this.api.put<{ updatedAtUtc: string }>(`photo/${entry.entityId}`, entry.payload),
+          );
+          await this.patchMirrorUpdatedAt('photo', entry.entityId, result.updatedAtUtc);
         }
         break;
       case 'delete':
@@ -335,13 +364,21 @@ export class SyncCoordinatorService {
       }
       case 'setTags':
         if (entry.entityType === 'gallery') {
-          await firstValueFrom(
-            this.api.put<string[]>(`Gallery/${entry.entityId}/tags`, { tagNames: entry.payload.tagNames }),
+          const result = await firstValueFrom(
+            this.api.put<{ tagNames: string[]; updatedAtUtc: string }>(
+              `Gallery/${entry.entityId}/tags`,
+              { tagNames: entry.payload.tagNames },
+            ),
           );
+          await this.patchMirrorUpdatedAt('gallery', entry.entityId, result.updatedAtUtc);
         } else {
-          await firstValueFrom(
-            this.api.put<string[]>(`Photo/${entry.entityId}/tags`, { tagNames: entry.payload.tagNames }),
+          const result = await firstValueFrom(
+            this.api.put<{ tagNames: string[]; updatedAtUtc: string }>(
+              `Photo/${entry.entityId}/tags`,
+              { tagNames: entry.payload.tagNames },
+            ),
           );
+          await this.patchMirrorUpdatedAt('photo', entry.entityId, result.updatedAtUtc);
         }
         break;
       case 'reorder':

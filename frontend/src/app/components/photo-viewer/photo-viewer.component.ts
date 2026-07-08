@@ -60,6 +60,15 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Some modals (gallery-select, confirm) render as siblings of the
+    // viewer rather than inside it, so the viewer can't see their open
+    // state - but it can see where keyboard focus actually is. Any text
+    // entry (e.g. typing a new gallery name) should never be hijacked as
+    // photo navigation.
+    if (isTextEntryTarget(event.target)) {
+      return;
+    }
+
     // 2️⃣ Калі няма фота — навігацыя немагчымая
     if (!this.photos?.length || !this.activePhotoId) {
       return;
@@ -237,4 +246,10 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
       }
     }, 2000);
   }
+}
+
+function isTextEntryTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  const tag = target.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
 }
