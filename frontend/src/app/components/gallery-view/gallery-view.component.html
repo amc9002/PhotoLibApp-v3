@@ -1,4 +1,8 @@
 <div class="gallery-view">
+  <div class="empty-gallery" *ngIf="loaded && photos.length === 0">
+    {{ "galleryView.emptyState" | t }}
+  </div>
+
   <app-gallery-grid
     [photos]="photos"
     (photoClicked)="onPhotoClicked($event)"

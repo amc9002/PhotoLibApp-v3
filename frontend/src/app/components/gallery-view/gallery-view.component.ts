@@ -14,11 +14,12 @@ import { PhotoApiService } from '../../services/photo-api.service';
 import { GalleryGridComponent } from './gallery-grid/gallery-grid.component';
 import { PhotoViewerComponent } from '../photo-viewer/photo-viewer.component';
 import { PhotoSelectionService } from '../../services/photo-selection.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-gallery-view',
   standalone: true,
-  imports: [CommonModule, GalleryGridComponent, PhotoViewerComponent],
+  imports: [CommonModule, GalleryGridComponent, PhotoViewerComponent, TranslatePipe],
   templateUrl: './gallery-view.component.html',
   styleUrls: ['./gallery-view.component.css'],
 })
@@ -30,6 +31,8 @@ export class GalleryViewComponent implements OnChanges {
   @Output() singleNewPhotoDetected = new EventEmitter<string>();
 
   photos: PhotoListItemDto[] = [];
+  /** Distinguishes "not loaded yet" from "loaded and genuinely empty" so the empty-state message doesn't flash before the first fetch resolves. */
+  loaded = false;
 
   constructor(
     private photoApi: PhotoApiService,
@@ -39,6 +42,7 @@ export class GalleryViewComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges) {
     if (changes['gallery'] && this.gallery?.id) {
       this.photoSelection.clear();
+      this.loaded = false;
       this.loadPhotos();
     }
   }
@@ -71,6 +75,7 @@ export class GalleryViewComponent implements OnChanges {
   private loadPhotos(onLoaded?: (photos: PhotoListItemDto[]) => void) {
     this.photoApi.getByGallery(this.gallery.id).subscribe((photos) => {
       this.photos = photos.slice().reverse();
+      this.loaded = true;
       this.photosLoaded.emit(this.photos);
       onLoaded?.(this.photos);
     });

@@ -72,6 +72,12 @@ export const translations: Record<string, Record<Lang, string>> = {
   'galleryProperties.created': { be: 'Створана:', en: 'Created:' },
   'galleryProperties.updated': { be: 'Абноўлена:', en: 'Updated:' },
 
+  // ---------------- gallery-view ----------------
+  'galleryView.emptyState': {
+    be: 'У гэтай галерэі пакуль няма фота. Дадайце першае праз меню "⋮".',
+    en: 'This gallery has no photos yet. Add the first one from the "⋮" menu.',
+  },
+
   // ---------------- gallery-select-modal ----------------
   'gallerySelect.noOtherGalleries': { be: 'Іншых галерэй пакуль няма', en: 'No other galleries yet' },
   'gallerySelect.newGalleryPlaceholder': { be: 'Ці стварыце новую галерэю…', en: 'Or create a new gallery…' },

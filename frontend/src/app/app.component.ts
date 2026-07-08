@@ -108,16 +108,27 @@ export class AppComponent implements OnInit {
           galleryId: this.selectedGallery!.id,
           title: file.name,
         })
-        .subscribe((photo) => {
-          this.photoApi.upload(photo.id, file).subscribe(() => {
-            this.galleryPage?.refreshPhotos(() => {
-              // Only for a single upload - a batch would otherwise chain
-              // one edit modal after another.
-              if (singleFile) {
-                this.galleryPage?.openViewer(photo.id, true);
-              }
+        .subscribe({
+          next: (photo) => {
+            this.photoApi.upload(photo.id, file).subscribe({
+              next: () => {
+                this.galleryPage?.refreshPhotos(() => {
+                  // Only for a single upload - a batch would otherwise chain
+                  // one edit modal after another.
+                  if (singleFile) {
+                    this.galleryPage?.openViewer(photo.id, true);
+                  }
+                });
+              },
+              // withRetry (in PhotoApiService) already absorbs transient
+              // server hiccups, and a real connectivity error is queued
+              // for background sync rather than rejected here - so a
+              // rejection reaching this point is a genuine, non-retryable
+              // failure worth logging rather than failing silently.
+              error: (err) => console.error('Failed to upload photo file', file.name, err),
             });
-          });
+          },
+          error: (err) => console.error('Failed to create photo', file.name, err),
         });
     });
 

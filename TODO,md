@@ -5,9 +5,9 @@ It is intentionally incomplete and evolves with the project.
 
 *Checkboxes reconciled against the actual codebase on 2026-07-08 - most
 backend CRUD/soft-delete items and several frontend items were already
-done but unchecked. Genuine near-term gaps: right-click context menu
-(low priority, duplicates the "⋮" menu), autoplay/slideshow, empty-gallery
-state, viewer fullscreen toggle, upload retry logic.*
+done but unchecked. Empty-gallery state and upload retry landed the same
+day. Remaining near-term gaps: right-click context menu (low priority,
+duplicates the "⋮" menu), autoplay/slideshow, viewer fullscreen toggle.*
 
 ---
 
@@ -84,7 +84,7 @@ state, viewer fullscreen toggle, upload retry logic.*
 - [x] Full-size / original photo overlay
 - [ ] Autoplay (ordered)
 - [ ] Autoplay (random)
-- [ ] Empty gallery state (no photos yet)
+- [x] Empty gallery state (no photos yet)
 
 ---
 
@@ -129,7 +129,7 @@ state, viewer fullscreen toggle, upload retry logic.*
 - [x] Two-ID model (localId / serverId) — `ClientTempId`, remapped once the server assigns a real id
 - [x] Soft delete propagation
 - [x] Conflict resolution strategy — `sync-coordinator.service.ts` compares `baseUpdatedAtUtc` vs the server's current value, surfaced via the sync review modal
-- [ ] Retry logic for file upload
+- [x] Retry logic for file upload — 3 attempts with backoff on transient 5xx/408/429, before falling back to the offline queue
 - [x] Propagate photo delete via sync
 - [x] Handle gallery delete in offline mode
 - [x] Resolve delete vs update conflicts — server-side delete while offline shows as a conflict requiring explicit "apply anyway"

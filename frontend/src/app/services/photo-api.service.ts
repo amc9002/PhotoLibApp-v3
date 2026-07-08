@@ -136,7 +136,9 @@ export class PhotoApiService {
       formData.append('file', file);
 
       try {
-        await firstValueFrom(this.api.post<void>(`Photo/${photoId}/upload`, formData));
+        await withRetry(() =>
+          firstValueFrom(this.api.post<void>(`Photo/${photoId}/upload`, formData)),
+        );
         await this.localDb.markMirroredPhotoHasFiles(photoId);
         return;
       } catch (err) {
@@ -377,6 +379,38 @@ export class PhotoApiService {
 
 function isConnectivityError(err: unknown): boolean {
   return err instanceof HttpErrorResponse && err.status === 0;
+}
+
+const UPLOAD_RETRY_ATTEMPTS = 3;
+const UPLOAD_RETRY_DELAY_MS = 800;
+
+/**
+ * Retries a request a couple of times on transient server-side failures
+ * (5xx, request timeout, rate limit) before giving up - a slow/overloaded
+ * server on one attempt shouldn't immediately fall back to queuing the
+ * whole upload for later sync. A true connectivity error (status 0) is
+ * deliberately NOT retried here - that's handled by the existing offline
+ * fallback right below the call site, which is the more appropriate
+ * recovery path for "the network is actually down".
+ */
+async function withRetry<T>(fn: () => Promise<T>, attempts = UPLOAD_RETRY_ATTEMPTS): Promise<T> {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (attempt >= attempts || !isRetryableError(err)) throw err;
+      await sleep(UPLOAD_RETRY_DELAY_MS * attempt);
+    }
+  }
+}
+
+function isRetryableError(err: unknown): boolean {
+  if (!(err instanceof HttpErrorResponse)) return false;
+  return err.status >= 500 || err.status === 408 || err.status === 429;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function toListItem(photo: PhotoDto): PhotoListItemDto {

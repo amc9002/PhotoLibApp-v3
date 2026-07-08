@@ -8,3 +8,10 @@
   margin: 48px auto;
   max-width: 90vw;
 }
+
+.empty-gallery {
+  padding: 48px 12px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
