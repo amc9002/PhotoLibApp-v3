@@ -124,6 +124,7 @@ export const translations: Record<string, Record<Lang, string>> = {
   'slideshow.orderReverse': { be: 'У адваротным парадку', en: 'Reverse order' },
   'slideshow.orderRandom': { be: 'Выпадкова', en: 'Random' },
   'slideshow.interval': { be: 'Інтэрвал (сек.)', en: 'Interval (sec.)' },
+  'slideshow.transitionDuration': { be: 'Працягласць пераходу (сек.)', en: 'Transition duration (sec.)' },
   'slideshow.start': { be: 'Пачаць', en: 'Start' },
 
   // ---------------- add-from-internet-modal ----------------

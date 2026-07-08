@@ -30,6 +30,7 @@
         [photoId]="activePhotoId"
         [open]="true"
         [crossfade]="slideshowActive"
+        [crossfadeMs]="slideshowConfig?.transitionMs ?? 800"
         (loaded)="onMainPhotoLoaded()"
       ></app-photo-viewer-main>
     </div>

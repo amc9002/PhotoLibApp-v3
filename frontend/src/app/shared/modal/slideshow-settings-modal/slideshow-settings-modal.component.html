@@ -43,6 +43,18 @@
           [(ngModel)]="intervalSeconds"
         />
       </div>
+
+      <div class="form-field">
+        <label for="slideshow-transition">{{ "slideshow.transitionDuration" | t }}</label>
+        <input
+          id="slideshow-transition"
+          type="number"
+          min="0.2"
+          max="5"
+          step="0.1"
+          [(ngModel)]="transitionSeconds"
+        />
+      </div>
     </div>
 
     <div class="modal-footer">

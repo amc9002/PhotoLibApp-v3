@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Subject, Subscription, catchError, of, switchMap } from 'rxjs';
 import { ImageCacheService } from '../../../core/offline/image-cache.service';
 
-/** How long the outgoing photo fades out under the incoming one during a crossfade. */
-const CROSSFADE_MS = 800;
+/** Fallback crossfade duration when `crossfadeMs` isn't set (e.g. outside a slideshow). */
+const DEFAULT_CROSSFADE_MS = 800;
 
 /** A shown photo's blob URL plus an identity distinct from every other layer ever shown. */
 interface PhotoLayer {
@@ -24,6 +24,8 @@ export class PhotoViewerMainComponent implements OnChanges, OnDestroy {
   @Input() open = false;
   /** When true (slideshow playback), dissolves between photos instead of an instant swap. */
   @Input() crossfade = false;
+  /** Duration of that dissolve, configurable from the slideshow settings. */
+  @Input() crossfadeMs = DEFAULT_CROSSFADE_MS;
 
   /**
    * Fires once the request for the current `photoId` has settled (loaded or
@@ -124,7 +126,7 @@ export class PhotoViewerMainComponent implements OnChanges, OnDestroy {
         this.releaseUrl(this.previousLayer);
         this.previousLayer = null;
         this.fadeTimeout = undefined;
-      }, CROSSFADE_MS);
+      }, this.crossfadeMs);
     } else if (this.crossfade) {
       // First photo of a slideshow - nothing to cross from yet, but it
       // should still fade in rather than pop straight to full opacity.
