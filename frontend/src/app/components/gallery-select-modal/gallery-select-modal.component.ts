@@ -44,6 +44,10 @@ export class GallerySelectModalComponent {
     return this.i18n.translate(this.mode === 'copy' ? 'gallerySelect.copy' : 'gallerySelect.move');
   }
 
+  trackById(index: number, gallery: Gallery): string {
+    return gallery.id;
+  }
+
   pick(galleryId: string) {
     if (this.isBusy) return;
     this.selectExisting.emit(galleryId);

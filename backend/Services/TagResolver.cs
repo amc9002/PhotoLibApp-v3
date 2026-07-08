@@ -17,6 +17,25 @@ namespace PhotoLibApi.Services
             _db = db;
         }
 
+        /// <summary>
+        /// Resolves tag names to tracked <see cref="Tag"/> entities, creating any that don't
+        /// exist yet. Bounded by the total number of distinct tags in the whole app (not by
+        /// this call's input), which is expected to stay small, so loading the full table is
+        /// the simplest correct option here.
+        /// </summary>
+        /// <remarks>
+        /// This intentionally does <em>not</em> filter server-side (e.g. via a translated
+        /// <c>WHERE</c> on a lowered column) or use <c>AsNoTracking()</c>:
+        /// <list type="bullet">
+        /// <item>SQLite's <c>LOWER()</c> only folds ASCII, so a server-side case-insensitive
+        /// filter would silently stop matching existing non-ASCII (e.g. Cyrillic) tag names
+        /// that only differ by case - unlike the <see cref="StringComparer.OrdinalIgnoreCase"/>
+        /// comparison used below, which folds correctly.</item>
+        /// <item>The returned entities are assigned directly to a tracked photo/gallery's
+        /// <c>Tags</c> navigation before <c>SaveChanges</c>; if they came back untracked,
+        /// EF Core would treat pre-existing tags as new rows and attempt to re-insert them.</item>
+        /// </list>
+        /// </remarks>
         public async Task<List<Tag>> ResolveAsync(IEnumerable<string> tagNames)
         {
             var normalized = tagNames

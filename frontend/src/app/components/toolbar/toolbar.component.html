@@ -14,7 +14,7 @@
   >
     <div
       class="dropdown-item"
-      *ngFor="let g of galleries"
+      *ngFor="let g of galleries; trackBy: trackById"
       cdkDrag
       (click)="select(g)"
     >

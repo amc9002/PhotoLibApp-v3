@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { EMPTY, catchError, forkJoin, from, mergeMap, switchMap, tap } from 'rxjs';
 import { Gallery } from './models/gallery.model';
 import { GalleryApiService } from './services/gallery-api.service';
 import { CommonModule } from '@angular/common';
@@ -95,44 +95,72 @@ export class AppComponent implements OnInit {
     this.fileInput.nativeElement.click();
   }
 
+  /**
+   * Caps how many files a multi-select upload sends to the server at once.
+   * Each upload makes the backend decode the full-resolution original into
+   * memory to build a thumbnail, so firing all of them in parallel (as a
+   * plain `forEach` once did) could hold dozens of decoded images in memory
+   * simultaneously and exhaust it; capping concurrency bounds that to a
+   * handful without meaningfully slowing a normal-sized batch down.
+   */
+  private static readonly MAX_CONCURRENT_UPLOADS = 3;
+
   onFilesSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files || !this.selectedGallery) return;
 
     const files = Array.from(input.files);
     const singleFile = files.length === 1;
+    const galleryId = this.selectedGallery.id;
 
-    files.forEach((file) => {
-      this.photoApi
-        .create({
-          galleryId: this.selectedGallery!.id,
-          title: file.name,
-        })
-        .subscribe({
-          next: (photo) => {
-            this.photoApi.upload(photo.id, file).subscribe({
-              next: () => {
-                this.galleryPage?.refreshPhotos(() => {
-                  // Only for a single upload - a batch would otherwise chain
-                  // one edit modal after another.
-                  if (singleFile) {
-                    this.galleryPage?.openViewer(photo.id, true);
-                  }
-                });
-              },
-              // withRetry (in PhotoApiService) already absorbs transient
-              // server hiccups, and a real connectivity error is queued
-              // for background sync rather than rejected here - so a
-              // rejection reaching this point is a genuine, non-retryable
-              // failure worth logging rather than failing silently.
-              error: (err) => console.error('Failed to upload photo file', file.name, err),
-            });
-          },
-          error: (err) => console.error('Failed to create photo', file.name, err),
-        });
-    });
+    from(files)
+      .pipe(
+        mergeMap(
+          (file) => this.createAndUploadOne(file, galleryId, singleFile),
+          AppComponent.MAX_CONCURRENT_UPLOADS,
+        ),
+      )
+      .subscribe();
 
     input.value = '';
+  }
+
+  /**
+   * Creates a photo's metadata, then uploads its file, then refreshes the
+   * grid - the per-file unit of work `onFilesSelected` runs with bounded
+   * concurrency via `mergeMap`. Errors are logged and swallowed here (rather
+   * than propagated) so one failing file in a batch doesn't cancel the
+   * `mergeMap` and abort the rest of the upload.
+   */
+  private createAndUploadOne(file: File, galleryId: string, singleFile: boolean) {
+    return this.photoApi.create({ galleryId, title: file.name }).pipe(
+      switchMap((photo) =>
+        this.photoApi.upload(photo.id, file).pipe(
+          tap(() => {
+            this.galleryPage?.refreshPhotos(() => {
+              // Only for a single upload - a batch would otherwise chain
+              // one edit modal after another.
+              if (singleFile) {
+                this.galleryPage?.openViewer(photo.id, true);
+              }
+            });
+          }),
+          // withRetry (in PhotoApiService) already absorbs transient server
+          // hiccups, and a real connectivity error is queued for background
+          // sync rather than rejected here - so a rejection reaching this
+          // point is a genuine, non-retryable failure worth logging rather
+          // than failing silently.
+          catchError((err) => {
+            console.error('Failed to upload photo file', file.name, err);
+            return EMPTY;
+          }),
+        ),
+      ),
+      catchError((err) => {
+        console.error('Failed to create photo', file.name, err);
+        return EMPTY;
+      }),
+    );
   }
 
   openGalleryProperties() {
@@ -212,6 +240,7 @@ export class AppComponent implements OnInit {
         this.galleries = this.galleries.filter((g) => g.id !== galleryId);
         this.selectedGallery = undefined;
         this.thumbnailSize.setGallery(null);
+        this.thumbnailSize.forgetGallery(galleryId);
         this.isDeletingGallery = false;
         this.deleteGalleryConfirmOpen = false;
       },

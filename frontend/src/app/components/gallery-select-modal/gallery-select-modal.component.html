@@ -8,7 +8,7 @@
     <div class="modal-body">
       <div class="gallery-picker-list">
         <div
-          *ngFor="let g of galleries"
+          *ngFor="let g of galleries; trackBy: trackById"
           class="gallery-picker-item"
           (click)="pick(g.id)"
         >

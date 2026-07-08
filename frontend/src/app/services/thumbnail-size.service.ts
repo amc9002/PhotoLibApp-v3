@@ -18,6 +18,11 @@ export class ThumbnailSizeService {
     this.currentGalleryId = galleryId;
   }
 
+  /** Drops a deleted gallery's stored size so the map doesn't grow forever. */
+  forgetGallery(galleryId: string) {
+    this.sizes.delete(galleryId);
+  }
+
   get size(): number {
     if (!this.currentGalleryId) return DEFAULT_SIZE;
     return this.sizes.get(this.currentGalleryId) ?? DEFAULT_SIZE;

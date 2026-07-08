@@ -72,6 +72,10 @@ export class ToolbarComponent {
     this.dropdownOpen = false;
   }
 
+  trackById(index: number, gallery: Gallery): string {
+    return gallery.id;
+  }
+
   onGalleryDropped(event: CdkDragDrop<Gallery[]>) {
     if (event.previousIndex === event.currentIndex) return;
 

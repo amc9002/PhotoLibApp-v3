@@ -107,6 +107,10 @@ export class SyncReviewModalComponent implements OnDestroy {
     }
   }
 
+  trackByOpId(index: number, item: SyncReviewItem): number {
+    return item.outboxOpId;
+  }
+
   private removeItem(item: SyncReviewItem): void {
     this.items = this.items.filter((i) => i !== item);
     if (this.items.length === 0) {

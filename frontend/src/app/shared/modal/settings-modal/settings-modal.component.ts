@@ -43,6 +43,10 @@ export class SettingsModalComponent {
     this.theme.setTheme(theme);
   }
 
+  trackByThemeId(index: number, themeId: ThemeId): ThemeId {
+    return themeId;
+  }
+
   themeLabelKey(theme: ThemeId): string {
     return THEME_LABEL_KEYS[theme];
   }

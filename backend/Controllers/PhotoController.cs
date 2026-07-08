@@ -4,8 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using PhotoLibApi.Data;
 using PhotoLibApi.Models;
 using PhotoLibApi.Services;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Processing;
 
 namespace PhotoLibApi.Controllers
 {
@@ -23,23 +21,23 @@ namespace PhotoLibApi.Controllers
         private readonly PhotoFilePathHelper _filePathHelper;
         private readonly TagResolver _tagResolver;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly PhotoImageProcessingService _imageProcessing;
 
-
+        /// <summary>
+        /// Creates the controller with its DB context and supporting services.
+        /// </summary>
         public PhotoController(
             PhotoDbContext db,
-            IConfiguration configuration,
+            PhotoFilePathHelper filePathHelper,
             TagResolver tagResolver,
-            IHttpClientFactory httpClientFactory)
+            IHttpClientFactory httpClientFactory,
+            PhotoImageProcessingService imageProcessing)
         {
             _db = db;
+            _filePathHelper = filePathHelper;
             _tagResolver = tagResolver;
             _httpClientFactory = httpClientFactory;
-
-            var photosRoot = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                configuration["Storage:PhotosPath"]!);
-
-            _filePathHelper = new PhotoFilePathHelper(photosRoot);
+            _imageProcessing = imageProcessing;
         }
 
         /// <summary>
@@ -311,7 +309,7 @@ namespace PhotoLibApi.Controllers
                 // mark original as existing
                 photo.HasOriginal = true;
 
-                GenerateThumbnailAndExif(photo, filePath);
+                _imageProcessing.GenerateThumbnailAndExif(photo, filePath);
 
                 await _db.SaveChangesAsync();
 
@@ -451,74 +449,71 @@ namespace PhotoLibApi.Controllers
                 return BadRequest("Could not download the image from the given URL.");
             }
 
-            if (!response.IsSuccessStatusCode)
-                return BadRequest($"The source returned HTTP {(int)response.StatusCode}.");
-
-            var contentType = response.Content.Headers.ContentType?.MediaType;
-            if (contentType == null || !contentType.StartsWith("image/"))
-                return BadRequest("The URL does not point to an image.");
-
-            if (response.Content.Headers.ContentLength is long declaredLength &&
-                declaredLength > MaxDownloadBytes)
+            // `using` (rather than a bare local) ensures the response - and the connection/
+            // buffers it holds - is disposed on every exit path below, including the early
+            // BadRequest returns.
+            using (response)
             {
-                return BadRequest("Image is too large.");
-            }
+                if (!response.IsSuccessStatusCode)
+                    return BadRequest($"The source returned HTTP {(int)response.StatusCode}.");
 
-            var bytes = await response.Content.ReadAsByteArrayAsync();
-            if (bytes.Length == 0 || bytes.Length > MaxDownloadBytes)
-                return BadRequest("Image is empty or too large.");
+                var contentType = response.Content.Headers.ContentType?.MediaType;
+                if (contentType == null || !contentType.StartsWith("image/"))
+                    return BadRequest("The URL does not point to an image.");
 
-            var fileName = Path.GetFileName(uri.LocalPath);
-            var photo = new Photo
-            {
-                Id = Guid.NewGuid(),
-                GalleryId = request.GalleryId,
-                Title = !string.IsNullOrWhiteSpace(request.Title)
-                    ? request.Title!
-                    : (!string.IsNullOrWhiteSpace(fileName) ? fileName : "Untitled"),
-                CreatedAtUtc = DateTime.UtcNow,
-                SortOrder = await NextSortOrderAsync(request.GalleryId),
-            };
-
-            Directory.CreateDirectory(_filePathHelper.GetOriginalsDirectory());
-            var filePath = _filePathHelper.GetOriginalFilePath(photo.Id);
-            await System.IO.File.WriteAllBytesAsync(filePath, bytes);
-            photo.HasOriginal = true;
-
-            GenerateThumbnailAndExif(photo, filePath);
-
-            _db.Photos.Add(photo);
-            await _db.SaveChangesAsync();
-
-            return StatusCode(StatusCodes.Status201Created, photo);
-        }
-
-        /// <summary>
-        /// Generates a thumbnail and reads EXIF metadata for an original file
-        /// already saved on disk, updating the given photo's flags in place.
-        /// </summary>
-        private void GenerateThumbnailAndExif(Photo photo, string originalFilePath)
-        {
-            Directory.CreateDirectory(_filePathHelper.GetThumbnailsDirectory());
-            var thumbnailPath = _filePathHelper.GetThumbnailFilePath(photo.Id);
-
-            using (var image = Image.Load(originalFilePath))
-            {
-                image.Mutate(x => x.Resize(new ResizeOptions
+                if (response.Content.Headers.ContentLength is long declaredLength &&
+                    declaredLength > MaxDownloadBytes)
                 {
-                    Size = new Size(300, 300),
-                    Mode = ResizeMode.Max
-                }));
+                    return BadRequest("Image is too large.");
+                }
 
-                image.Save(thumbnailPath);
+                var fileName = Path.GetFileName(uri.LocalPath);
+                var photo = new Photo
+                {
+                    Id = Guid.NewGuid(),
+                    GalleryId = request.GalleryId,
+                    Title = !string.IsNullOrWhiteSpace(request.Title)
+                        ? request.Title!
+                        : (!string.IsNullOrWhiteSpace(fileName) ? fileName : "Untitled"),
+                    CreatedAtUtc = DateTime.UtcNow,
+                    SortOrder = await NextSortOrderAsync(request.GalleryId),
+                };
+
+                Directory.CreateDirectory(_filePathHelper.GetOriginalsDirectory());
+                var filePath = _filePathHelper.GetOriginalFilePath(photo.Id);
+
+                // Stream the download straight to disk instead of buffering the whole
+                // image in memory first (the previous `ReadAsByteArrayAsync` approach) -
+                // that let a response with no Content-Length header balloon memory before
+                // the size limit could ever reject it.
+                long totalBytes;
+                await using (var downloadStream = await response.Content.ReadAsStreamAsync())
+                {
+                    try
+                    {
+                        totalBytes = await _imageProcessing.SaveStreamToFileAsync(
+                            downloadStream, filePath, MaxDownloadBytes);
+                    }
+                    catch (StreamTooLargeException)
+                    {
+                        return BadRequest("Image is too large.");
+                    }
+                }
+
+                if (totalBytes == 0)
+                {
+                    System.IO.File.Delete(filePath);
+                    return BadRequest("Image is empty.");
+                }
+
+                photo.HasOriginal = true;
+                _imageProcessing.GenerateThumbnailAndExif(photo, filePath);
+
+                _db.Photos.Add(photo);
+                await _db.SaveChangesAsync();
+
+                return StatusCode(StatusCodes.Status201Created, photo);
             }
-
-            photo.HasThumbnail = true;
-
-            var exif = ExifReader.Read(originalFilePath);
-            photo.ExifJson = exif.Json;
-            photo.Latitude = exif.Latitude;
-            photo.Longitude = exif.Longitude;
         }
 
         /// <summary>

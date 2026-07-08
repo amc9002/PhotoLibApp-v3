@@ -60,6 +60,10 @@ export class EditMetadataModalComponent implements OnInit {
     });
   }
 
+  trackByTag(index: number, tag: string): string {
+    return tag;
+  }
+
   get isDirty(): boolean {
     return (
       this.title !== this.initialTitle ||

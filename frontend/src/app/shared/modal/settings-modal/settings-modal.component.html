@@ -31,7 +31,7 @@
         <div class="theme-options">
           <button
             class="theme-option"
-            *ngFor="let th of themeIds"
+            *ngFor="let th of themeIds; trackBy: trackByThemeId"
             [class.active]="theme.theme === th"
             (click)="setTheme(th)"
           >

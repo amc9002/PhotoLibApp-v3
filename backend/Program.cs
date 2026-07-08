@@ -32,6 +32,18 @@ builder.Services.AddDbContext<PhotoDbContext>(options =>
 
 builder.Services.AddScoped<TagResolver>();
 
+// Config-driven and stateless once built, so a single shared instance is safe.
+builder.Services.AddSingleton(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var photosRoot = Path.Combine(
+        Directory.GetCurrentDirectory(),
+        configuration["Storage:PhotosPath"]!);
+
+    return new PhotoFilePathHelper(photosRoot);
+});
+builder.Services.AddScoped<PhotoImageProcessingService>();
+
 builder.Services.AddHttpClient();
 
 // Cross-origin access for the "Add from internet" bookmarklet: the bookmarklet

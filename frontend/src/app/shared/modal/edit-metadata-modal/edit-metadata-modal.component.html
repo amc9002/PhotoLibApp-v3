@@ -38,7 +38,7 @@
           [(ngModel)]="tagsText"
         />
         <datalist id="edit-tag-options">
-          <option *ngFor="let t of availableTags" [value]="t"></option>
+          <option *ngFor="let t of availableTags; trackBy: trackByTag" [value]="t"></option>
         </datalist>
       </div>
     </div>
