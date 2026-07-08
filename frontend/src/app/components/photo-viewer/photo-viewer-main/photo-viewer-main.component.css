@@ -37,11 +37,15 @@
   opacity: 1;
 }
 
-/* Outgoing photo during a slideshow crossfade - sits statically underneath
-   while the incoming one dissolves in on top of it. */
+/* Outgoing photo during a slideshow crossfade - fades out in lockstep with
+   the incoming photo fading in over it (see .crossfade below). */
 .photo-viewer-main img.photo-below {
   opacity: 1;
-  transition: none;
+  transition: opacity 800ms ease;
+}
+
+.photo-viewer-main img.photo-below.fading-out {
+  opacity: 0;
 }
 
 /* Incoming photo during a slideshow crossfade - plain opacity dissolve,
