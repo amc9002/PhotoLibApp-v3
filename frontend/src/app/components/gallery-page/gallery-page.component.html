@@ -3,6 +3,11 @@
   (photoSelected)="openViewer($event)"
   (photosLoaded)="onPhotosLoaded($event)"
   (singleNewPhotoDetected)="openViewer($event, true)"
+  (editPhotoRequest)="openEditMetadataFor($event)"
+  (showPhotoInfoRequest)="showPhotoInfoFor($event)"
+  (copyPhotoRequest)="requestCopyOrMove([$event], 'copy')"
+  (movePhotoRequest)="requestCopyOrMove([$event], 'move')"
+  (deletePhotoRequest)="openDeleteConfirm($event)"
 ></app-gallery-view>
 
 <app-photo-viewer
@@ -37,3 +42,21 @@
   (createNew)="onCreateGalleryForMoveOrCopy($event)"
   (cancel)="closeGallerySelect()"
 ></app-gallery-select-modal>
+
+<app-edit-metadata-modal
+  *ngIf="editMetadataOpen && contextEditPhoto as photo"
+  heading="photoViewer.editDetails"
+  [title]="photo.title"
+  [description]="photo.description ?? ''"
+  [tags]="photo.tags"
+  [isSaving]="isSavingMetadata"
+  [saveError]="metadataSaveError ? (metadataSaveError | t) : null"
+  (save)="onSaveMetadata($event)"
+  (close)="closeEditMetadata()"
+></app-edit-metadata-modal>
+
+<app-photo-info-modal
+  *ngIf="infoOpen && infoPhoto"
+  [photo]="infoPhoto"
+  (close)="closeInfo()"
+></app-photo-info-modal>

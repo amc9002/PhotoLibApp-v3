@@ -30,6 +30,13 @@ export class GalleryViewComponent implements OnChanges {
   /** Fires when a background refresh finds exactly one photo that wasn't there before. */
   @Output() singleNewPhotoDetected = new EventEmitter<string>();
 
+  // Pass-through from the grid's right-click context menu.
+  @Output() editPhotoRequest = new EventEmitter<string>();
+  @Output() showPhotoInfoRequest = new EventEmitter<string>();
+  @Output() copyPhotoRequest = new EventEmitter<string>();
+  @Output() movePhotoRequest = new EventEmitter<string>();
+  @Output() deletePhotoRequest = new EventEmitter<string>();
+
   photos: PhotoListItemDto[] = [];
   /** Distinguishes "not loaded yet" from "loaded and genuinely empty" so the empty-state message doesn't flash before the first fetch resolves. */
   loaded = false;

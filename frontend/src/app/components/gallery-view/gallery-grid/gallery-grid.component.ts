@@ -12,15 +12,19 @@ import { CommonModule } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { PhotoListItemDto } from '../../../models/photoLisrItem.dto';
 import { PhotoThumbnailComponent } from '../../../shared/ui/photo-thumbnail/photo-thumbnail.component';
+import { PhotoContextMenuComponent } from '../../../shared/ui/photo-context-menu/photo-context-menu.component';
 import { ThumbnailSizeService } from '../../../services/thumbnail-size.service';
 import { PhotoSelectionService } from '../../../services/photo-selection.service';
 
 const MIN_DRAG_DISTANCE = 4;
+const CONTEXT_MENU_WIDTH = 210;
+const CONTEXT_MENU_HEIGHT = 190;
+const CONTEXT_MENU_MARGIN = 8;
 
 @Component({
   selector: 'app-gallery-grid',
   standalone: true,
-  imports: [CommonModule, DragDropModule, PhotoThumbnailComponent],
+  imports: [CommonModule, DragDropModule, PhotoThumbnailComponent, PhotoContextMenuComponent],
   templateUrl: './gallery-grid.component.html',
   styleUrls: ['./gallery-grid.component.css'],
 })
@@ -28,7 +32,16 @@ export class GalleryGridComponent implements OnDestroy {
   @Input({ required: true }) photos!: PhotoListItemDto[];
   @Output() photoClicked = new EventEmitter<string>();
   @Output() photosReordered = new EventEmitter<PhotoListItemDto[]>();
+  @Output() editPhotoRequest = new EventEmitter<string>();
+  @Output() showPhotoInfoRequest = new EventEmitter<string>();
+  @Output() copyPhotoRequest = new EventEmitter<string>();
+  @Output() movePhotoRequest = new EventEmitter<string>();
+  @Output() deletePhotoRequest = new EventEmitter<string>();
   @Input() activePhotoId: string | null = null;
+
+  contextMenuPhotoId: string | null = null;
+  contextMenuX = 0;
+  contextMenuY = 0;
 
   dragging = false;
   // All drag coordinates are kept in viewport (client) space; only
@@ -86,6 +99,32 @@ export class GalleryGridComponent implements OnDestroy {
 
   trackById(index: number, photo: PhotoListItemDto): string {
     return photo.id;
+  }
+
+  onPhotoContextMenu(event: MouseEvent, photoId: string) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.contextMenuPhotoId = photoId;
+    this.contextMenuX = Math.min(event.clientX, window.innerWidth - CONTEXT_MENU_WIDTH - CONTEXT_MENU_MARGIN);
+    this.contextMenuY = Math.min(event.clientY, window.innerHeight - CONTEXT_MENU_HEIGHT - CONTEXT_MENU_MARGIN);
+  }
+
+  closeContextMenu() {
+    this.contextMenuPhotoId = null;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClickForContextMenu(event: MouseEvent) {
+    if (!this.contextMenuPhotoId) return;
+    if (!(event.target as HTMLElement).closest('.context-menu')) {
+      this.closeContextMenu();
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeForContextMenu() {
+    this.closeContextMenu();
   }
 
   onPhotoDropped(event: CdkDragDrop<PhotoListItemDto[]>) {

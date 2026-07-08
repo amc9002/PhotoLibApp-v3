@@ -7,5 +7,10 @@
     [photos]="photos"
     (photoClicked)="onPhotoClicked($event)"
     (photosReordered)="onPhotosReordered($event)"
+    (editPhotoRequest)="editPhotoRequest.emit($event)"
+    (showPhotoInfoRequest)="showPhotoInfoRequest.emit($event)"
+    (copyPhotoRequest)="copyPhotoRequest.emit($event)"
+    (movePhotoRequest)="movePhotoRequest.emit($event)"
+    (deletePhotoRequest)="deletePhotoRequest.emit($event)"
   ></app-gallery-grid>
 </div>

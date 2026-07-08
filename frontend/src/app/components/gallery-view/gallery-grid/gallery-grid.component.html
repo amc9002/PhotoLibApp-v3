@@ -15,7 +15,11 @@
     [class.active]="photo.id === activePhotoId"
     [class.selected]="selection.isSelected(photo.id)"
   >
-    <div class="photo-tile thumb" (click)="onPhotoClick($event, photo.id)">
+    <div
+      class="photo-tile thumb"
+      (click)="onPhotoClick($event, photo.id)"
+      (contextmenu)="onPhotoContextMenu($event, photo.id)"
+    >
       <app-photo-thumbnail
         [photoId]="photo.id"
         [hasThumbnail]="photo.hasThumbnail"
@@ -32,4 +36,15 @@
   </div>
 
   <div class="marquee" *ngIf="dragging" [ngStyle]="marqueeStyle"></div>
+
+  <app-photo-context-menu
+    *ngIf="contextMenuPhotoId as photoId"
+    [x]="contextMenuX"
+    [y]="contextMenuY"
+    (editInfo)="editPhotoRequest.emit(photoId); closeContextMenu()"
+    (showInfo)="showPhotoInfoRequest.emit(photoId); closeContextMenu()"
+    (copyTo)="copyPhotoRequest.emit(photoId); closeContextMenu()"
+    (moveTo)="movePhotoRequest.emit(photoId); closeContextMenu()"
+    (deletePhoto)="deletePhotoRequest.emit(photoId); closeContextMenu()"
+  ></app-photo-context-menu>
 </div>

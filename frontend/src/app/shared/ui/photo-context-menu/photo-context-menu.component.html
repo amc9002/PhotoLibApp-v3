@@ -1,0 +1,21 @@
+<div class="context-menu" [style.left.px]="x" [style.top.px]="y" (click)="$event.stopPropagation()">
+  <button class="context-menu-item" (click)="editInfo.emit()">
+    {{ "photoActions.editInfo" | t }}
+  </button>
+
+  <button class="context-menu-item" (click)="showInfo.emit()">
+    {{ "photoActions.photoInfo" | t }}
+  </button>
+
+  <button class="context-menu-item" (click)="copyTo.emit()">
+    {{ "photoActions.copyToGallery" | t }}
+  </button>
+
+  <button class="context-menu-item" (click)="moveTo.emit()">
+    {{ "photoActions.moveToGallery" | t }}
+  </button>
+
+  <button class="context-menu-item danger" (click)="deletePhoto.emit()">
+    {{ "photoActions.deletePhoto" | t }}
+  </button>
+</div>

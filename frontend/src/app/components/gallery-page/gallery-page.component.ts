@@ -13,12 +13,15 @@ import { GalleryViewComponent } from '../gallery-view/gallery-view.component';
 import { PhotoViewerComponent } from '../photo-viewer/photo-viewer.component';
 import { ConfirmModalComponent } from '../../shared/modal/confirm-modal/confirm-modal.component';
 import { GallerySelectModalComponent } from '../gallery-select-modal/gallery-select-modal.component';
+import { EditMetadataModalComponent } from '../../shared/modal/edit-metadata-modal/edit-metadata-modal.component';
+import { PhotoInfoModalComponent } from '../photo-viewer/photo-actions/photo-info-modal/photo-info-modal.component';
 import { PhotoApiService } from '../../services/photo-api.service';
 import { GalleryApiService } from '../../services/gallery-api.service';
 import { PhotoSelectionService } from '../../services/photo-selection.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { photoRemoveMessage } from '../../core/i18n/plurals';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { PhotoDto } from '../../models/photo.dto';
 
 @Component({
   selector: 'app-gallery-page',
@@ -29,6 +32,8 @@ import { TranslatePipe } from '../../core/i18n/translate.pipe';
     PhotoViewerComponent,
     ConfirmModalComponent,
     GallerySelectModalComponent,
+    EditMetadataModalComponent,
+    PhotoInfoModalComponent,
     TranslatePipe,
   ],
   templateUrl: './gallery-page.component.html',
@@ -57,6 +62,16 @@ export class GalleryPageComponent {
   gallerySelectMode: 'copy' | 'move' = 'copy';
   photoIdsToMoveOrCopy: string[] = [];
   isMovingOrCopying = false;
+
+  // edit / info, triggered from the grid's right-click context menu
+  // (the viewer has its own separate copy of this same flow)
+  contextEditPhotoId: string | null = null;
+  editMetadataOpen = false;
+  isSavingMetadata = false;
+  metadataSaveError: string | null = null;
+
+  infoOpen = false;
+  infoPhoto?: PhotoDto;
 
   constructor(
     private photoApi: PhotoApiService,
@@ -229,5 +244,66 @@ export class GalleryPageComponent {
       },
       `Failed to ${mode} photo(s)`,
     );
+  }
+
+  // ---------------- edit / info (grid context menu) ----------------
+
+  get contextEditPhoto(): PhotoListItemDto | undefined {
+    return this.photos.find((p) => p.id === this.contextEditPhotoId);
+  }
+
+  openEditMetadataFor(photoId: string) {
+    this.contextEditPhotoId = photoId;
+    this.metadataSaveError = null;
+    this.editMetadataOpen = true;
+  }
+
+  closeEditMetadata() {
+    this.editMetadataOpen = false;
+    this.contextEditPhotoId = null;
+  }
+
+  onSaveMetadata(data: { title: string; description: string; tags: string[] }) {
+    const id = this.contextEditPhotoId;
+    if (!id) return;
+
+    this.isSavingMetadata = true;
+    this.metadataSaveError = null;
+
+    forkJoin([
+      this.photoApi.update(id, data),
+      this.photoApi.setTags(id, data.tags),
+    ]).subscribe({
+      next: () => {
+        const photo = this.photos.find((p) => p.id === id);
+        if (photo) {
+          photo.title = data.title;
+          photo.description = data.description;
+          photo.tags = data.tags;
+        }
+        this.isSavingMetadata = false;
+        this.closeEditMetadata();
+      },
+      error: (err) => {
+        console.error('Failed to update photo metadata', err);
+        this.isSavingMetadata = false;
+        this.metadataSaveError = 'photoViewer.saveFailed';
+      },
+    });
+  }
+
+  showPhotoInfoFor(photoId: string) {
+    this.photoApi.getById(photoId).subscribe({
+      next: (photo) => {
+        this.infoPhoto = photo;
+        this.infoOpen = true;
+      },
+      error: (err) => console.error('Failed to load photo info', err),
+    });
+  }
+
+  closeInfo() {
+    this.infoOpen = false;
+    this.infoPhoto = undefined;
   }
 }
