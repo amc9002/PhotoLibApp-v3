@@ -59,3 +59,14 @@ photolib.db
 # Local app settings
 ###############################
 appsettings.Development.json
+
+###############################
+# Visual Studio / MSBuild user files
+###############################
+.vs/
+*.user
+
+###############################
+# Local scratch
+###############################
+Screenshots/
