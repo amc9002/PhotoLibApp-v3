@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { PhotoListItemDto } from '../../models/photoLisrItem.dto';
@@ -25,7 +25,7 @@ import { PhotoDto } from '../../models/photo.dto';
   templateUrl: './photo-viewer.component.html',
   styleUrls: ['./photo-viewer.component.css'],
 })
-export class PhotoViewerComponent implements OnInit, OnDestroy {
+export class PhotoViewerComponent implements OnInit {
   @Input({ required: true }) photos!: PhotoListItemDto[];
   @Input({ required: true }) activePhotoId!: string;
   /** Opens the edit-details modal as soon as the viewer loads, e.g. right after a single upload. */
@@ -37,16 +37,12 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
   @Output() requestCopy = new EventEmitter<string>();
   @Output() requestMove = new EventEmitter<string>();
 
-  controlsVisible = false;
-  controlsHovered = false;
   photoMenuOpen = false;
   editMetadataOpen = false;
   isSavingMetadata = false;
   metadataSaveError: string | null = null;
   infoOpen = false;
   infoPhoto?: PhotoDto;
-
-  private hideControlsTimer?: number;
 
   @HostListener('window:keydown', ['$event'])
   onKeydown(event: KeyboardEvent) {
@@ -109,12 +105,6 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
   ngOnInit() {
     if (this.openEditOnLoad) {
       this.openEditMetadata();
-    }
-  }
-
-  ngOnDestroy() {
-    if (this.hideControlsTimer) {
-      clearTimeout(this.hideControlsTimer);
     }
   }
 
@@ -230,21 +220,6 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
     if (index > 0) {
       this.photoSelected.emit(this.photos[index - 1].id);
     }
-  }
-
-  @HostListener('document:mousemove')
-  onMouseMove() {
-    this.controlsVisible = true;
-
-    if (this.hideControlsTimer) {
-      clearTimeout(this.hideControlsTimer);
-    }
-
-    this.hideControlsTimer = window.setTimeout(() => {
-      if (!this.controlsHovered) {
-        this.controlsVisible = false;
-      }
-    }, 2000);
   }
 }
 

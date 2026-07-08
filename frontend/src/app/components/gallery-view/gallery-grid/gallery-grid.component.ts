@@ -4,6 +4,8 @@ import {
   EventEmitter,
   HostListener,
   Input,
+  NgZone,
+  OnDestroy,
   Output,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -22,7 +24,7 @@ const MIN_DRAG_DISTANCE = 4;
   templateUrl: './gallery-grid.component.html',
   styleUrls: ['./gallery-grid.component.css'],
 })
-export class GalleryGridComponent {
+export class GalleryGridComponent implements OnDestroy {
   @Input({ required: true }) photos!: PhotoListItemDto[];
   @Output() photoClicked = new EventEmitter<string>();
   @Output() photosReordered = new EventEmitter<PhotoListItemDto[]>();
@@ -36,11 +38,32 @@ export class GalleryGridComponent {
   private dragCurrentX = 0;
   private dragCurrentY = 0;
 
+  // Bound once so add/removeEventListener target the same reference, and
+  // attached outside Angular's zone - most mousemove events happen while
+  // not dragging and would otherwise trigger a full change-detection pass
+  // on every mouse movement over the grid for no reason.
+  private readonly onDocumentMouseMove = (event: MouseEvent) => {
+    if (!this.dragging) return;
+    this.zone.run(() => {
+      this.dragCurrentX = event.clientX;
+      this.dragCurrentY = event.clientY;
+    });
+  };
+
   constructor(
     public thumbnailSize: ThumbnailSizeService,
     public selection: PhotoSelectionService,
     private host: ElementRef<HTMLElement>,
-  ) {}
+    private zone: NgZone,
+  ) {
+    this.zone.runOutsideAngular(() => {
+      document.addEventListener('mousemove', this.onDocumentMouseMove);
+    });
+  }
+
+  ngOnDestroy() {
+    document.removeEventListener('mousemove', this.onDocumentMouseMove);
+  }
 
   onPhotoClick(event: MouseEvent, photoId: string) {
     if (event.ctrlKey || event.metaKey) {
@@ -85,13 +108,6 @@ export class GalleryGridComponent {
     if (!event.ctrlKey && !event.metaKey && !event.shiftKey) {
       this.selection.clear();
     }
-  }
-
-  @HostListener('document:mousemove', ['$event'])
-  onDocumentMouseMove(event: MouseEvent) {
-    if (!this.dragging) return;
-    this.dragCurrentX = event.clientX;
-    this.dragCurrentY = event.clientY;
   }
 
   @HostListener('document:mouseup')

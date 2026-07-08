@@ -1,5 +1,6 @@
 import { Component, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Subject, Subscription, catchError, of, switchMap } from 'rxjs';
 import { ImageCacheService } from '../../../core/offline/image-cache.service';
 
 @Component({
@@ -18,7 +19,30 @@ export class PhotoThumbnailComponent implements OnChanges, OnDestroy {
 
   objectUrl: string | null = null;
 
-  constructor(private imageCache: ImageCacheService) {}
+  // switchMap so a component instance reused for a different photoId (e.g.
+  // recycled by trackBy) cancels its stale in-flight load instead of racing
+  // to overwrite a newer objectUrl without revoking it.
+  private request$ = new Subject<string | null>();
+  private sub: Subscription;
+
+  constructor(private imageCache: ImageCacheService) {
+    this.sub = this.request$
+      .pipe(
+        switchMap((id) => {
+          if (!id) return of(null);
+          return this.imageCache.getThumbnailUrl$(id).pipe(
+            catchError((err) => {
+              console.error('Failed to load thumbnail', id, err);
+              return of(null);
+            }),
+          );
+        }),
+      )
+      .subscribe((url) => {
+        this.releaseUrl();
+        this.objectUrl = url;
+      });
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['photoId'] || changes['hasThumbnail']) {
@@ -27,18 +51,12 @@ export class PhotoThumbnailComponent implements OnChanges, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.sub.unsubscribe();
     this.releaseUrl();
   }
 
   private load() {
-    this.releaseUrl();
-
-    if (!this.hasThumbnail || !this.photoId) return;
-
-    this.imageCache.getThumbnailUrl$(this.photoId).subscribe({
-      next: (url) => (this.objectUrl = url),
-      error: (err) => console.error('Failed to load thumbnail', this.photoId, err),
-    });
+    this.request$.next(this.hasThumbnail && this.photoId ? this.photoId : null);
   }
 
   private releaseUrl() {
