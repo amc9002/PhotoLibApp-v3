@@ -22,6 +22,8 @@ import { I18nService } from '../../core/i18n/i18n.service';
 import { photoRemoveMessage } from '../../core/i18n/plurals';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { PhotoDto } from '../../models/photo.dto';
+import { SlideshowConfig } from '../../models/slideshow-config';
+import { SlideshowSettingsModalComponent } from '../../shared/modal/slideshow-settings-modal/slideshow-settings-modal.component';
 
 @Component({
   selector: 'app-gallery-page',
@@ -34,6 +36,7 @@ import { PhotoDto } from '../../models/photo.dto';
     GallerySelectModalComponent,
     EditMetadataModalComponent,
     PhotoInfoModalComponent,
+    SlideshowSettingsModalComponent,
     TranslatePipe,
   ],
   templateUrl: './gallery-page.component.html',
@@ -51,6 +54,9 @@ export class GalleryPageComponent {
   viewerOpen = false;
   viewerPhotoId?: string;
   viewerAutoEdit = false;
+
+  slideshowSettingsOpen = false;
+  activeSlideshowConfig: SlideshowConfig | null = null;
 
   // delete (single photo from the viewer, or a bulk selection from the grid)
   deleteConfirmOpen = false;
@@ -90,6 +96,27 @@ export class GalleryPageComponent {
     this.viewerOpen = false;
     this.viewerPhotoId = undefined;
     this.viewerAutoEdit = false;
+    this.activeSlideshowConfig = null;
+  }
+
+  // ---------------- slideshow ----------------
+
+  openSlideshowSettings() {
+    if (!this.photos.length) return;
+    this.slideshowSettingsOpen = true;
+  }
+
+  closeSlideshowSettings() {
+    this.slideshowSettingsOpen = false;
+  }
+
+  startSlideshow(config: SlideshowConfig) {
+    if (!this.photos.length) return;
+    this.slideshowSettingsOpen = false;
+    this.activeSlideshowConfig = config;
+    // The viewer picks its own first slide based on `config.order` once it
+    // initializes - this just satisfies the required activePhotoId input.
+    this.openViewer(this.photos[0].id);
   }
 
   /** Re-fetches this gallery's photos without a full page/view remount. */

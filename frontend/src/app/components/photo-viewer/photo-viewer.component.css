@@ -82,7 +82,8 @@
   background: rgba(0, 0, 0, 0.55);
 }
 
-.viewer-close {
+.viewer-close,
+.viewer-stop-slideshow {
   width: 40px;
   height: 40px;
 
@@ -93,6 +94,11 @@
   color: var(--text);
   font-size: 18px;
   cursor: pointer;
+}
+
+.viewer-close:hover,
+.viewer-stop-slideshow:hover {
+  background: rgba(0, 0, 0, 0.55);
 }
 
 /* === Fix stacking order: controls above photo === */

@@ -1,9 +1,16 @@
-.photo-viewer-main {
-  flex: 0 0 auto;
-
+/* The host itself is a flex item of .viewer-center; without a definite
+   size here it shrink-wraps to its content (.photo-viewer-main), which in
+   turn wants 100% of the host - a circular reference that collapses both
+   to 0 width. */
+:host {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.photo-viewer-main {
+  position: relative;
+  width: 100%;
 
   overflow: hidden;
 
@@ -11,10 +18,11 @@
 }
 
 .photo-viewer-main img {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   display: block;
 
   transform: scale(0.96);
@@ -26,5 +34,24 @@
 
 .photo-viewer-main img.open {
   transform: scale(1);
+  opacity: 1;
+}
+
+/* Outgoing photo during a slideshow crossfade - sits statically underneath
+   while the incoming one dissolves in on top of it. */
+.photo-viewer-main img.photo-below {
+  opacity: 1;
+  transition: none;
+}
+
+/* Incoming photo during a slideshow crossfade - plain opacity dissolve,
+   no scale movement, so slides don't "pop" on every advance. */
+.photo-viewer-main img.crossfade {
+  transform: none;
+  opacity: 0;
+  transition: opacity 800ms ease;
+}
+
+.photo-viewer-main img.crossfade.crossfade-in {
   opacity: 1;
 }

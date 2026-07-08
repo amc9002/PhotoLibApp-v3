@@ -35,6 +35,7 @@ export class ToolbarComponent {
   @Output() newGallery = new EventEmitter<void>();
   @Output() deleteGallery = new EventEmitter<void>();
   @Output() editGallery = new EventEmitter<void>();
+  @Output() slideshow = new EventEmitter<void>();
   @Output() copySelected = new EventEmitter<void>();
   @Output() moveSelected = new EventEmitter<void>();
   @Output() deleteSelected = new EventEmitter<void>();
@@ -119,6 +120,12 @@ export class ToolbarComponent {
     this.closeServiceMenu();
     if (!this.selectedGallery) return;
     this.editGallery.emit();
+  }
+
+  onSlideshow() {
+    this.closeServiceMenu();
+    if (!this.selectedGallery) return;
+    this.slideshow.emit();
   }
 
   onCopySelected() {

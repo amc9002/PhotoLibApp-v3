@@ -115,6 +115,13 @@
 
       <div
         class="service-menu-item"
+        (click)="onSlideshow(); $event.stopPropagation()"
+      >
+        {{ "toolbar.slideshow" | t }}
+      </div>
+
+      <div
+        class="service-menu-item"
         (click)="closeServiceMenu(); properties.emit()"
       >
         {{ "toolbar.galleryProperties" | t }}

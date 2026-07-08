@@ -1,8 +1,16 @@
 <div class="photo-viewer-main">
   <img
-    *ngIf="objectUrl"
-    [src]="objectUrl"
+    *ngIf="previousUrl"
+    class="photo-below"
+    [src]="previousUrl"
+    alt="Photo"
+  />
+  <img
+    *ngIf="currentUrl"
+    [src]="currentUrl"
     [class.open]="open"
+    [class.crossfade]="crossfade"
+    [class.crossfade-in]="crossfade && fadingIn"
     alt="Photo"
   />
 </div>

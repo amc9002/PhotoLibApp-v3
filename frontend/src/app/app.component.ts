@@ -322,6 +322,10 @@ export class AppComponent implements OnInit {
     this.galleryPage?.requestBulkDelete(this.photoSelection.ids);
   }
 
+  onSlideshow() {
+    this.galleryPage?.openSlideshowSettings();
+  }
+
   showSettings = false;
 
   openSettings() {

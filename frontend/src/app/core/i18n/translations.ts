@@ -51,6 +51,7 @@ export const translations: Record<string, Record<Lang, string>> = {
   'toolbar.galleryProperties': { be: 'Уласцівасці галерэі', en: 'Gallery properties' },
   'toolbar.editGallery': { be: 'Рэдагаваць галерэю', en: 'Edit gallery' },
   'toolbar.deleteGallery': { be: 'Выдаліць галерэю', en: 'Delete gallery' },
+  'toolbar.slideshow': { be: 'Слайд-шоу', en: 'Slideshow' },
   'toolbar.settings': { be: 'Налады', en: 'Settings' },
 
   // ---------------- create-gallery ----------------
@@ -114,6 +115,16 @@ export const translations: Record<string, Record<Lang, string>> = {
   'photoViewer.noDescription': { be: 'Без апісання', en: 'No description' },
   'photoViewer.collapseInfo': { be: 'Схаваць звесткі пра фота', en: 'Hide photo info' },
   'photoViewer.expandInfo': { be: 'Паказаць звесткі пра фота', en: 'Show photo info' },
+  'photoViewer.stopSlideshow': { be: 'Спыніць слайд-шоу', en: 'Stop slideshow' },
+
+  // ---------------- slideshow-settings-modal ----------------
+  'slideshow.heading': { be: 'Слайд-шоу', en: 'Slideshow' },
+  'slideshow.order': { be: 'Парадак', en: 'Order' },
+  'slideshow.orderForward': { be: 'У парадку', en: 'In order' },
+  'slideshow.orderReverse': { be: 'У адваротным парадку', en: 'Reverse order' },
+  'slideshow.orderRandom': { be: 'Выпадкова', en: 'Random' },
+  'slideshow.interval': { be: 'Інтэрвал (сек.)', en: 'Interval (sec.)' },
+  'slideshow.start': { be: 'Пачаць', en: 'Start' },
 
   // ---------------- add-from-internet-modal ----------------
   'addFromInternet.heading': { be: 'Дадаць з інтэрнэту', en: 'Add from internet' },

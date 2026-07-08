@@ -15,12 +15,19 @@
   [photos]="photos"
   [activePhotoId]="viewerPhotoId"
   [openEditOnLoad]="viewerAutoEdit"
+  [slideshowConfig]="activeSlideshowConfig"
   (close)="closeViewer()"
   (photoSelected)="openViewer($event)"
   (requestDelete)="openDeleteConfirm($event)"
   (requestCopy)="requestCopyOrMove([$event], 'copy')"
   (requestMove)="requestCopyOrMove([$event], 'move')"
 ></app-photo-viewer>
+
+<app-slideshow-settings-modal
+  *ngIf="slideshowSettingsOpen"
+  (start)="startSlideshow($event)"
+  (cancel)="closeSlideshowSettings()"
+></app-slideshow-settings-modal>
 
 <app-confirm-modal
   *ngIf="deleteConfirmOpen"

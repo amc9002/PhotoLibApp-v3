@@ -5,7 +5,7 @@
       <app-photo-carousel
         [photos]="photos"
         [activePhotoId]="activePhotoId"
-        (photoSelected)="photoSelected.emit($event)"
+        (photoSelected)="manualSelect($event)"
       ></app-photo-carousel>
     </div>
 
@@ -29,6 +29,8 @@
       <app-photo-viewer-main
         [photoId]="activePhotoId"
         [open]="true"
+        [crossfade]="slideshowActive"
+        (loaded)="onMainPhotoLoaded()"
       ></app-photo-viewer-main>
     </div>
 
@@ -36,6 +38,16 @@
     <div class="viewer-right">
       <div class="viewer-side-top">
         <button class="viewer-close" (click)="close.emit()">✕</button>
+
+        <button
+          class="viewer-stop-slideshow"
+          *ngIf="slideshowActive"
+          (click)="stopSlideshow()"
+          [attr.aria-label]="'photoViewer.stopSlideshow' | t"
+          [title]="'photoViewer.stopSlideshow' | t"
+        >
+          ⏸
+        </button>
 
         <app-photo-actions
           (editMetadata)="openEditMetadata()"
