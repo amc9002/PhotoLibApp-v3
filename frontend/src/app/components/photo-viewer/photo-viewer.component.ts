@@ -314,9 +314,16 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
     if (!this.slideshowActive) return;
 
     this.clearSlideshowTimer();
+    // The interval is "how long to look at the photo", separate from and
+    // in addition to however long the crossfade itself takes - without
+    // adding the transition duration here, a transition configured longer
+    // than (or close to) the interval never gets to finish before the next
+    // advance interrupts it and restarts it from scratch, which looks like
+    // it's barely fading at all no matter how long it's set to.
+    const crossfadeMs = this.slideshowConfig?.transitionMs ?? 0;
     this.slideshowAdvanceTimeout = setTimeout(
       () => this.advanceSlideshow(),
-      this.slideshowIntervalMs,
+      this.slideshowIntervalMs + crossfadeMs,
     );
   }
 
