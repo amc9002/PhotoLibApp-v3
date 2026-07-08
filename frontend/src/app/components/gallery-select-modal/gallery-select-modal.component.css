@@ -2,7 +2,7 @@
   max-height: 240px;
   overflow-y: auto;
 
-  border: 1px solid #333;
+  border: 1px solid var(--canvas-border);
   border-radius: 4px;
   margin-bottom: 12px;
 }
@@ -24,7 +24,7 @@
 .gallery-picker-empty {
   padding: 10px;
   font-size: 13px;
-  color: #888;
+  color: var(--text-muted);
 }
 
 .gallery-picker-new {
@@ -35,18 +35,18 @@
 .gallery-picker-new input {
   flex: 1;
 
-  background: #2a2a2a;
-  border: 1px solid #333;
+  background: var(--canvas-elevated);
+  border: 1px solid var(--canvas-border);
   border-radius: 4px;
   padding: 8px;
 
-  color: white;
+  color: var(--text);
   font-size: 13px;
 }
 
 .gallery-picker-new input:focus {
   outline: none;
-  border-color: #4da3ff;
+  border-color: var(--amber);
 }
 
 button:disabled {

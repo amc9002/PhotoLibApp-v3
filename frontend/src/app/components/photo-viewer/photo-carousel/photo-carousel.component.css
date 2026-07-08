@@ -2,8 +2,8 @@
 
 .photo-viewer-carousel {
   height: 80px;
-  background: #2b2b2b;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--canvas-elevated);
+  border-bottom: 1px solid var(--canvas-border);
 }
 
 /* ===== STRIP ===== */
@@ -83,7 +83,7 @@
   width: 100%;
 
   font-size: 11px;
-  color: #aaa;
+  color: var(--text-muted);
 
   text-align: center;
   white-space: nowrap;
@@ -104,7 +104,7 @@
 .carousel-item.active .carousel-thumb {
   background: rgba(255, 255, 255, 0.08);
 
-  outline: 1px solid rgba(255, 255, 255, 0.45);
+  outline: 2px solid var(--amber);
   outline-offset: -1px;
 
   border-radius: 4px;
@@ -116,7 +116,7 @@
 
 .carousel-item.active .carousel-title {
   font-weight: 600;
-  color: #fff;
+  color: var(--text);
   z-index: 3;
 }
 

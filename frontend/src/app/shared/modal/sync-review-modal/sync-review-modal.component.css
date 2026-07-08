@@ -12,7 +12,7 @@
 
 .sync-intro {
   margin: 0 0 16px;
-  color: #aaa;
+  color: var(--text-muted);
   font-size: 13px;
 }
 
@@ -25,17 +25,17 @@
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #999;
+  color: var(--text-muted);
 }
 
 .sync-section h3.conflict-heading {
-  color: #f5a623;
+  color: var(--warn);
 }
 
 .sync-hint {
   margin: 0 0 8px;
   font-size: 12px;
-  color: #999;
+  color: var(--text-muted);
 }
 
 .sync-item {
@@ -43,7 +43,7 @@
   align-items: center;
   gap: 10px;
   padding: 8px 0;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--canvas-border);
 }
 
 .sync-item:last-child {
@@ -57,7 +57,7 @@
   flex: 0 0 auto;
   border-radius: 4px;
   overflow: hidden;
-  background: #2a2a2a;
+  background: var(--canvas-elevated);
 }
 
 .sync-item ::ng-deep app-photo-thumbnail img {
@@ -85,7 +85,7 @@
 
 .conflict-reason {
   font-size: 11px;
-  color: #f5a623;
+  color: var(--warn);
 }
 
 .sync-item-actions {
@@ -95,7 +95,7 @@
 }
 
 .sync-item.conflict {
-  background: rgba(245, 166, 35, 0.08);
+  background: color-mix(in srgb, var(--warn) 8%, transparent);
   border-radius: 6px;
   padding: 8px;
 }

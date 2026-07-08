@@ -5,7 +5,7 @@
   cursor: pointer;
 }
 .gallery-item.selected {
-  background-color: #dbeafe; /* светла-сіні */
+  background-color: color-mix(in srgb, var(--amber) 20%, transparent);
 }
 
 .gallery-title {

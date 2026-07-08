@@ -11,11 +11,12 @@
 
 /* === MODAL CONTAINER === */
 .modal {
-  background: #222;
-  color: white;
+  background: var(--canvas-elevated);
+  color: var(--text);
   padding: 20px;
   border-radius: 8px;
   min-width: 300px;
+  border: 1px solid var(--canvas-border);
 }
 
 /* === MODAL HEADER === */
@@ -51,11 +52,11 @@
 .modal-close {
   background: none;
   border: none;
-  color: #aaa;
+  color: var(--text-muted);
   font-size: 16px;
   cursor: pointer;
 }
 
 .modal-close:hover {
-  color: #fff;
+  color: var(--text);
 }

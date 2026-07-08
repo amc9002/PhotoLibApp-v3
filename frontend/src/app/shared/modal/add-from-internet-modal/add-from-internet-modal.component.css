@@ -11,8 +11,8 @@
   text-align: center;
   padding: 10px 16px;
   margin: 16px 0;
-  background: #4da3ff;
-  color: white;
+  background: var(--amber);
+  color: var(--ink);
   border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
@@ -22,11 +22,11 @@
 }
 
 .bookmarklet-btn:hover {
-  background: #3d8ce6;
+  background: var(--amber-deep);
 }
 
 .hint {
   font-size: 12px;
-  color: #aaa;
+  color: var(--text-muted);
   margin-top: 12px;
 }

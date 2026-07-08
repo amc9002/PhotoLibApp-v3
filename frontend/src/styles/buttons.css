@@ -8,17 +8,17 @@
 }
 
 .btn.primary {
-  background: #3b82f6;
-  color: white;
+  background: var(--amber);
+  color: var(--ink);
 }
 
 .btn.secondary {
-  background: #444;
-  color: #ddd;
+  background: var(--canvas-elevated);
+  color: var(--text);
 }
 
 .btn.danger {
-  background: #b91c1c;
+  background: var(--warn);
   color: white;
 }
 

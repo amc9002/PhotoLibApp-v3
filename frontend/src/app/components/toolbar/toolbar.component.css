@@ -28,7 +28,7 @@
   align-items: center;
   gap: 12px; /* ← больш адлегласці ад кнопкі */
   padding-left: 12px;
-  border-left: 1px solid rgba(255, 255, 255, 0.25); /* візуальны падзел */
+  border-left: 1px solid var(--canvas-border); /* візуальны падзел */
   overflow: hidden;
 }
 
@@ -58,7 +58,7 @@
   height: 28px;
   padding: 0 8px;
   font-size: 14px;
-  color: #fff;
+  color: var(--text);
 
   background-color: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -85,8 +85,8 @@
   top: 36px;
   left: 0;
   min-width: 220px;
-  background-color: #222;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: var(--canvas-elevated);
+  border: 1px solid var(--canvas-border);
   border-radius: 4px;
   z-index: 100;
 }
@@ -115,8 +115,8 @@
   top: 36px;
   min-width: 180px;
 
-  background-color: #222;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: var(--canvas-elevated);
+  border: 1px solid var(--canvas-border);
   border-radius: 4px;
   z-index: 200;
 }
@@ -131,13 +131,13 @@
 }
 
 .service-menu-item.danger {
-  color: #ff6b6b;
+  color: var(--warn);
 }
 
 .service-menu-label {
   padding: 6px 10px;
   font-size: 11px;
-  color: #999;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }

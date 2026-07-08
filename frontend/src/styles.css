@@ -9,13 +9,31 @@ body {
 
 body {
   font-family: Roboto, "Helvetica Neue", sans-serif;
-  color: #eee;
+  color: var(--text);
 
-  background: linear-gradient(180deg, #3a3434 0%, #2e2929 100%);
+  background: linear-gradient(180deg, var(--canvas-elevated) 0%, var(--canvas) 100%);
 }
 
 :root {
   --ui-ease: cubic-bezier(0.4, 0, 0.2, 1);
   --ui-fast: 120ms;
   --ui-normal: 200ms;
+
+  /* Brand palette, sampled from the PhotoLib logo (Ink/Amber) and built
+     out into the neutrals and status colours the app needs. Single dark
+     world by design - the app has no light theme to support. */
+  --ink: #1d2b3f;
+  --ink-soft: #34455e;
+  --amber: #f5ac22;
+  --amber-deep: #c98910;
+
+  --canvas: #14171f;
+  --canvas-elevated: #1e222c;
+  --canvas-border: #2a2f3b;
+
+  --ok: #6fa98a;
+  --warn: #d96c5b;
+
+  --text: #ece9e3;
+  --text-muted: #a6abb8;
 }

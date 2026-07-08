@@ -1,11 +1,11 @@
 .btn.danger {
-  background: #e04b4b;
+  background: var(--warn);
   color: white;
   border: none;
 }
 
 .btn.danger:hover {
-  background: #c73e3e;
+  background: color-mix(in srgb, var(--warn) 80%, black);
 }
 
 button:disabled {

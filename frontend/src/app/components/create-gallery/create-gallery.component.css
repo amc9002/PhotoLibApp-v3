@@ -9,8 +9,8 @@
 }
 
 .window {
-  background: #1e1e1e;
-  color: #fff;
+  background: var(--canvas-elevated);
+  color: var(--text);
   width: 320px;
   border-radius: 6px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -20,7 +20,7 @@
   display: flex;
   justify-content: space-between;
   padding: 8px 12px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--canvas-border);
 }
 
 .window-content {
