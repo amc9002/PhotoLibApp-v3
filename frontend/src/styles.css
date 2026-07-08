@@ -24,8 +24,9 @@ body {
      world by design - the app has no light theme to support. */
   --ink: #1d2b3f;
   --ink-soft: #34455e;
-  --amber: #f5ac22;
-  --amber-deep: #c98910;
+  --amber: #d46611;
+  --amber-deep: #97480c;
+  --paper: #f4ede0;
 
   --canvas: #14171f;
   --canvas-elevated: #1e222c;
