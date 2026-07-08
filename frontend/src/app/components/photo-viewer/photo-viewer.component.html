@@ -57,6 +57,34 @@
       </div>
     </div>
   </div>
+
+  <!-- INFO PANEL -->
+  <aside
+    class="viewer-info-panel"
+    [class.collapsed]="infoPanelCollapsed"
+    (click)="$event.stopPropagation()"
+  >
+    <button
+      class="info-panel-toggle"
+      (click)="toggleInfoPanel()"
+      [attr.aria-label]="(infoPanelCollapsed ? 'photoViewer.expandInfo' : 'photoViewer.collapseInfo') | t"
+      [title]="(infoPanelCollapsed ? 'photoViewer.expandInfo' : 'photoViewer.collapseInfo') | t"
+    >
+      {{ infoPanelCollapsed ? '‹' : '›' }}
+    </button>
+
+    <div class="info-panel-content" *ngIf="!infoPanelCollapsed && activePhoto as photo">
+      <h2 class="info-title">{{ photo.title || ('photoViewer.untitled' | t) }}</h2>
+
+      <p class="info-description" [class.muted]="!activePhotoHasDescription">
+        {{ activePhotoHasDescription ? photo.description : ('photoViewer.noDescription' | t) }}
+      </p>
+
+      <div class="info-tags" *ngIf="photo.tags?.length">
+        <span class="info-tag" *ngFor="let tag of photo.tags">{{ tag }}</span>
+      </div>
+    </div>
+  </aside>
 </div>
 
 <ng-container *ngIf="activePhoto as photo">

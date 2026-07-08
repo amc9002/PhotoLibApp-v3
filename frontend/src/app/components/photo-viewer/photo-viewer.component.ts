@@ -46,6 +46,9 @@ export class PhotoViewerComponent implements OnInit {
   infoOpen = false;
   infoPhoto?: PhotoDto;
 
+  /** Whether the title/description side panel is folded away to give the photo full width. */
+  infoPanelCollapsed = false;
+
   @HostListener('window:keydown', ['$event'])
   onKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
@@ -116,6 +119,14 @@ export class PhotoViewerComponent implements OnInit {
     }
 
     return this.photos.find((p) => p.id === this.activePhotoId);
+  }
+
+  get activePhotoHasDescription(): boolean {
+    return !!this.activePhoto?.description?.trim();
+  }
+
+  toggleInfoPanel() {
+    this.infoPanelCollapsed = !this.infoPanelCollapsed;
   }
 
   // Backdrop closes viewer; overlay actions must stop event bubbling

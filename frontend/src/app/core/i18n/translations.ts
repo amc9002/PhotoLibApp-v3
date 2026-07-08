@@ -110,6 +110,10 @@ export const translations: Record<string, Record<Lang, string>> = {
     be: 'Не ўдалося захаваць змены. Паспрабуйце яшчэ раз.',
     en: 'Failed to save changes. Please try again.',
   },
+  'photoViewer.untitled': { be: 'Без назвы', en: 'Untitled' },
+  'photoViewer.noDescription': { be: 'Без апісання', en: 'No description' },
+  'photoViewer.collapseInfo': { be: 'Схаваць звесткі пра фота', en: 'Hide photo info' },
+  'photoViewer.expandInfo': { be: 'Паказаць звесткі пра фота', en: 'Show photo info' },
 
   // ---------------- add-from-internet-modal ----------------
   'addFromInternet.heading': { be: 'Дадаць з інтэрнэту', en: 'Add from internet' },

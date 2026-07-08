@@ -53,12 +53,13 @@ namespace PhotoLibApi.Controllers
                 .AsNoTracking()
                 .Where(p => p.GalleryId == galleryId && !p.IsDeleted)
                 .OrderBy(p => p.SortOrder)
-                // Minimal projection for gallery view:
-                // only data required to render thumbnails list
+                // Minimal projection for gallery view: only data required to
+                // render the thumbnails list and the viewer's info panel.
                 .Select(p => new
                 {
                     p.Id,
                     p.Title,
+                    p.Description,
                     p.HasThumbnail,
                     p.UpdatedAtUtc,
                     Tags = p.Tags.Select(t => t.Name)
