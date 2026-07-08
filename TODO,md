@@ -3,6 +3,12 @@
 This document tracks planned work, ideas, and architectural notes.
 It is intentionally incomplete and evolves with the project.
 
+*Checkboxes reconciled against the actual codebase on 2026-07-08 - most
+backend CRUD/soft-delete items and several frontend items were already
+done but unchecked. Genuine near-term gaps: right-click context menu
+(low priority, duplicates the "⋮" menu), autoplay/slideshow, empty-gallery
+state, viewer fullscreen toggle, upload retry logic.*
+
 ---
 
 ## Backend – Core API
@@ -13,40 +19,40 @@ It is intentionally incomplete and evolves with the project.
 - [x] Store originals and thumbnails separately
 - [x] Add thumbnail endpoint
 - [x] Implement PUT endpoint for updating photo title and description
-- [ ] Decide on delete strategy (soft vs hard)
-- [ ] Implement soft delete logic (IsDeleted)
-- [ ] Handle file cleanup on hard delete (if used)
-- [ ] Add metadata-only GET /photo/{id}
+- [x] Decide on delete strategy (soft vs hard) — soft delete for normal use; `admin/{id}` hard-delete endpoints exist for dev cleanup
+- [x] Implement soft delete logic (IsDeleted)
+- [x] Handle file cleanup on hard delete (if used) — `AdminHardDelete` removes original + thumbnail files via `PhotoFilePathHelper`
+- [x] Add metadata-only GET /photo/{id} — `GetById` returns the DTO only; file bytes are served separately by `/file` and `/thumbnail`
 
 ### Photos – CRUD Completion
 
-- [ ] Implement DELETE /photo/{id} (soft delete)
-- [ ] Define photo delete strategy (soft vs hard)
-- [ ] Add IsDeleted + DeletedAt fields
-- [ ] Exclude soft-deleted photos from default queries
-- [ ] Handle hard delete (internal / maintenance only)
+- [x] Implement DELETE /photo/{id} (soft delete)
+- [x] Define photo delete strategy (soft vs hard)
+- [x] Add IsDeleted + DeletedAt fields — `IsDeleted` bool; no separate `DeletedAt`, `UpdatedAtUtc` doubles as the delete timestamp (see Architecture Notes in README)
+- [x] Exclude soft-deleted photos from default queries
+- [x] Handle hard delete (internal / maintenance only)
 
 ### Galleries
 
-- [ ] Review GalleryController endpoints
-- [ ] Decide gallery delete behavior
-- [ ] Add gallery-level sync support
+- [x] Review GalleryController endpoints
+- [x] Decide gallery delete behavior — soft delete, no automatic cascade to its photos (an emptied gallery prompts the user separately to delete it too)
+- [x] Add gallery-level sync support
 
 ### Galleries – CRUD Completion
 
-- [ ] Implement PUT /gallery/{id} (rename / metadata)
-- [ ] Implement DELETE /gallery/{id}
-- [ ] Define gallery delete behavior:
-  - cascade delete photos?
-  - forbid delete if not empty?
-  - soft delete gallery?
+- [x] Implement PUT /gallery/{id} (rename / metadata)
+- [x] Implement DELETE /gallery/{id}
+- [x] Define gallery delete behavior:
+  - no automatic cascade delete of photos
+  - not forbidden if non-empty (deletion is explicit, user-confirmed)
+  - soft delete gallery
 
 ---
 
 ## Backend – Storage & Architecture
 
 - [x] File-based storage for originals and thumbnails
-- [ ] Extract file path logic into helper/service
+- [x] Extract file path logic into helper/service — `Services/PhotoFilePathHelper.cs`
 - [ ] Consider future cloud storage abstraction
 - [ ] Add remarks/docs for storage evolution
 
@@ -54,19 +60,19 @@ It is intentionally incomplete and evolves with the project.
 
 ## Frontend – Angular (General)
 
-- [ ] Align gallery view with thumbnail-only API
-- [ ] Lazy-load thumbnails
-- [ ] Fetch original image only on user interaction
-- [ ] Offline-first sync UI states
+- [x] Align gallery view with thumbnail-only API
+- [x] Lazy-load thumbnails
+- [x] Fetch original image only on user interaction — `photo-viewer-main` fetches the original only when the viewer opens
+- [x] Offline-first sync UI states — local mirror, outbox, sync review modal
 
 ---
 
 ## Frontend – Gallery & Photo Actions (Planned)
 
-- [ ] Define unified photo actions (single & batch)
-- [ ] Add selection mode in gallery (multi-select)
-- [ ] Implement group actions (delete, add to album)
-- [ ] Add context menu (right-click) for photo actions
+- [x] Define unified photo actions (single & batch)
+- [x] Add selection mode in gallery (multi-select)
+- [x] Implement group actions (delete, copy/move to gallery) — no separate "album" concept, galleries fill that role
+- [ ] Add context menu (right-click) for photo actions — low priority, the "⋮" actions menu already covers the same actions
 
 ## Frontend – Gallery & Photo Viewing
 
@@ -75,7 +81,7 @@ It is intentionally incomplete and evolves with the project.
 - [x] Next / previous navigation (keyboard + buttons)
 - [x] Thumbnail carousel in viewer mode
 - [x] Keyboard handling with proper focus awareness
-- [ ] Full-size / original photo overlay
+- [x] Full-size / original photo overlay
 - [ ] Autoplay (ordered)
 - [ ] Autoplay (random)
 - [ ] Empty gallery state (no photos yet)
@@ -89,8 +95,8 @@ It is intentionally incomplete and evolves with the project.
 - [x] Disable Save button while saving
 - [x] Show “Saving…” state during PUT request
 - [x] Prevent viewer keyboard navigation while editing text
-- [ ] Disable Save button until metadata is actually changed (dirty state)
-- [ ] Show inline error message on failed save
+- [x] Disable Save button until metadata is actually changed (dirty state)
+- [x] Show inline error message on failed save
 - [ ] Add subtle button press / saving animation
 
 ---
@@ -120,13 +126,13 @@ It is intentionally incomplete and evolves with the project.
 
 ## Sync & Offline
 
-- [x] Two-ID model (localId / serverId)
-- [ ] Soft delete propagation
-- [ ] Conflict resolution strategy
+- [x] Two-ID model (localId / serverId) — `ClientTempId`, remapped once the server assigns a real id
+- [x] Soft delete propagation
+- [x] Conflict resolution strategy — `sync-coordinator.service.ts` compares `baseUpdatedAtUtc` vs the server's current value, surfaced via the sync review modal
 - [ ] Retry logic for file upload
-- [ ] Propagate photo delete via sync
-- [ ] Handle gallery delete in offline mode
-- [ ] Resolve delete vs update conflicts
+- [x] Propagate photo delete via sync
+- [x] Handle gallery delete in offline mode
+- [x] Resolve delete vs update conflicts — server-side delete while offline shows as a conflict requiring explicit "apply anyway"
 
 ---
 
