@@ -32,6 +32,7 @@ interface PhotoLibCacheSchema extends DBSchema {
   thumbnails: {
     key: string; // photoId
     value: { photoId: string; blob: Blob; cachedAt: number };
+    indexes: { cachedAt: number };
   };
   originals: {
     key: string; // photoId
@@ -55,10 +56,19 @@ interface PhotoLibCacheSchema extends DBSchema {
 }
 
 const DB_NAME = 'photolib-cache';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 /** Hard cap on how many full-size originals are kept locally; oldest-viewed is evicted first. */
 export const MAX_CACHED_ORIGINALS = 10;
+
+/**
+ * Hard cap on how many thumbnails are kept locally; oldest-cached is
+ * evicted first. Thumbnails are cheap and meant to cover normal browsing
+ * (many galleries' worth), unlike the much tighter original-image cap -
+ * without any cap at all, though, a long-lived library just keeps
+ * accumulating rows forever.
+ */
+export const MAX_CACHED_THUMBNAILS = 500;
 
 /**
  * Thin promise-based wrapper around the app's IndexedDB cache. Owns the
@@ -76,9 +86,12 @@ export class LocalDbService {
     navigator.storage?.persist?.().catch(() => {});
 
     this.dbPromise = openDB<PhotoLibCacheSchema>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        if (!db.objectStoreNames.contains('thumbnails')) {
-          db.createObjectStore('thumbnails', { keyPath: 'photoId' });
+      upgrade(db, _oldVersion, _newVersion, transaction) {
+        const thumbnails = db.objectStoreNames.contains('thumbnails')
+          ? transaction.objectStore('thumbnails')
+          : db.createObjectStore('thumbnails', { keyPath: 'photoId' });
+        if (!thumbnails.indexNames.contains('cachedAt')) {
+          thumbnails.createIndex('cachedAt', 'cachedAt');
         }
         if (!db.objectStoreNames.contains('originals')) {
           const originals = db.createObjectStore('originals', { keyPath: 'photoId' });
@@ -107,9 +120,11 @@ export class LocalDbService {
     return (await db.get('thumbnails', photoId))?.blob;
   }
 
+  /** Stores a newly-fetched thumbnail and evicts the least-recently-cached entries over the cap. */
   async putThumbnail(photoId: string, blob: Blob): Promise<void> {
     const db = await this.dbPromise;
     await db.put('thumbnails', { photoId, blob, cachedAt: Date.now() });
+    await this.evictExcessThumbnails(db);
   }
 
   async getOriginal(photoId: string): Promise<Blob | undefined> {
@@ -159,6 +174,24 @@ export class LocalDbService {
     const tx = db.transaction('originals', 'readwrite');
     // No direction = ascending by viewedAt, i.e. oldest-viewed first.
     let cursor = await tx.store.index('viewedAt').openCursor();
+
+    while (cursor && excess > 0) {
+      await cursor.delete();
+      excess--;
+      cursor = await cursor.continue();
+    }
+
+    await tx.done;
+  }
+
+  private async evictExcessThumbnails(db: IDBPDatabase<PhotoLibCacheSchema>): Promise<void> {
+    const count = await db.count('thumbnails');
+    let excess = count - MAX_CACHED_THUMBNAILS;
+    if (excess <= 0) return;
+
+    const tx = db.transaction('thumbnails', 'readwrite');
+    // No direction = ascending by cachedAt, i.e. oldest-cached first.
+    let cursor = await tx.store.index('cachedAt').openCursor();
 
     while (cursor && excess > 0) {
       await cursor.delete();

@@ -3,7 +3,7 @@
     <div class="carousel-items">
       <div
         class="carousel-item thumb"
-        *ngFor="let photo of photos"
+        *ngFor="let photo of photos; trackBy: trackById"
         [class.active]="photo.id === activePhotoId"
         (click)="selectPhoto(photo.id)"
       >

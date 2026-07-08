@@ -165,11 +165,11 @@ namespace PhotoLibApi.Controllers
         [HttpGet("{id:guid}/file")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetFile(Guid id)
+        public async Task<IActionResult> GetFile(Guid id)
         {
 
-            // Check that photo exists and has original    
-            var photo = _db.Photos.Find(id);
+            // Check that photo exists and has original
+            var photo = await _db.Photos.FindAsync(id);
             if (photo == null || !photo.HasOriginal)
                 return NotFound();
 
@@ -194,10 +194,10 @@ namespace PhotoLibApi.Controllers
         [HttpGet("{id:guid}/thumbnail")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetThumbnail(Guid id)
+        public async Task<IActionResult> GetThumbnail(Guid id)
         {
             // Check that photo exists and has thumbnail
-            var photo = _db.Photos.Find(id);
+            var photo = await _db.Photos.FindAsync(id);
             if (photo == null || !photo.HasThumbnail)
                 return NotFound();
 

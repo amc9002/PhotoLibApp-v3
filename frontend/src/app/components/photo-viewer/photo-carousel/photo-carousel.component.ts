@@ -19,4 +19,8 @@ export class PhotoCarouselComponent {
   selectPhoto(photoId: string) {
     this.photoSelected.emit(photoId);
   }
+
+  trackById(index: number, photo: PhotoListItemDto): string {
+    return photo.id;
+  }
 }
