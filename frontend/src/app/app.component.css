@@ -23,17 +23,8 @@ app-toolbar {
   align-items: center;
 }
 
-.app-logo-plate {
-  display: flex;
-  align-items: center;
-  height: 30px;
-  padding: 0 10px;
-  border-radius: 6px;
-  background: var(--paper);
-}
-
 .app-logo {
-  height: 22px;
+  height: 26px;
   width: auto;
   display: block;
 }
