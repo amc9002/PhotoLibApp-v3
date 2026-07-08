@@ -95,6 +95,20 @@ export class PhotoViewerMainComponent implements OnChanges, OnDestroy {
     return layer.id;
   }
 
+  /**
+   * Runs `callback` after a real paint of whatever state is on screen right
+   * now. A single `requestAnimationFrame` is enough in Chromium, but
+   * Firefox can coalesce a class change made there with the state that was
+   * just set synchronously - the transition never gets a "before" frame to
+   * animate from, so it jumps straight to its end value instead of
+   * animating. A second rAF forces that paint to actually happen first.
+   */
+  private afterPaint(callback: () => void) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(callback);
+    });
+  }
+
   private applyNewUrl(url: string | null) {
     if (this.fadeTimeout) {
       clearTimeout(this.fadeTimeout);
@@ -114,10 +128,9 @@ export class PhotoViewerMainComponent implements OnChanges, OnDestroy {
       this.fadingOut = false;
 
       // Let both <img>s paint at their starting opacity first, then flip
-      // together - setting both in the same tick would skip the transition
-      // entirely, and the two need to start in the same frame to stay in
+      // together - the two need to start in the same frame to stay in
       // lockstep (outgoing fading out exactly as incoming fades in).
-      requestAnimationFrame(() => {
+      this.afterPaint(() => {
         this.fadingIn = true;
         this.fadingOut = true;
       });
@@ -133,7 +146,7 @@ export class PhotoViewerMainComponent implements OnChanges, OnDestroy {
       this.releaseUrl(this.currentLayer);
       this.currentLayer = newLayer;
       this.fadingIn = false;
-      requestAnimationFrame(() => {
+      this.afterPaint(() => {
         this.fadingIn = true;
       });
     } else {

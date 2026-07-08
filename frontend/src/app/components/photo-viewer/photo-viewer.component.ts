@@ -321,10 +321,8 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
     // advance interrupts it and restarts it from scratch, which looks like
     // it's barely fading at all no matter how long it's set to.
     const crossfadeMs = this.slideshowConfig?.transitionMs ?? 0;
-    this.slideshowAdvanceTimeout = setTimeout(
-      () => this.advanceSlideshow(),
-      this.slideshowIntervalMs + crossfadeMs,
-    );
+    const delay = this.slideshowIntervalMs + crossfadeMs;
+    this.slideshowAdvanceTimeout = setTimeout(() => this.advanceSlideshow(), delay);
   }
 
   private advanceSlideshow() {
