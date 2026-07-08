@@ -38,8 +38,17 @@
 }
 
 /* Outgoing photo during a slideshow crossfade - fades out in lockstep with
-   the incoming photo fading in over it (see .crossfade below). */
+   the incoming photo fading in over it (see .crossfade below). This is
+   always a freshly-mounted element (previousLayer goes through null
+   between fades, see photo-viewer-main.component.ts), so it never gets
+   the .open class's scale(1) the way the same photo did while it was the
+   *incoming* layer - without overriding transform here too, it would
+   inherit the base rule's scale(0.96) and visibly snap to that smaller
+   size the instant it becomes the outgoing layer, reading as a little
+   jolt right before the fade-out starts.
+*/
 .photo-viewer-main img.photo-below {
+  transform: scale(1);
   opacity: 1;
   transition: opacity 800ms ease;
 }
