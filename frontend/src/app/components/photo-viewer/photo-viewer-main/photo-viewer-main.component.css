@@ -37,18 +37,15 @@
   opacity: 1;
 }
 
-/* Outgoing photo during a slideshow crossfade - held at full, constant
-   opacity underneath the incoming photo rather than also animated. Fading
-   *both* layers' opacity independently double-composites against the dark
-   backdrop behind them (each partially-transparent layer lets some of it
-   through), which visibly darkens/muddies the mid-transition frame - a
-   classic two-layer-crossfade artifact. Keeping this layer opaque means
-   the backdrop never shows through at all: as the incoming photo's own
-   opacity rises, it progressively covers this one, which reads to the eye
-   as exactly the same "old photo dissolves into new" effect, just clean. */
+/* Outgoing photo during a slideshow crossfade - fades out in lockstep with
+   the incoming photo fading in over it (see .crossfade below). */
 .photo-viewer-main img.photo-below {
   opacity: 1;
-  transition: none;
+  transition: opacity 800ms ease;
+}
+
+.photo-viewer-main img.photo-below.fading-out {
+  opacity: 0;
 }
 
 /* Incoming photo during a slideshow crossfade - plain opacity dissolve,

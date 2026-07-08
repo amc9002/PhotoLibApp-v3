@@ -2,6 +2,8 @@
   <img
     *ngIf="previousLayer as p"
     class="photo-below"
+    [class.fading-out]="fadingOut"
+    [style.transitionDuration.ms]="crossfadeMs"
     [src]="p.url"
     alt="Photo"
   />

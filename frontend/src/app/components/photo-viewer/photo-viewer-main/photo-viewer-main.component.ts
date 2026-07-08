@@ -37,10 +37,12 @@ export class PhotoViewerMainComponent implements OnChanges, OnDestroy {
 
   /** Currently shown photo. */
   currentLayer: PhotoLayer | null = null;
-  /** Previous photo, held at full opacity underneath while `currentLayer` fades in over it. */
+  /** Previous photo, faded out simultaneously with `currentLayer` fading in over it. */
   previousLayer: PhotoLayer | null = null;
   /** Drives the fade-in transition on `currentLayer` once it's in the DOM at opacity 0. */
   fadingIn = false;
+  /** Drives the fade-out transition on `previousLayer`, in lockstep with `fadingIn`. */
+  fadingOut = false;
 
   // switchMap so rapid next/prev navigation cancels stale in-flight loads
   // instead of racing to display whichever happens to resolve last.
@@ -109,11 +111,15 @@ export class PhotoViewerMainComponent implements OnChanges, OnDestroy {
       this.previousLayer = this.currentLayer;
       this.currentLayer = newLayer;
       this.fadingIn = false;
+      this.fadingOut = false;
 
-      // Let the new <img> paint at opacity 0 first, then transition to 1 -
-      // setting both in the same tick would skip the transition entirely.
+      // Let both <img>s paint at their starting opacity first, then flip
+      // together - setting both in the same tick would skip the transition
+      // entirely, and the two need to start in the same frame to stay in
+      // lockstep (outgoing fading out exactly as incoming fades in).
       requestAnimationFrame(() => {
         this.fadingIn = true;
+        this.fadingOut = true;
       });
 
       this.fadeTimeout = setTimeout(() => {
