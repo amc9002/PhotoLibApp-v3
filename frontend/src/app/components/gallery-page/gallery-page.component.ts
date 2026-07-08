@@ -16,6 +16,9 @@ import { GallerySelectModalComponent } from '../gallery-select-modal/gallery-sel
 import { PhotoApiService } from '../../services/photo-api.service';
 import { GalleryApiService } from '../../services/gallery-api.service';
 import { PhotoSelectionService } from '../../services/photo-selection.service';
+import { I18nService } from '../../core/i18n/i18n.service';
+import { photoRemoveMessage } from '../../core/i18n/plurals';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-gallery-page',
@@ -26,6 +29,7 @@ import { PhotoSelectionService } from '../../services/photo-selection.service';
     PhotoViewerComponent,
     ConfirmModalComponent,
     GallerySelectModalComponent,
+    TranslatePipe,
   ],
   templateUrl: './gallery-page.component.html',
 })
@@ -58,6 +62,7 @@ export class GalleryPageComponent {
     private photoApi: PhotoApiService,
     private galleryApi: GalleryApiService,
     public photoSelection: PhotoSelectionService,
+    private i18n: I18nService,
   ) {}
 
   openViewer(photoId: string, autoEdit = false) {
@@ -136,9 +141,7 @@ export class GalleryPageComponent {
   }
 
   get deleteConfirmMessage() {
-    return this.photoIdsToDelete.length > 1
-      ? `${this.photoIdsToDelete.length} photos will be removed from the gallery.`
-      : 'This photo will be removed from the gallery.';
+    return photoRemoveMessage(this.photoIdsToDelete.length, this.i18n.lang);
   }
 
   confirmDelete() {

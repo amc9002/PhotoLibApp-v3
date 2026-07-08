@@ -16,14 +16,14 @@
         </div>
 
         <div *ngIf="galleries.length === 0" class="gallery-picker-empty">
-          No other galleries yet
+          {{ "gallerySelect.noOtherGalleries" | t }}
         </div>
       </div>
 
       <div class="gallery-picker-new">
         <input
           type="text"
-          placeholder="Or create a new gallery…"
+          [placeholder]="'gallerySelect.newGalleryPlaceholder' | t"
           [(ngModel)]="newTitle"
           (keyup.enter)="submitNew()"
         />
@@ -32,13 +32,13 @@
           [disabled]="!newTitle.trim() || isBusy"
           (click)="submitNew()"
         >
-          {{ isBusy ? "Working…" : "Create & " + actionLabel }}
+          {{ isBusy ? ("common.working" | t) : (("common.create" | t) + " & " + actionLabel) }}
         </button>
       </div>
     </div>
 
     <div class="modal-footer">
-      <button class="btn secondary" (click)="cancel.emit()">Cancel</button>
+      <button class="btn secondary" (click)="cancel.emit()">{{ "common.cancel" | t }}</button>
     </div>
   </div>
 </div>

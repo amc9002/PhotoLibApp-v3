@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 import { SyncCoordinatorService } from '../../../core/offline/sync-coordinator.service';
 import { SyncReviewItem } from '../../../core/offline/sync-review.model';
 import { PhotoThumbnailComponent } from '../../ui/photo-thumbnail/photo-thumbnail.component';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * Shown once the app reconnects with unconfirmed offline changes queued.
@@ -14,7 +15,7 @@ import { PhotoThumbnailComponent } from '../../ui/photo-thumbnail/photo-thumbnai
 @Component({
   selector: 'app-sync-review-modal',
   standalone: true,
-  imports: [CommonModule, PhotoThumbnailComponent],
+  imports: [CommonModule, PhotoThumbnailComponent, TranslatePipe],
   templateUrl: './sync-review-modal.component.html',
   styleUrls: ['./sync-review-modal.component.css'],
 })

@@ -5,7 +5,7 @@
     (click)="$event.stopPropagation()"
   >
     <div class="modal-header">
-      <h2>Photo info</h2>
+      <h2>{{ "photoInfo.heading" | t }}</h2>
       <button class="modal-close" (click)="close.emit()">✕</button>
     </div>
 
@@ -13,16 +13,16 @@
       <div class="facts-col">
         <div class="info-facts" *ngIf="hasFacts">
           <div *ngIf="make || model">
-            <span class="label">Camera</span> {{ make }} {{ model }}
+            <span class="label">{{ "photoInfo.camera" | t }}</span> {{ make }} {{ model }}
           </div>
           <div *ngIf="dateTaken">
-            <span class="label">Date taken</span> {{ dateTaken }}
+            <span class="label">{{ "photoInfo.dateTaken" | t }}</span> {{ dateTaken }}
           </div>
           <div *ngIf="exposureTime">
-            <span class="label">Exposure</span> {{ exposureTime }}
+            <span class="label">{{ "photoInfo.exposure" | t }}</span> {{ exposureTime }}
           </div>
         </div>
-        <p class="muted" *ngIf="!hasFacts">No EXIF metadata found for this photo.</p>
+        <p class="muted" *ngIf="!hasFacts">{{ "photoInfo.noExif" | t }}</p>
 
         <!-- Map stays inline here until the full EXIF list is expanded -->
         <ng-container *ngIf="!showFullExif">
@@ -32,7 +32,7 @@
               {{ photo.latitude | number: "1.5-5" }}, {{ photo.longitude | number: "1.5-5" }}
             </div>
           </div>
-          <p class="muted" *ngIf="!hasLocation">No location data.</p>
+          <p class="muted" *ngIf="!hasLocation">{{ "photoInfo.noLocation" | t }}</p>
         </ng-container>
 
         <button
@@ -40,7 +40,7 @@
           *ngIf="exifGroups.length"
           (click)="toggleFullExif()"
         >
-          {{ showFullExif ? "Hide full EXIF" : "Show full EXIF" }}
+          {{ (showFullExif ? "photoInfo.hideFullExif" : "photoInfo.showFullExif") | t }}
         </button>
 
         <div class="full-exif" *ngIf="showFullExif">
@@ -61,12 +61,12 @@
             {{ photo.latitude | number: "1.5-5" }}, {{ photo.longitude | number: "1.5-5" }}
           </div>
         </div>
-        <p class="muted" *ngIf="!hasLocation">No location data.</p>
+        <p class="muted" *ngIf="!hasLocation">{{ "photoInfo.noLocation" | t }}</p>
       </div>
     </div>
 
     <div class="modal-footer">
-      <button class="btn secondary" (click)="close.emit()">Close</button>
+      <button class="btn secondary" (click)="close.emit()">{{ "common.close" | t }}</button>
     </div>
   </div>
 </div>

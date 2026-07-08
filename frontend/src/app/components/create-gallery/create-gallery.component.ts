@@ -2,11 +2,13 @@ import { Component, EventEmitter, HostListener, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConfirmModalComponent } from '../../shared/modal/confirm-modal/confirm-modal.component';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { I18nService } from '../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-create-gallery',
   standalone: true,
-  imports: [CommonModule, FormsModule, ConfirmModalComponent],
+  imports: [CommonModule, FormsModule, ConfirmModalComponent, TranslatePipe],
   templateUrl: './create-gallery.component.html',
   styleUrls: ['./create-gallery.component.css'],
 })
@@ -16,6 +18,16 @@ export class CreateGalleryComponent {
 
   @Output() create = new EventEmitter<string>();
   @Output() cancel = new EventEmitter<void>();
+
+  constructor(private i18n: I18nService) {}
+
+  get confirmMessage(): string {
+    return (
+      this.i18n.translate('createGallery.confirmMessagePrefix') +
+      this.title.trim() +
+      this.i18n.translate('createGallery.confirmMessageSuffix')
+    );
+  }
 
   @HostListener('keydown.escape')
   onEscape() {

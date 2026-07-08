@@ -1,0 +1,60 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal settings-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ "settings.heading" | t }}</h2>
+      <button class="modal-close" (click)="close.emit()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="settings-section">
+        <div class="settings-label">{{ "settings.language" | t }}</div>
+        <div class="settings-options">
+          <button
+            class="settings-option"
+            [class.active]="i18n.lang === 'be'"
+            (click)="setLang('be')"
+          >
+            {{ "settings.languageBe" | t }}
+          </button>
+          <button
+            class="settings-option"
+            [class.active]="i18n.lang === 'en'"
+            (click)="setLang('en')"
+          >
+            {{ "settings.languageEn" | t }}
+          </button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-label">{{ "settings.theme" | t }}</div>
+        <div class="theme-options">
+          <button
+            class="theme-option"
+            *ngFor="let th of themeIds"
+            [class.active]="theme.theme === th"
+            (click)="setTheme(th)"
+          >
+            <span class="theme-swatch">
+              <span
+                class="theme-swatch-half"
+                [style.background]="previewCanvas(th)"
+              ></span>
+              <span
+                class="theme-swatch-half"
+                [style.background]="previewElevated(th)"
+              ></span>
+            </span>
+            <span>{{ themeLabelKey(th) | t }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn primary" (click)="close.emit()">
+        {{ "common.close" | t }}
+      </button>
+    </div>
+  </div>
+</div>

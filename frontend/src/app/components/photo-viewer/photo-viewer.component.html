@@ -17,7 +17,7 @@
         <button
           class="nav-arrow"
           (click)="selectPrev()"
-          aria-label="Previous photo"
+          [attr.aria-label]="'photoViewer.previousPhoto' | t"
         >
           ‹
         </button>
@@ -50,7 +50,7 @@
         <button
           class="nav-arrow"
           (click)="selectNext()"
-          aria-label="Next photo"
+          [attr.aria-label]="'photoViewer.nextPhoto' | t"
         >
           ›
         </button>
@@ -62,9 +62,9 @@
 <ng-container *ngIf="activePhoto as photo">
   <app-edit-metadata-modal
     *ngIf="editMetadataOpen"
-    heading="Edit details"
+    heading="photoViewer.editDetails"
     [isSaving]="isSavingMetadata"
-    [saveError]="metadataSaveError"
+    [saveError]="metadataSaveError ? (metadataSaveError | t) : null"
     [title]="photo.title"
     [description]="photo.description ?? ''"
     [tags]="photo.tags"

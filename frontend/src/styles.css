@@ -38,3 +38,19 @@ body {
   --text: #ece9e3;
   --text-muted: #a6abb8;
 }
+
+/* App background presets (Settings > App background). Only the neutral
+   canvas tokens move - ink/amber/status colours stay put so the app is
+   still recognisably PhotoLib under any of them. "navy" is the default,
+   defined on :root above; these are the other two. */
+:root[data-theme="charcoal"] {
+  --canvas: #1a1817;
+  --canvas-elevated: #242120;
+  --canvas-border: #35302d;
+}
+
+:root[data-theme="black"] {
+  --canvas: #000000;
+  --canvas-elevated: #141414;
+  --canvas-border: #262626;
+}

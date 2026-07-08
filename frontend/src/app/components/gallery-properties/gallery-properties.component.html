@@ -1,22 +1,22 @@
 <div class="window" [style.left.px]="x" [style.top.px]="y">
   <div class="window-header" (mousedown)="startDrag($event)">
-    <span>Gallery properties</span>
+    <span>{{ "galleryProperties.heading" | t }}</span>
     <button class="close-btn" (click)="close.emit()">✕</button>
   </div>
 
   <div class="window-content">
-    <div><strong>Title:</strong> {{ gallery.title }}</div>
-    <div><strong>Description:</strong> {{ gallery.description || "—" }}</div>
+    <div><strong>{{ "galleryProperties.title" | t }}</strong> {{ gallery.title }}</div>
+    <div><strong>{{ "galleryProperties.description" | t }}</strong> {{ gallery.description || "—" }}</div>
     <div>
-      <strong>Tags:</strong>
+      <strong>{{ "galleryProperties.tags" | t }}</strong>
       {{ gallery.tags.length ? gallery.tags.join(", ") : "—" }}
     </div>
-    <div><strong>ID:</strong> {{ gallery.id }}</div>
+    <div><strong>{{ "galleryProperties.id" | t }}</strong> {{ gallery.id }}</div>
     <div>
-      <strong>Created:</strong> {{ gallery.createdAtUtc | date: "medium" }}
+      <strong>{{ "galleryProperties.created" | t }}</strong> {{ gallery.createdAtUtc | date: "medium" }}
     </div>
     <div>
-      <strong>Updated:</strong> {{ gallery.updatedAtUtc | date: "medium" }}
+      <strong>{{ "galleryProperties.updated" | t }}</strong> {{ gallery.updatedAtUtc | date: "medium" }}
     </div>
   </div>
 </div>

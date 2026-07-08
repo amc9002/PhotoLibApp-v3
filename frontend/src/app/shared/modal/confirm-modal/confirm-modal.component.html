@@ -10,7 +10,7 @@
     </div>
 
     <div class="modal-footer" appButtonGroupNav>
-      <button class="btn secondary" (click)="cancel.emit()">Cancel</button>
+      <button class="btn secondary" (click)="cancel.emit()">{{ "common.cancel" | t }}</button>
       <button
         class="btn"
         [class.danger]="variant === 'danger'"
@@ -18,7 +18,7 @@
         [disabled]="isBusy"
         (click)="confirm.emit()"
       >
-        {{ isBusy ? "Working…" : confirmText }}
+        {{ isBusy ? ("common.working" | t) : confirmText }}
       </button>
     </div>
   </div>

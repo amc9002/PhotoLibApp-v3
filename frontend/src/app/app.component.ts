@@ -16,6 +16,9 @@ import { SyncReviewModalComponent } from './shared/modal/sync-review-modal/sync-
 import { PhotoSelectionService } from './services/photo-selection.service';
 import { ThumbnailSizeService } from './services/thumbnail-size.service';
 import { SyncCoordinatorService } from './core/offline/sync-coordinator.service';
+import { ThemeService } from './core/theme/theme.service';
+import { TranslatePipe } from './core/i18n/translate.pipe';
+import { SettingsModalComponent } from './shared/modal/settings-modal/settings-modal.component';
 
 @Component({
   selector: 'app-root',
@@ -30,6 +33,8 @@ import { SyncCoordinatorService } from './core/offline/sync-coordinator.service'
     EditMetadataModalComponent,
     AddFromInternetModalComponent,
     SyncReviewModalComponent,
+    SettingsModalComponent,
+    TranslatePipe,
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
@@ -50,6 +55,9 @@ export class AppComponent implements OnInit {
     public photoSelection: PhotoSelectionService,
     private thumbnailSize: ThumbnailSizeService,
     private syncCoordinator: SyncCoordinatorService,
+    // Injected only so it constructs (and applies the stored theme
+    // attribute) before first render - not read directly here.
+    private themeService: ThemeService,
   ) {}
 
   ngOnInit(): void {
@@ -161,14 +169,13 @@ export class AppComponent implements OnInit {
 
   deleteGalleryConfirmOpen = false;
   isDeletingGallery = false;
-  deleteGalleryTitle = 'Delete gallery?';
-  deleteGalleryMessage = 'This gallery and all its photos will be removed.';
+  deleteGalleryTitle = 'app.deleteGalleryTitle';
+  deleteGalleryMessage = 'app.deleteGalleryMessage';
 
   openDeleteGalleryConfirm() {
     if (!this.selectedGallery) return;
-    this.deleteGalleryTitle = 'Delete gallery?';
-    this.deleteGalleryMessage =
-      'This gallery and all its photos will be removed.';
+    this.deleteGalleryTitle = 'app.deleteGalleryTitle';
+    this.deleteGalleryMessage = 'app.deleteGalleryMessage';
     this.deleteGalleryConfirmOpen = true;
   }
 
@@ -178,9 +185,8 @@ export class AppComponent implements OnInit {
 
   onGalleryEmptied() {
     if (!this.selectedGallery) return;
-    this.deleteGalleryTitle = 'Gallery is empty';
-    this.deleteGalleryMessage =
-      'This gallery has no photos left. Delete it as well?';
+    this.deleteGalleryTitle = 'app.emptyGalleryTitle';
+    this.deleteGalleryMessage = 'app.emptyGalleryMessage';
     this.deleteGalleryConfirmOpen = true;
   }
 
@@ -249,7 +255,7 @@ export class AppComponent implements OnInit {
       error: (err) => {
         console.error('update gallery error:', err);
         this.isSavingGallery = false;
-        this.gallerySaveError = 'Failed to save changes. Please try again.';
+        this.gallerySaveError = 'app.saveFailed';
       },
     });
   }
@@ -274,5 +280,15 @@ export class AppComponent implements OnInit {
 
   onDeleteSelected() {
     this.galleryPage?.requestBulkDelete(this.photoSelection.ids);
+  }
+
+  showSettings = false;
+
+  openSettings() {
+    this.showSettings = true;
+  }
+
+  closeSettings() {
+    this.showSettings = false;
   }
 }

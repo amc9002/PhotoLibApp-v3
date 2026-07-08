@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { environment } from '../../../../environments/environment';
 import { buildAddFromInternetBookmarklet } from '../../utils/bookmarklet';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * Explains and hands out the "Add from internet" bookmarklet for a single
@@ -12,7 +13,7 @@ import { buildAddFromInternetBookmarklet } from '../../utils/bookmarklet';
 @Component({
   selector: 'app-add-from-internet-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './add-from-internet-modal.component.html',
   styleUrls: ['./add-from-internet-modal.component.css'],
 })

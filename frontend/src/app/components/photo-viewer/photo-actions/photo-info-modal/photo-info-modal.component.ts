@@ -9,13 +9,14 @@ import {
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ExifGroup, PhotoDto } from '../../../../models/photo.dto';
+import { TranslatePipe } from '../../../../core/i18n/translate.pipe';
 
 const MAP_SPAN = 0.004;
 
 @Component({
   selector: 'app-photo-info-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './photo-info-modal.component.html',
   styleUrls: ['./photo-info-modal.component.css'],
 })

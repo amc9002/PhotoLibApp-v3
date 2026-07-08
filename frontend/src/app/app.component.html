@@ -23,6 +23,7 @@
       (copySelected)="onCopySelected()"
       (moveSelected)="onMoveSelected()"
       (deleteSelected)="onDeleteSelected()"
+      (openSettings)="openSettings()"
     ></app-toolbar>
     <app-gallery-properties
       *ngIf="showGalleryProperties && selectedGallery"
@@ -42,7 +43,7 @@
   ></app-gallery-page>
 
   <div *ngIf="!selectedGallery" class="empty-state">
-    Select a gallery to view photos
+    {{ "app.selectGallery" | t }}
   </div>
 </main>
 
@@ -52,7 +53,7 @@
   multiple
   accept="image/*"
   class="hidden-file-input"
-  aria-label="Add photos to gallery"
+  [attr.aria-label]="'app.addPhotosInput' | t"
   (change)="onFilesSelected($event)"
 />
 
@@ -64,9 +65,9 @@
 
 <app-confirm-modal
   *ngIf="deleteGalleryConfirmOpen"
-  [title]="deleteGalleryTitle"
-  [message]="deleteGalleryMessage"
-  confirmText="Delete"
+  [title]="deleteGalleryTitle | t"
+  [message]="deleteGalleryMessage | t"
+  [confirmText]="'common.delete' | t"
   [isBusy]="isDeletingGallery"
   (confirm)="confirmDeleteGallery()"
   (cancel)="closeDeleteGalleryConfirm()"
@@ -74,12 +75,12 @@
 
 <app-edit-metadata-modal
   *ngIf="editGalleryOpen && selectedGallery"
-  heading="Edit gallery"
+  heading="app.editGallery"
   [title]="selectedGallery.title"
   [description]="selectedGallery.description ?? ''"
   [tags]="selectedGallery.tags"
   [isSaving]="isSavingGallery"
-  [saveError]="gallerySaveError"
+  [saveError]="gallerySaveError ? (gallerySaveError | t) : null"
   (save)="saveGalleryEdit($event)"
   (close)="closeEditGallery()"
 ></app-edit-metadata-modal>
@@ -90,5 +91,10 @@
   [galleryTitle]="selectedGallery.title"
   (close)="closeAddFromInternet()"
 ></app-add-from-internet-modal>
+
+<app-settings-modal
+  *ngIf="showSettings"
+  (close)="closeSettings()"
+></app-settings-modal>
 
 <app-sync-review-modal></app-sync-review-modal>

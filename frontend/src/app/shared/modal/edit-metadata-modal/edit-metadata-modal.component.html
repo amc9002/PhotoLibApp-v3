@@ -1,39 +1,39 @@
 <div class="modal-backdrop" (click)="close.emit()">
   <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>{{ heading }}</h2>
+      <h2>{{ heading | t }}</h2>
       <button class="modal-close" (click)="close.emit()">✕</button>
     </div>
 
     <div class="modal-body">
       <div class="form-field">
-        <label for="edit-title">Title</label>
+        <label for="edit-title">{{ "editMetadata.title" | t }}</label>
         <input
           id="edit-title"
           type="text"
-          placeholder="Title"
+          [placeholder]="'editMetadata.title' | t"
           [value]="title"
           (input)="title = $any($event.target).value"
         />
       </div>
 
       <div class="form-field">
-        <label for="edit-description">Description</label>
+        <label for="edit-description">{{ "editMetadata.description" | t }}</label>
         <textarea
           id="edit-description"
           rows="4"
-          placeholder="Description"
+          [placeholder]="'editMetadata.description' | t"
           (input)="description = $any($event.target).value"
           >{{ description }}</textarea
         >
       </div>
 
       <div class="form-field">
-        <label for="edit-tags">Tags</label>
+        <label for="edit-tags">{{ "editMetadata.tags" | t }}</label>
         <input
           id="edit-tags"
           type="text"
-          placeholder="e.g. ships, vintage"
+          [placeholder]="'editMetadata.tagsPlaceholder' | t"
           list="edit-tag-options"
           [(ngModel)]="tagsText"
         />
@@ -46,13 +46,13 @@
     <div class="form-error" *ngIf="saveError">{{ saveError }}</div>
 
     <div class="modal-footer" appButtonGroupNav>
-      <button class="btn secondary" (click)="close.emit()">Cancel</button>
+      <button class="btn secondary" (click)="close.emit()">{{ "common.cancel" | t }}</button>
       <button
         class="btn primary"
         [disabled]="isSaving || !isDirty"
         (click)="onSave()"
       >
-        {{ isSaving ? "Saving…" : "Save" }}
+        {{ (isSaving ? "common.saving" : "common.save") | t }}
       </button>
     </div>
   </div>

@@ -1,38 +1,32 @@
 <div class="modal-backdrop" (click)="close.emit()">
   <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2>Add from internet</h2>
+      <h2>{{ "addFromInternet.heading" | t }}</h2>
       <button class="modal-close" (click)="close.emit()">✕</button>
     </div>
 
     <div class="modal-body">
       <p>
-        Перацягні гэтую спасылку ў панэль закладак браўзера. На любой
-        старонцы ў інтэрнэце націсні закладку, потым клікні патрэбнае фота —
-        яно дадасца ў галерэю
+        {{ "addFromInternet.instructions" | t }}
         <strong>{{ galleryTitle }}</strong
         >.
       </p>
 
       <a class="bookmarklet-btn" [href]="bookmarkletHref" (click)="$event.preventDefault()">
-        📷 Add to «{{ galleryTitle }}»
+        {{ "addFromInternet.bookmarkletPrefix" | t }}{{ galleryTitle }}{{ "addFromInternet.bookmarkletSuffix" | t }}
       </a>
 
       <p class="hint">
-        Пасля кліку па фота коратка адкрыецца маленькае акенца — яно само
-        зачыніцца, калі фота дадасца. Калі браўзер заблакіраваў яго як
-        усплывальнае акно, дазволь папапы для гэтага сайта.
+        {{ "addFromInternet.hint1" | t }}
       </p>
 
       <p class="hint">
-        Закладка прывязана да гэтай галерэі. Каб дадаваць фота ў іншую
-        галерэю, адкрый гэтае акно зноў, калі яна выбрана, і перацягні новую
-        спасылку.
+        {{ "addFromInternet.hint2" | t }}
       </p>
     </div>
 
     <div class="modal-footer">
-      <button class="btn secondary" (click)="close.emit()">Close</button>
+      <button class="btn secondary" (click)="close.emit()">{{ "common.close" | t }}</button>
     </div>
   </div>
 </div>

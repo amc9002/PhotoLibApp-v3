@@ -4,7 +4,7 @@
     class="toolbar-btn gallery-btn"
     (click)="toggleDropdown(); $event.stopPropagation()"
   >
-    Галерэя ▼
+    {{ "toolbar.gallery" | t }}
   </button>
   <div
     class="dropdown"
@@ -22,7 +22,7 @@
     </div>
 
     <div *ngIf="galleries.length === 0" class="dropdown-empty">
-      No galleries
+      {{ "toolbar.noGalleries" | t }}
     </div>
   </div>
 
@@ -41,7 +41,7 @@
     class="toolbar-btn"
     [disabled]="!thumbnailSize.canIncrease"
     (click)="thumbnailSize.increase()"
-    title="Increase thumbnail size"
+    [title]="'toolbar.increaseThumbSize' | t"
   >
     ➕
   </button>
@@ -49,7 +49,7 @@
     class="toolbar-btn"
     [disabled]="!thumbnailSize.canDecrease"
     (click)="thumbnailSize.decrease()"
-    title="Decrease thumbnail size"
+    [title]="'toolbar.decreaseThumbSize' | t"
   >
     ➖
   </button>
@@ -65,31 +65,28 @@
     <div class="service-menu" *ngIf="serviceMenuOpen">
       <ng-container *ngIf="photoSelection.count > 0">
         <div class="service-menu-label">
-          {{ photoSelection.count }} photo{{
-            photoSelection.count > 1 ? "s" : ""
-          }}
-          selected
+          {{ photosSelectedLabel }}
         </div>
 
         <div
           class="service-menu-item"
           (click)="onCopySelected(); $event.stopPropagation()"
         >
-          Copy selected to gallery
+          {{ "toolbar.copySelected" | t }}
         </div>
 
         <div
           class="service-menu-item"
           (click)="onMoveSelected(); $event.stopPropagation()"
         >
-          Move selected to gallery
+          {{ "toolbar.moveSelected" | t }}
         </div>
 
         <div
           class="service-menu-item danger"
           (click)="onDeleteSelected(); $event.stopPropagation()"
         >
-          Delete selected
+          {{ "toolbar.deleteSelected" | t }}
         </div>
 
         <div class="service-menu-divider"></div>
@@ -99,42 +96,51 @@
         class="service-menu-item"
         (click)="onAddPhotos(); $event.stopPropagation()"
       >
-        Add photos
+        {{ "toolbar.addPhotos" | t }}
       </div>
 
       <div
         class="service-menu-item"
         (click)="onAddFromInternet(); $event.stopPropagation()"
       >
-        Add from internet
+        {{ "toolbar.addFromInternet" | t }}
       </div>
 
       <div
         class="service-menu-item"
         (click)="onNewGallery(); $event.stopPropagation()"
       >
-        New gallery
+        {{ "toolbar.newGallery" | t }}
       </div>
 
       <div
         class="service-menu-item"
         (click)="closeServiceMenu(); properties.emit()"
       >
-        Gallery properties
+        {{ "toolbar.galleryProperties" | t }}
       </div>
 
       <div
         class="service-menu-item"
         (click)="onEditGallery(); $event.stopPropagation()"
       >
-        Edit gallery
+        {{ "toolbar.editGallery" | t }}
       </div>
 
       <div
         class="service-menu-item danger"
         (click)="onDeleteGallery(); $event.stopPropagation()"
       >
-        Delete gallery
+        {{ "toolbar.deleteGallery" | t }}
+      </div>
+
+      <div class="service-menu-divider"></div>
+
+      <div
+        class="service-menu-item"
+        (click)="onOpenSettings(); $event.stopPropagation()"
+      >
+        {{ "toolbar.settings" | t }}
       </div>
     </div>
   </div>

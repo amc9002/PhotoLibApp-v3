@@ -10,6 +10,7 @@ import { EditMetadataModalComponent } from '../../shared/modal/edit-metadata-mod
 import { PhotoInfoModalComponent } from './photo-actions/photo-info-modal/photo-info-modal.component';
 import { PhotoApiService } from '../../services/photo-api.service';
 import { PhotoDto } from '../../models/photo.dto';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-photo-viewer',
@@ -21,6 +22,7 @@ import { PhotoDto } from '../../models/photo.dto';
     PhotoActionsComponent,
     EditMetadataModalComponent,
     PhotoInfoModalComponent,
+    TranslatePipe,
   ],
   templateUrl: './photo-viewer.component.html',
   styleUrls: ['./photo-viewer.component.css'],
@@ -170,7 +172,7 @@ export class PhotoViewerComponent implements OnInit {
       error: (err) => {
         console.error('Failed to update photo metadata', err);
         this.isSavingMetadata = false;
-        this.metadataSaveError = 'Failed to save changes. Please try again.';
+        this.metadataSaveError = 'photoViewer.saveFailed';
       },
     });
   }

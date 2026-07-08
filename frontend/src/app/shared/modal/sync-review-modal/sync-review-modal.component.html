@@ -1,18 +1,17 @@
 <div class="modal-backdrop" *ngIf="items.length">
   <div class="modal sync-review-modal">
     <div class="modal-header">
-      <h2>Сінхранізацыя змен</h2>
+      <h2>{{ "syncReview.heading" | t }}</h2>
     </div>
 
     <div class="modal-body">
       <p class="sync-intro">
-        Пакуль не было сувязі з серверам, гэтыя змены захаваліся лакальна.
-        Пацвердзі іх па адной ці ўсе разам.
+        {{ "syncReview.intro" | t }}
       </p>
 
       <div class="sync-section" *ngIf="conflicted.length">
-        <h3 class="conflict-heading">Канфлікты ({{ conflicted.length }})</h3>
-        <p class="sync-hint">Гэтыя аб'екты зменены на серверы, пакуль не было сувязі.</p>
+        <h3 class="conflict-heading">{{ "syncReview.conflictsHeading" | t }} ({{ conflicted.length }})</h3>
+        <p class="sync-hint">{{ "syncReview.conflictsHint" | t }}</p>
         <div class="sync-item conflict" *ngFor="let item of conflicted">
           <app-photo-thumbnail
             *ngIf="item.thumbnailPhotoId"
@@ -24,14 +23,14 @@
             <span class="conflict-reason">{{ item.conflictReason }}</span>
           </div>
           <div class="sync-item-actions">
-            <button class="btn secondary" [disabled]="busy" (click)="discard(item)">Прапусціць</button>
-            <button class="btn primary" [disabled]="busy" (click)="confirm(item)">Усё роўна ўжыць</button>
+            <button class="btn secondary" [disabled]="busy" (click)="discard(item)">{{ "syncReview.discard" | t }}</button>
+            <button class="btn primary" [disabled]="busy" (click)="confirm(item)">{{ "syncReview.applyAnyway" | t }}</button>
           </div>
         </div>
       </div>
 
       <div class="sync-section" *ngIf="added.length">
-        <h3>Дададзена ({{ added.length }})</h3>
+        <h3>{{ "syncReview.addedHeading" | t }} ({{ added.length }})</h3>
         <div class="sync-item" *ngFor="let item of added">
           <app-photo-thumbnail
             *ngIf="item.thumbnailPhotoId"
@@ -40,14 +39,14 @@
           ></app-photo-thumbnail>
           <span class="sync-item-title">{{ item.title }}</span>
           <div class="sync-item-actions">
-            <button class="btn secondary" [disabled]="busy" (click)="discard(item)">Скасаваць</button>
-            <button class="btn primary" [disabled]="busy" (click)="confirm(item)">Пацвердзіць</button>
+            <button class="btn secondary" [disabled]="busy" (click)="discard(item)">{{ "common.cancel" | t }}</button>
+            <button class="btn primary" [disabled]="busy" (click)="confirm(item)">{{ "common.confirm" | t }}</button>
           </div>
         </div>
       </div>
 
       <div class="sync-section" *ngIf="deleted.length">
-        <h3>Выдалена ({{ deleted.length }})</h3>
+        <h3>{{ "syncReview.deletedHeading" | t }} ({{ deleted.length }})</h3>
         <div class="sync-item" *ngFor="let item of deleted">
           <app-photo-thumbnail
             *ngIf="item.thumbnailPhotoId"
@@ -56,14 +55,14 @@
           ></app-photo-thumbnail>
           <span class="sync-item-title">{{ item.title }}</span>
           <div class="sync-item-actions">
-            <button class="btn secondary" [disabled]="busy" (click)="discard(item)">Вярнуць</button>
-            <button class="btn danger" [disabled]="busy" (click)="confirm(item)">Пацвердзіць</button>
+            <button class="btn secondary" [disabled]="busy" (click)="discard(item)">{{ "syncReview.restore" | t }}</button>
+            <button class="btn danger" [disabled]="busy" (click)="confirm(item)">{{ "common.confirm" | t }}</button>
           </div>
         </div>
       </div>
 
       <div class="sync-section" *ngIf="changed.length">
-        <h3>Зменена ({{ changed.length }})</h3>
+        <h3>{{ "syncReview.changedHeading" | t }} ({{ changed.length }})</h3>
         <div class="sync-item" *ngFor="let item of changed">
           <app-photo-thumbnail
             *ngIf="item.thumbnailPhotoId"
@@ -72,16 +71,16 @@
           ></app-photo-thumbnail>
           <span class="sync-item-title">{{ item.title }}</span>
           <div class="sync-item-actions">
-            <button class="btn secondary" [disabled]="busy" (click)="discard(item)">Скасаваць</button>
-            <button class="btn primary" [disabled]="busy" (click)="confirm(item)">Пацвердзіць</button>
+            <button class="btn secondary" [disabled]="busy" (click)="discard(item)">{{ "common.cancel" | t }}</button>
+            <button class="btn primary" [disabled]="busy" (click)="confirm(item)">{{ "common.confirm" | t }}</button>
           </div>
         </div>
       </div>
     </div>
 
     <div class="modal-footer">
-      <button class="btn secondary" [disabled]="busy" (click)="discardAll()">Скасаваць усе</button>
-      <button class="btn primary" [disabled]="busy" (click)="confirmAll()">Пацвердзіць усе</button>
+      <button class="btn secondary" [disabled]="busy" (click)="discardAll()">{{ "syncReview.discardAll" | t }}</button>
+      <button class="btn primary" [disabled]="busy" (click)="confirmAll()">{{ "syncReview.confirmAll" | t }}</button>
     </div>
   </div>
 </div>

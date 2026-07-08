@@ -5,7 +5,7 @@
 <div class="photo-actions" (click)="$event.stopPropagation()">
   <button
     class="photo-action-btn"
-    aria-label="Photo actions"
+    [attr.aria-label]="'photoActions.menuLabel' | t"
     (click)="toggleMenu(); $event.stopPropagation()"
   >
     ⋮
@@ -16,35 +16,35 @@
       class="photo-action-item"
       (click)="onEditMetadataClick(); $event.stopPropagation()"
     >
-      Edit info
+      {{ "photoActions.editInfo" | t }}
     </button>
 
     <button
       class="photo-action-item"
       (click)="onShowInfoClick(); $event.stopPropagation()"
     >
-      Photo info
+      {{ "photoActions.photoInfo" | t }}
     </button>
 
     <button
       class="photo-action-item"
       (click)="onCopyClick(); $event.stopPropagation()"
     >
-      Copy to gallery
+      {{ "photoActions.copyToGallery" | t }}
     </button>
 
     <button
       class="photo-action-item"
       (click)="onMoveClick(); $event.stopPropagation()"
     >
-      Move to gallery
+      {{ "photoActions.moveToGallery" | t }}
     </button>
 
     <button
       class="photo-action-item danger"
       (click)="onDeleteClick(); $event.stopPropagation()"
     >
-      Delete photo
+      {{ "photoActions.deletePhoto" | t }}
     </button>
   </div>
 </div>

@@ -19,9 +19,9 @@
 
 <app-confirm-modal
   *ngIf="deleteConfirmOpen"
-  title="Delete photo?"
+  [title]="'galleryPage.deletePhotoTitle' | t"
   [message]="deleteConfirmMessage"
-  confirmText="Delete"
+  [confirmText]="'common.delete' | t"
   [isBusy]="isDeletingPhoto"
   (confirm)="confirmDelete()"
   (cancel)="closeDeleteConfirm()"

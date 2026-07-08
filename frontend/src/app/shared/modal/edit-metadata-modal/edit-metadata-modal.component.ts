@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { ButtonGroupNavDirective } from '../../directives/button-group-nav.directive';
 import { TagApiService } from '../../../services/tag-api.service';
 import { parseTagsInput } from '../../utils/tags';
+import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 
 /**
  * Title + description + tags editor, shared by the photo and gallery
@@ -19,12 +20,12 @@ import { parseTagsInput } from '../../utils/tags';
 @Component({
   selector: 'app-edit-metadata-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, ButtonGroupNavDirective],
+  imports: [CommonModule, FormsModule, ButtonGroupNavDirective, TranslatePipe],
   templateUrl: './edit-metadata-modal.component.html',
   styleUrls: ['./edit-metadata-modal.component.css'],
 })
 export class EditMetadataModalComponent implements OnInit {
-  @Input() heading = 'Edit details';
+  @Input() heading = 'editMetadata.heading';
   @Input() title = '';
   @Input() description = '';
   @Input() tags: string[] = [];
