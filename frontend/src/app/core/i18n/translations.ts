@@ -160,6 +160,10 @@ export const translations: Record<string, Record<Lang, string>> = {
   'editMetadata.aiLengthShort': { be: 'Кароткі', en: 'Short' },
   'editMetadata.aiLengthMedium': { be: 'Сярэдні', en: 'Medium' },
   'editMetadata.aiLengthLong': { be: 'Падрабязны', en: 'Long' },
+  'editMetadata.aiInstructionsPlaceholder': {
+    be: 'Дадатковыя інструкцыі (мова, вядомыя факты і г.д.)',
+    en: 'Additional instructions (language, known facts, etc.)',
+  },
   'editMetadata.aiGenerate': { be: 'Стварыць', en: 'Generate' },
   'editMetadata.aiGenerating': { be: 'Стварэнне…', en: 'Generating…' },
   'editMetadata.aiFailed': {

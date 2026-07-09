@@ -24,6 +24,13 @@
             {{ (isGenerating ? "editMetadata.aiGenerating" : "editMetadata.aiGenerate") | t }}
           </button>
         </div>
+        <textarea
+          class="ai-generate-instructions"
+          rows="2"
+          [placeholder]="'editMetadata.aiInstructionsPlaceholder' | t"
+          [disabled]="isGenerating"
+          [(ngModel)]="aiInstructions"
+        ></textarea>
         <div class="form-error" *ngIf="generateError">{{ "editMetadata.aiFailed" | t }}</div>
       </div>
 

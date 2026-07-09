@@ -72,3 +72,22 @@ button:disabled {
 .ai-generate .form-error {
   margin: 8px 0 0;
 }
+
+.ai-generate-instructions {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+  background: var(--canvas);
+  border: 1px solid var(--canvas-border);
+  border-radius: 4px;
+  padding: 6px 8px;
+  color: var(--text);
+  font-size: 13px;
+  resize: vertical;
+}
+
+.ai-generate-instructions:focus {
+  outline: none;
+  border-color: var(--amber);
+}

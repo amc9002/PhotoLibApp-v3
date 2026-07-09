@@ -149,6 +149,12 @@ namespace PhotoLibApi.Services
                 ? "\n\nExisting context about this photo:\n" + string.Join("\n", context)
                 : "";
 
+            var userInstructionsBlock = string.IsNullOrWhiteSpace(request.AdditionalInstructions)
+                ? ""
+                : $"\n\nAdditional instructions from the user - follow these, including any" +
+                  $" requested output language, unless they conflict with accuracy:\n" +
+                  $"{request.AdditionalInstructions.Trim()}";
+
             return $"""
                 Identify the specific real-world subject of this photo (e.g. the exact
                 ship, building, landmark, species, or event depicted - not just a generic
@@ -162,6 +168,7 @@ namespace PhotoLibApi.Services
                 If you cannot confidently identify the specific subject, describe what is
                 visibly depicted instead - do not invent facts.
                 {contextBlock}
+                {userInstructionsBlock}
                 """;
         }
 

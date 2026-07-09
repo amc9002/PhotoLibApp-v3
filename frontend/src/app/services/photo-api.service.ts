@@ -89,10 +89,12 @@ export class PhotoApiService {
     photoId: string,
     style: DescriptionStyle,
     length: DescriptionLength,
+    additionalInstructions?: string,
   ): Observable<GenerateDescriptionResponse> {
     return this.api.post<GenerateDescriptionResponse>(`Photo/${photoId}/generate-description`, {
       style,
       length,
+      additionalInstructions,
     });
   }
 

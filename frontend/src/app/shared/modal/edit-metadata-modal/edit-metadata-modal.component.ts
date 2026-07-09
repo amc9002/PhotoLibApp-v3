@@ -48,6 +48,7 @@ export class EditMetadataModalComponent implements OnInit {
 
   aiStyle: DescriptionStyle = 'informative';
   aiLength: DescriptionLength = 'medium';
+  aiInstructions = '';
   isGenerating = false;
   generateError = false;
 
@@ -114,22 +115,29 @@ export class EditMetadataModalComponent implements OnInit {
     this.isGenerating = true;
     this.generateError = false;
 
-    this.photoApi.generateDescription(this.photoId, this.aiStyle, this.aiLength).subscribe({
-      next: (draft) => {
-        this.title = draft.title;
-        this.description = draft.description;
-        const existing = parseTagsInput(this.tagsText);
-        const merged = [...existing, ...draft.suggestedTags].filter(
-          (tag, i, arr) => arr.findIndex((t) => t.toLowerCase() === tag.toLowerCase()) === i,
-        );
-        this.tagsText = merged.join(', ');
-        this.isGenerating = false;
-      },
-      error: (err) => {
-        console.error('Failed to generate photo description', err);
-        this.isGenerating = false;
-        this.generateError = true;
-      },
-    });
+    this.photoApi
+      .generateDescription(
+        this.photoId,
+        this.aiStyle,
+        this.aiLength,
+        this.aiInstructions.trim() || undefined,
+      )
+      .subscribe({
+        next: (draft) => {
+          this.title = draft.title;
+          this.description = draft.description;
+          const existing = parseTagsInput(this.tagsText);
+          const merged = [...existing, ...draft.suggestedTags].filter(
+            (tag, i, arr) => arr.findIndex((t) => t.toLowerCase() === tag.toLowerCase()) === i,
+          );
+          this.tagsText = merged.join(', ');
+          this.isGenerating = false;
+        },
+        error: (err) => {
+          console.error('Failed to generate photo description', err);
+          this.isGenerating = false;
+          this.generateError = true;
+        },
+      });
   }
 }

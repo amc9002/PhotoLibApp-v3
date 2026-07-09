@@ -21,5 +21,11 @@ namespace PhotoLibApi.Models
         /// </summary>
         [Required]
         public string Length { get; set; } = "medium";
+
+        /// <summary>
+        /// Optional free-form instructions from the user (e.g. desired
+        /// language, extra known facts, things to emphasize or avoid).
+        /// </summary>
+        public string? AdditionalInstructions { get; set; }
     }
 }

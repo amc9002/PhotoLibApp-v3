@@ -5,6 +5,7 @@ export type DescriptionLength = 'short' | 'medium' | 'long';
 export interface GenerateDescriptionRequest {
   style: DescriptionStyle;
   length: DescriptionLength;
+  additionalInstructions?: string;
 }
 
 export interface GenerateDescriptionResponse {
