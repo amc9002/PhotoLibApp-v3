@@ -165,6 +165,30 @@ user accounts first, which the app doesn't have at all today
 roughly sequential: each one is a prerequisite for the next, and there's no
 point building billing before there's a concept of "a user" to bill.
 
+### Immediate risk — sharing a single hosted instance before Phase 1/2
+
+Today the app has exactly one Anthropic key, shared by every request that
+hits that backend instance, with no per-user auth or quota at all
+(confirmed: `Program.cs` builds one `AnthropicClient` from
+`Anthropic:ApiKey`/`ANTHROPIC_API_KEY` — nothing routes cost or limits per
+caller). Two different sharing modes have very different exposure:
+
+- Sharing the repo/Docker setup so each person runs *their own* instance
+  with *their own* key in *their own* `.env` — no risk to you, their key,
+  their bill.
+- Hosting *one* instance yourself and giving others access to it (e.g. a
+  server URL, not everyone running their own container) — every AI
+  request from every person who can reach that URL spends your tokens,
+  unmetered and unlimited, until Phase 1 (auth) and Phase 2 (quotas) below
+  are actually built.
+
+- [ ] Before hosting a single shared instance for anyone other than
+  yourself, add *some* stopgap on the AI endpoint - even before real
+  auth/quotas exist: a basic per-IP or global rate limit on
+  `POST /Photo/{id}/generate-description`, and/or a hard on/off switch
+  (config flag) to disable the endpoint entirely for a shared instance
+  until Phase 1/2 are done.
+
 ### Phase 1 — Authentication & multi-tenancy (do this first, no billing yet)
 
 This is the biggest structural change to the app so far — every backend
