@@ -7,6 +7,7 @@ import {
   Output,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { ButtonGroupNavDirective } from '../../directives/button-group-nav.directive';
 import { TagApiService } from '../../../services/tag-api.service';
@@ -51,6 +52,7 @@ export class EditMetadataModalComponent implements OnInit {
   aiInstructions = '';
   isGenerating = false;
   generateError = false;
+  generateRateLimited = false;
 
   private initialTitle = '';
   private initialDescription = '';
@@ -114,6 +116,7 @@ export class EditMetadataModalComponent implements OnInit {
 
     this.isGenerating = true;
     this.generateError = false;
+    this.generateRateLimited = false;
 
     this.photoApi
       .generateDescription(
@@ -136,7 +139,11 @@ export class EditMetadataModalComponent implements OnInit {
         error: (err) => {
           console.error('Failed to generate photo description', err);
           this.isGenerating = false;
-          this.generateError = true;
+          if (err instanceof HttpErrorResponse && err.status === 429) {
+            this.generateRateLimited = true;
+          } else {
+            this.generateError = true;
+          }
         },
       });
   }

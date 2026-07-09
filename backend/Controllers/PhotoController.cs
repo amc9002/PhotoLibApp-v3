@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using PhotoLibApi.Data;
 using PhotoLibApi.Models;
@@ -568,10 +569,13 @@ namespace PhotoLibApi.Controllers
         /// <param name="cancellationToken">Cancellation token for the request.</param>
         /// <response code="200">Drafted title, description and tags.</response>
         /// <response code="404">Photo not found, or has no image file to analyze.</response>
+        /// <response code="429">Too many AI requests from this client recently - try again later.</response>
         /// <response code="502">The AI request failed.</response>
         [HttpPost("{id:guid}/generate-description")]
+        [EnableRateLimiting("AiGeneration")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [ProducesResponseType(StatusCodes.Status502BadGateway)]
         public async Task<IActionResult> GenerateDescription(
             Guid id,

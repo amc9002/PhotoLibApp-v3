@@ -1,5 +1,7 @@
 using System.Reflection;
+using System.Threading.RateLimiting;
 using Anthropic;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using PhotoLibApi.Data;
@@ -58,6 +60,25 @@ builder.Services.AddScoped<PhotoDescriptionAiService>();
 
 builder.Services.AddHttpClient();
 
+// Stopgap abuse guard on the AI endpoint (see TODO,md "Immediate risk"):
+// there's no per-user auth/quota yet, so if a single hosted instance is
+// shared with others, one client could otherwise drain the shared
+// Anthropic key with unlimited requests. Keyed by IP rather than global so
+// one noisy client doesn't lock everyone else out on a shared instance.
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("AiGeneration", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromHours(1),
+                QueueLimit = 0,
+            }));
+});
+
 // Cross-origin access for the "Add from internet" bookmarklet: the bookmarklet
 // runs on arbitrary third-party pages and posts an image URL directly to this
 // API, so that one endpoint needs to accept requests from any origin. Every
@@ -112,5 +133,6 @@ app.Use(async (context, next) =>
 
 app.UseCors();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllers();
 app.Run();

@@ -172,6 +172,10 @@ export const translations: Record<string, Record<Lang, string>> = {
     be: 'Не ўдалося стварыць апісанне. Паспрабуйце яшчэ раз.',
     en: 'Failed to generate a description. Please try again.',
   },
+  'editMetadata.aiRateLimited': {
+    be: 'Занадта шмат запытаў да ШІ за апошні час. Паспрабуйце пазней.',
+    en: 'Too many AI requests recently. Please try again later.',
+  },
 
   // ---------------- sync-review-modal ----------------
   'syncReview.heading': { be: 'Сінхранізацыя змен', en: 'Sync changes' },

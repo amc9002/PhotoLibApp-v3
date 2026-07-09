@@ -32,6 +32,7 @@
           [(ngModel)]="aiInstructions"
         ></textarea>
         <div class="form-error" *ngIf="generateError">{{ "editMetadata.aiFailed" | t }}</div>
+        <div class="form-error" *ngIf="generateRateLimited">{{ "editMetadata.aiRateLimited" | t }}</div>
       </div>
 
       <div class="form-field">

@@ -182,12 +182,13 @@ caller). Two different sharing modes have very different exposure:
   unmetered and unlimited, until Phase 1 (auth) and Phase 2 (quotas) below
   are actually built.
 
-- [ ] Before hosting a single shared instance for anyone other than
+- [x] Before hosting a single shared instance for anyone other than
   yourself, add *some* stopgap on the AI endpoint - even before real
   auth/quotas exist: a basic per-IP or global rate limit on
   `POST /Photo/{id}/generate-description`, and/or a hard on/off switch
   (config flag) to disable the endpoint entirely for a shared instance
-  until Phase 1/2 are done.
+  until Phase 1/2 are done. Done: per-IP fixed-window limiter (10
+  requests/hour), 429 response, distinct frontend message.
 
 ### Phase 1 — Authentication & multi-tenancy (do this first, no billing yet)
 
