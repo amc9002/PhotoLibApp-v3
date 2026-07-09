@@ -123,7 +123,8 @@ export class LocalDbService {
   /** Stores a newly-fetched thumbnail and evicts the least-recently-cached entries over the cap. */
   async putThumbnail(photoId: string, blob: Blob): Promise<void> {
     const db = await this.dbPromise;
-    await db.put('thumbnails', { photoId, blob, cachedAt: Date.now() });
+    const storable = await this.toStorableBlob(blob);
+    await db.put('thumbnails', { photoId, blob: storable, cachedAt: Date.now() });
     await this.evictExcessThumbnails(db);
   }
 
@@ -145,8 +146,25 @@ export class LocalDbService {
   /** Stores a newly-fetched original and evicts the least-recently-viewed entries over the cap. */
   async putOriginal(photoId: string, blob: Blob): Promise<void> {
     const db = await this.dbPromise;
-    await db.put('originals', { photoId, blob, viewedAt: Date.now() });
+    const storable = await this.toStorableBlob(blob);
+    await db.put('originals', { photoId, blob: storable, viewedAt: Date.now() });
     await this.evictExcessOriginals(db);
+  }
+
+  /**
+   * WebKit/Safari's IndexedDB can throw "Error preparing Blob/File data to
+   * be stored in object store" for a Blob obtained via fetch/HttpClient,
+   * even though the same Blob type works fine everywhere else. Rebuilding
+   * it from a plain ArrayBuffer sidesteps whatever internal state WebKit
+   * trips on, without changing behavior on browsers that don't need it.
+   */
+  private async toStorableBlob(blob: Blob): Promise<Blob> {
+    try {
+      const buffer = await blob.arrayBuffer();
+      return new Blob([buffer], { type: blob.type });
+    } catch {
+      return blob;
+    }
   }
 
   /** Moves cached blobs from a clientTempId key to the real id the server assigned. */

@@ -34,7 +34,12 @@ export class ImageCacheService {
     if (cached) return URL.createObjectURL(cached);
 
     const blob = await this.fetchBlob(`/api/Photo/${photoId}/thumbnail`);
-    await this.localDb.putThumbnail(photoId, blob);
+    // Caching is an optimization, not a display requirement - if the write
+    // fails (e.g. WebKit rejecting the Blob), still show the fetched image
+    // instead of losing it.
+    await this.localDb.putThumbnail(photoId, blob).catch((err) => {
+      console.error('Failed to cache thumbnail', photoId, err);
+    });
     return URL.createObjectURL(blob);
   }
 
@@ -48,7 +53,9 @@ export class ImageCacheService {
     }
 
     const blob = await this.fetchBlob(`/api/Photo/${photoId}/file`);
-    await this.localDb.putOriginal(photoId, blob);
+    await this.localDb.putOriginal(photoId, blob).catch((err) => {
+      console.error('Failed to cache original', photoId, err);
+    });
     return URL.createObjectURL(blob);
   }
 
