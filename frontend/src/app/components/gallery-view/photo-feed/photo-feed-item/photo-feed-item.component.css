@@ -1,0 +1,169 @@
+/* Host height/display come from a HostBinding in the .ts (see the `height`
+   Input's doc comment) - this guards against any content ever exceeding
+   that fixed row height and visually overlapping the next row, since CDK's
+   fixed-size strategy positions rows purely by trusting `itemSize`, not by
+   measuring/clamping actual rendered height. */
+:host {
+  overflow: hidden;
+}
+
+.feed-item {
+  display: flex;
+  gap: 12px;
+  height: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 0;
+  box-sizing: border-box;
+}
+
+.feed-item-media {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feed-item-media img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  border-radius: 6px;
+}
+
+.feed-item-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #f0f0f0, #e2e2e2);
+  border-radius: 6px;
+}
+
+.feed-item-menu-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.feed-item-menu-btn:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+/* Same collapsible-panel pattern as the modal viewer's info panel
+   (photo-viewer.component.css), just narrower and with its own scroll
+   bounded by this row's fixed height instead of the whole viewer. */
+.feed-info-panel {
+  position: relative;
+  flex: 0 0 320px;
+  width: 320px;
+  height: 100%;
+
+  background: var(--canvas-elevated);
+  border: 1px solid var(--canvas-border);
+  border-radius: 6px;
+  overflow: hidden;
+
+  transition:
+    flex-basis var(--ui-normal) var(--ui-ease),
+    width var(--ui-normal) var(--ui-ease);
+}
+
+.feed-info-panel.collapsed {
+  flex-basis: 40px;
+  width: 40px;
+}
+
+.feed-info-toggle {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+
+  width: 28px;
+  height: 28px;
+
+  background: rgba(0, 0, 0, 0.35);
+  border: none;
+  border-radius: 50%;
+
+  color: var(--text);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feed-info-toggle:hover {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.feed-info-content {
+  height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 20px 36px 16px 16px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feed-info-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.feed-info-description {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.feed-info-description.muted {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.feed-info-tags {
+  margin-top: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.feed-info-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--canvas-border);
+  color: var(--text-muted);
+}

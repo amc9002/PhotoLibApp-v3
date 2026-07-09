@@ -152,6 +152,174 @@ concept + sharing.*
 
 ---
 
+## SaaS / Multi-Tenant Monetization (Future)
+
+**The model:** users pay *you* (subscription or credit top-up), never touch
+Anthropic directly, never see an API key or console.anthropic.com. Your
+backend holds one Anthropic key (as it already does today — see
+`Anthropic:ApiKey` in user-secrets) and calls it on their behalf; you cover
+the wholesale AI cost out of what they pay and keep the difference. This is
+a standard SaaS-reseller shape, not something unusual — but it requires real
+user accounts first, which the app doesn't have at all today
+(`Gallery.OwnerId` is nullable and unused). Treat the phases below as
+roughly sequential: each one is a prerequisite for the next, and there's no
+point building billing before there's a concept of "a user" to bill.
+
+### Phase 1 — Authentication & multi-tenancy (do this first, no billing yet)
+
+This is the biggest structural change to the app so far — every backend
+endpoint currently assumes a single implicit owner.
+
+- [ ] Choose an auth approach:
+  - **Roll your own** (ASP.NET Core Identity + email/password) — full
+    control, but *you* become responsible for password storage, reset
+    flows, email verification, brute-force protection.
+  - **OAuth-only sign-in** (e.g. "Sign in with Google") — no passwords to
+    manage at all, less code, users trust an identity they already have.
+    Recommended starting point given payments are also new territory —
+    fewer unfamiliar things to get right at once.
+  - **Managed auth service** (Auth0, Clerk, Supabase Auth) — handles
+    sessions/tokens/social-login/2FA for you at a per-user cost; worth it
+    once user count grows, possibly overkill for a launch.
+- [ ] Add a real `User` entity (id, email, created date, plan/tier) and a
+  non-nullable `OwnerId` FK on `Gallery` (and transitively `Photo` through
+  its gallery)
+- [ ] Add auth middleware ([Authorize]) to every controller action;
+  audit each endpoint in `GalleryController`/`PhotoController`/
+  `TagController` to filter/scope queries by the current user — **this is
+  the critical security boundary**: user A must never be able to read,
+  edit, or delete user B's galleries/photos via a guessed/enumerated ID
+- [ ] Decide session mechanism: short-lived JWT (stateless, simpler to
+  scale) vs server-side session cookie (simpler to revoke immediately) —
+  either is fine for a small service; cookie is usually the easier default
+  for a browser-only app like this one
+- [ ] Frontend: login/signup UI, auth token/cookie attached to every
+  `ApiService` call, redirect-to-login on 401, sign-out
+- [ ] Decide what happens to today's single-owner data on migration (the
+  existing dev database has no owner at all)
+
+### Phase 2 — AI usage metering & quotas (build before charging anyone)
+
+Ship this while still covering costs yourself, so you have real usage data
+*before* deciding on prices in Phase 3.
+
+- [ ] Add a `UsageRecord` table: user id, timestamp, which endpoint,
+  estimated cost/tokens (Claude's response `usage` block already has this
+  — log it)
+- [ ] Add a quota check *before* calling Claude in
+  `PhotoDescriptionAiService` — e.g. "used N of M generations this period" —
+  reject with a clear error once exhausted, don't silently degrade
+- [ ] Handle concurrent requests safely: two simultaneous generate-description
+  calls from the same user must not both pass a stale quota check and
+  double-spend the last unit — needs an atomic decrement (DB transaction /
+  row lock), not a read-then-write race
+- [ ] Decide the unit you meter: raw token cost (accurate, opaque to users)
+  vs a flat "1 generation = 1 credit" (simpler for users to understand,
+  eats your margin a bit on the rare complex query with several web
+  searches)
+- [ ] Frontend: show remaining quota somewhere near the "Generate" button;
+  a clear inline message (not just a generic error) when it's exhausted
+
+### Phase 3 — Billing & payments
+
+**This section assumes no prior experience — the concepts, not just a
+checklist.**
+
+You need a *payment processor* to legally and safely take money from
+strangers' cards — you should never build this yourself (PCI compliance
+for handling raw card numbers is a serious undertaking to avoid). Two
+common shapes:
+
+- **Stripe** (Billing + Checkout + Customer Portal) — the standard choice,
+  huge documentation/community, cheap (~2.9% + $0.30/transaction typical).
+  *You* are the "merchant of record": you're responsible for figuring out
+  sales tax/VAT per customer's country (Stripe Tax add-on can automate
+  this, at extra cost), and in many jurisdictions you need a registered
+  business entity to open a Stripe account for anything beyond
+  testing/sandbox mode.
+- **Merchant-of-record platforms** (Paddle, Lemon Squeezy) — they legally
+  sell *on your behalf*, so *they* handle global VAT/sales tax compliance
+  and invoicing for you. Higher fee (~5%), but meaningfully less
+  compliance burden for a solo developer new to this — worth strongly
+  considering as the first choice specifically *because* this is
+  unfamiliar territory.
+
+Pricing shape — pick one to start, don't build both:
+
+- [ ] **Subscription tiers** (e.g. Free / Basic $X / Pro $Y per month, each
+  with a monthly generation quota) — predictable revenue, simplest to
+  reason about, most turnkey with either Stripe Billing or Paddle
+- [ ] **Credit top-ups** (buy a bundle of N generations for $X, no
+  expiry or a long one) — more "fair," better for irregular users, more
+  bookkeeping (tracking a balance instead of a period reset)
+
+Regardless of which:
+
+- [ ] Integrate the provider's hosted checkout (Stripe Checkout / Paddle
+  Checkout) — do **not** build a custom card-entry form; use their
+  redirect/embedded widget so card data never touches your server
+- [ ] Add a webhook endpoint to receive subscription/payment events
+  (created, renewed, cancelled, payment failed) and update the user's
+  plan/quota accordingly — **verify the webhook signature** on every
+  request (both providers give you a signing secret for this; an
+  unverified webhook endpoint is a direct way for someone to grant
+  themselves a free subscription)
+- [ ] Handle the unhappy paths explicitly: failed renewal payment
+  (grace period? immediate downgrade?), user cancels mid-period (access
+  until period end, or immediate?), refund requests
+- [ ] Write a Terms of Service and a Privacy Policy before accepting real
+  payments — not optional once real money and personal photos are
+  involved; a template reviewed for your jurisdiction is a reasonable
+  starting point, doesn't need to be custom-drafted from scratch
+- [ ] Check Anthropic's own commercial/usage terms for any provisions
+  about reselling API-backed functionality — a business-terms question,
+  not a code question, but worth confirming before charging customers for
+  it
+
+### Phase 4 — Security & compliance hardening
+
+Things that matter more once the app has real accounts, real payments, and
+is reachable by strangers rather than just you:
+
+- [ ] Rate limiting per user and per IP (login attempts, AI generation
+  calls, upload endpoints) — protects both your Anthropic bill and the
+  app itself from abuse
+- [ ] Move secrets out of dev-only user-secrets into real production
+  secret storage (environment variables at minimum; a managed secret
+  store — Azure Key Vault, AWS Secrets Manager — if hosting there)
+- [ ] Enforce HTTPS in production; review the current permissive CORS
+  policy (currently open for the "Add from internet" bookmarklet
+  endpoint only — confirm nothing else is inadvertently exposed)
+- [ ] Account data rights: let a user delete their account and data,
+  and export their data on request — required under GDPR if any EU users,
+  good practice regardless
+- [ ] Password reset / account recovery flow, if you went with your own
+  password auth in Phase 1 (not needed if OAuth-only)
+
+### Phase 5 — Production readiness
+
+- [ ] Migrate off SQLite to a server-grade database (PostgreSQL is the
+  common default) — SQLite's single-writer model doesn't hold up well
+  under concurrent multi-user writes
+- [ ] Real backup strategy for both the database and the on-disk photo
+  files — currently neither is backed up at all
+- [ ] Basic uptime/error monitoring (even a simple hosted option) so you
+  find out about outages before your customers tell you
+
+### Open questions only you can decide
+
+- Pricing: subscription vs credits, and at what price point relative to
+  your actual Anthropic cost-per-generation (roughly $0.03–0.10 today,
+  per the earlier estimate — re-check against real usage data from Phase 2)
+- Target market/jurisdiction — affects which payment provider makes sense
+  and what tax/business-registration obligations apply to you
+- Whether to keep this repo's offline-first architecture (local IndexedDB
+  mirror) once there's a real backend source of truth per user — still
+  useful, but the sync-conflict story gets more complex with concurrent
+  multi-device use per account
+
+---
+
 ## Media Types – Future Vision
 
 - [ ] Support short video clips inside galleries

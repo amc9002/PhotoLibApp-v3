@@ -40,6 +40,8 @@ export const translations: Record<string, Record<Lang, string>> = {
   // ---------------- toolbar ----------------
   'toolbar.gallery': { be: 'Галерэя ▼', en: 'Gallery ▼' },
   'toolbar.noGalleries': { be: 'Няма галерэй', en: 'No galleries' },
+  'toolbar.gridView': { be: 'Рэжым пліткі', en: 'Grid view' },
+  'toolbar.feedView': { be: 'Рэжым стужкі', en: 'Feed view' },
   'toolbar.increaseThumbSize': { be: 'Павялічыць мініяцюры', en: 'Increase thumbnail size' },
   'toolbar.decreaseThumbSize': { be: 'Паменшыць мініяцюры', en: 'Decrease thumbnail size' },
   'toolbar.copySelected': { be: 'Капіяваць вылучанае ў галерэю', en: 'Copy selected to gallery' },

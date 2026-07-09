@@ -1,0 +1,24 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Data Source=/data/photolib.db
+      - Storage__PhotosPath=/data/uploads/photos
+      # Optional - only needed for the "Generate with AI" photo-description
+      # feature. Leave unset to run everything else without it.
+      - Anthropic__ApiKey=${ANTHROPIC_API_KEY:-}
+    volumes:
+      - photolib-data:/data
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  photolib-data:

@@ -1,0 +1,37 @@
+<div class="feed-item" [attr.data-photo-id]="photo.id">
+  <div class="feed-item-media">
+    <img *ngIf="url" [src]="url" alt="" />
+    <div class="feed-item-placeholder" *ngIf="!url"></div>
+
+    <button
+      class="feed-item-menu-btn"
+      (click)="menu.emit($event)"
+      aria-label="⋮"
+    >
+      ⋮
+    </button>
+  </div>
+
+  <aside class="feed-info-panel" [class.collapsed]="!infoOpen">
+    <button
+      class="feed-info-toggle"
+      (click)="toggleInfo()"
+      [attr.aria-label]="(infoOpen ? 'photoViewer.collapseInfo' : 'photoViewer.expandInfo') | t"
+      [title]="(infoOpen ? 'photoViewer.collapseInfo' : 'photoViewer.expandInfo') | t"
+    >
+      {{ infoOpen ? '›' : '‹' }}
+    </button>
+
+    <div class="feed-info-content" *ngIf="infoOpen">
+      <h3 class="feed-info-title">{{ photo.title || ('photoViewer.untitled' | t) }}</h3>
+
+      <p class="feed-info-description" [class.muted]="!hasDescription">
+        {{ hasDescription ? photo.description : ('photoViewer.noDescription' | t) }}
+      </p>
+
+      <div class="feed-info-tags" *ngIf="photo.tags?.length">
+        <span class="feed-info-tag" *ngFor="let tag of photo.tags">{{ tag }}</span>
+      </div>
+    </div>
+  </aside>
+</div>

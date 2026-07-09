@@ -11,6 +11,7 @@ import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-
 import { Gallery } from '../../models/gallery.model';
 import { ThumbnailSizeService } from '../../services/thumbnail-size.service';
 import { PhotoSelectionService } from '../../services/photo-selection.service';
+import { ViewModeService } from '../../services/view-mode.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { photosSelectedText } from '../../core/i18n/plurals';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -45,6 +46,7 @@ export class ToolbarComponent {
     private elementRef: ElementRef,
     public thumbnailSize: ThumbnailSizeService,
     public photoSelection: PhotoSelectionService,
+    public viewMode: ViewModeService,
     public i18n: I18nService,
   ) {}
 

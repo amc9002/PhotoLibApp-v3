@@ -39,6 +39,24 @@
 <ng-container *ngIf="layout === 'right'">
   <button
     class="toolbar-btn"
+    [class.active]="viewMode.mode === 'grid'"
+    (click)="viewMode.setMode('grid')"
+    [title]="'toolbar.gridView' | t"
+  >
+    ▦
+  </button>
+  <button
+    class="toolbar-btn"
+    [class.active]="viewMode.mode === 'feed'"
+    (click)="viewMode.setMode('feed')"
+    [title]="'toolbar.feedView' | t"
+  >
+    ☰
+  </button>
+
+  <button
+    class="toolbar-btn"
+    *ngIf="viewMode.mode === 'grid'"
     [disabled]="!thumbnailSize.canIncrease"
     (click)="thumbnailSize.increase()"
     [title]="'toolbar.increaseThumbSize' | t"
@@ -47,6 +65,7 @@
   </button>
   <button
     class="toolbar-btn"
+    *ngIf="viewMode.mode === 'grid'"
     [disabled]="!thumbnailSize.canDecrease"
     (click)="thumbnailSize.decrease()"
     [title]="'toolbar.decreaseThumbSize' | t"

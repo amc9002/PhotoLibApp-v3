@@ -72,6 +72,15 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Applies any pending EF Core migrations on startup, so a fresh container
+// (or a fresh clone) doesn't need a separate manual `dotnet ef database
+// update` step - the database file is created/updated the first time the
+// app actually runs.
+using (var scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<PhotoDbContext>().Database.Migrate();
+}
+
 // Only enable swagger UI in Development by default (you can enable always if you prefer)
 if (app.Environment.IsDevelopment())
 {
