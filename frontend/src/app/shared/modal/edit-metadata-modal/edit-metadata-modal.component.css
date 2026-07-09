@@ -38,3 +38,37 @@ button:disabled {
   font-size: 12px;
   margin: -4px 0 12px;
 }
+
+.ai-generate {
+  background: var(--canvas-elevated);
+  border: 1px solid var(--canvas-border);
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 16px;
+}
+
+.ai-generate-heading {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.ai-generate-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ai-generate-row select {
+  flex: 1;
+  background: var(--canvas);
+  border: 1px solid var(--canvas-border);
+  border-radius: 4px;
+  padding: 6px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.ai-generate .form-error {
+  margin: 8px 0 0;
+}

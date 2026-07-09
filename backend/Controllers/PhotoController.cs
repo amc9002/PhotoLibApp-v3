@@ -22,6 +22,7 @@ namespace PhotoLibApi.Controllers
         private readonly TagResolver _tagResolver;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PhotoImageProcessingService _imageProcessing;
+        private readonly PhotoDescriptionAiService _descriptionAi;
 
         /// <summary>
         /// Creates the controller with its DB context and supporting services.
@@ -31,13 +32,15 @@ namespace PhotoLibApi.Controllers
             PhotoFilePathHelper filePathHelper,
             TagResolver tagResolver,
             IHttpClientFactory httpClientFactory,
-            PhotoImageProcessingService imageProcessing)
+            PhotoImageProcessingService imageProcessing,
+            PhotoDescriptionAiService descriptionAi)
         {
             _db = db;
             _filePathHelper = filePathHelper;
             _tagResolver = tagResolver;
             _httpClientFactory = httpClientFactory;
             _imageProcessing = imageProcessing;
+            _descriptionAi = descriptionAi;
         }
 
         /// <summary>
@@ -551,6 +554,50 @@ namespace PhotoLibApi.Controllers
             // authoritative UpdatedAtUtc to avoid caching a stale/guessed
             // value that would later trip a false sync conflict.
             return Ok(new { updatedAtUtc = photo.UpdatedAtUtc });
+        }
+
+        /// <summary>
+        /// Asks the AI to draft a title, description and tags for a photo.
+        /// </summary>
+        /// <remarks>
+        /// This does not persist anything - the draft is returned for the
+        /// caller to review and save via the normal update endpoints.
+        /// </remarks>
+        /// <param name="id">Photo identifier.</param>
+        /// <param name="request">Requested writing style and length.</param>
+        /// <param name="cancellationToken">Cancellation token for the request.</param>
+        /// <response code="200">Drafted title, description and tags.</response>
+        /// <response code="404">Photo not found, or has no image file to analyze.</response>
+        /// <response code="502">The AI request failed.</response>
+        [HttpPost("{id:guid}/generate-description")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status502BadGateway)]
+        public async Task<IActionResult> GenerateDescription(
+            Guid id,
+            [FromBody] GenerateDescriptionRequest request,
+            CancellationToken cancellationToken)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var photo = await _db.Photos.FindAsync(new object?[] { id }, cancellationToken);
+            if (photo == null || photo.IsDeleted || (!photo.HasOriginal && !photo.HasThumbnail))
+                return NotFound();
+
+            try
+            {
+                var draft = await _descriptionAi.GenerateAsync(photo, request, cancellationToken);
+                return Ok(draft);
+            }
+            catch (FileNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status502BadGateway, new { message = "AI request failed: " + ex.Message });
+            }
         }
 
         /// <summary>

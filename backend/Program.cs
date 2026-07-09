@@ -1,4 +1,5 @@
 using System.Reflection;
+using Anthropic;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using PhotoLibApi.Data;
@@ -43,6 +44,17 @@ builder.Services.AddSingleton(sp =>
     return new PhotoFilePathHelper(photosRoot);
 });
 builder.Services.AddScoped<PhotoImageProcessingService>();
+
+// Config-driven and stateless once built, so a single shared instance is safe
+// (same rationale as the PhotoFilePathHelper registration above). The key is
+// read from user-secrets in development (`dotnet user-secrets set
+// "Anthropic:ApiKey" "..."`) - never committed to appsettings.json.
+builder.Services.AddSingleton(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    return new AnthropicClient { ApiKey = configuration["Anthropic:ApiKey"] };
+});
+builder.Services.AddScoped<PhotoDescriptionAiService>();
 
 builder.Services.AddHttpClient();
 

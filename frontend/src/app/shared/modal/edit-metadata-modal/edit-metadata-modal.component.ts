@@ -10,8 +10,10 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonGroupNavDirective } from '../../directives/button-group-nav.directive';
 import { TagApiService } from '../../../services/tag-api.service';
+import { PhotoApiService } from '../../../services/photo-api.service';
 import { parseTagsInput } from '../../utils/tags';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { DescriptionLength, DescriptionStyle } from '../../../models/generate-description.dto';
 
 /**
  * Title + description + tags editor, shared by the photo and gallery
@@ -31,6 +33,8 @@ export class EditMetadataModalComponent implements OnInit {
   @Input() tags: string[] = [];
   @Input() isSaving = false;
   @Input() saveError: string | null = null;
+  /** Only set when editing a photo - gates the "Generate with AI" section, which doesn't apply to galleries. */
+  @Input() photoId?: string;
 
   @Output() close = new EventEmitter<void>();
   @Output() save = new EventEmitter<{
@@ -42,11 +46,19 @@ export class EditMetadataModalComponent implements OnInit {
   tagsText = '';
   availableTags: string[] = [];
 
+  aiStyle: DescriptionStyle = 'informative';
+  aiLength: DescriptionLength = 'medium';
+  isGenerating = false;
+  generateError = false;
+
   private initialTitle = '';
   private initialDescription = '';
   private initialTags: string[] = [];
 
-  constructor(private tagApi: TagApiService) {}
+  constructor(
+    private tagApi: TagApiService,
+    private photoApi: PhotoApiService,
+  ) {}
 
   ngOnInit() {
     this.tagsText = this.tags.join(', ');
@@ -93,6 +105,31 @@ export class EditMetadataModalComponent implements OnInit {
       title: this.title,
       description: this.description,
       tags: parseTagsInput(this.tagsText),
+    });
+  }
+
+  generateWithAi() {
+    if (!this.photoId || this.isGenerating) return;
+
+    this.isGenerating = true;
+    this.generateError = false;
+
+    this.photoApi.generateDescription(this.photoId, this.aiStyle, this.aiLength).subscribe({
+      next: (draft) => {
+        this.title = draft.title;
+        this.description = draft.description;
+        const existing = parseTagsInput(this.tagsText);
+        const merged = [...existing, ...draft.suggestedTags].filter(
+          (tag, i, arr) => arr.findIndex((t) => t.toLowerCase() === tag.toLowerCase()) === i,
+        );
+        this.tagsText = merged.join(', ');
+        this.isGenerating = false;
+      },
+      error: (err) => {
+        console.error('Failed to generate photo description', err);
+        this.isGenerating = false;
+        this.generateError = true;
+      },
     });
   }
 }

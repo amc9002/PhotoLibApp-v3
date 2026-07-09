@@ -53,6 +53,7 @@
 <app-edit-metadata-modal
   *ngIf="editMetadataOpen && contextEditPhoto as photo"
   heading="photoViewer.editDetails"
+  [photoId]="photo.id"
   [title]="photo.title"
   [description]="photo.description ?? ''"
   [tags]="photo.tags"

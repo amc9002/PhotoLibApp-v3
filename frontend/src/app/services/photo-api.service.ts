@@ -6,6 +6,11 @@ import { ConnectivityService } from '../core/offline/connectivity.service';
 import { LocalDbService } from '../core/offline/local-db.service';
 import { PhotoDto } from '../models/photo.dto';
 import { PhotoListItemDto } from '../models/photoLisrItem.dto';
+import {
+  DescriptionLength,
+  DescriptionStyle,
+  GenerateDescriptionResponse,
+} from '../models/generate-description.dto';
 
 @Injectable({
   providedIn: 'root',
@@ -73,6 +78,22 @@ export class PhotoApiService {
 
   reorder(galleryId: string, photoIds: string[]): Observable<void> {
     return defer(() => from(this.resolveReorder(galleryId, photoIds)));
+  }
+
+  /**
+   * Asks the AI to draft a title, description and tags for a photo. Online-only
+   * and on-demand - nothing is persisted by this call (so unlike the other
+   * methods here, there's no offline mirror/outbox path to fall back to).
+   */
+  generateDescription(
+    photoId: string,
+    style: DescriptionStyle,
+    length: DescriptionLength,
+  ): Observable<GenerateDescriptionResponse> {
+    return this.api.post<GenerateDescriptionResponse>(`Photo/${photoId}/generate-description`, {
+      style,
+      length,
+    });
   }
 
   // ---------------- implementation ----------------

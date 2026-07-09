@@ -104,6 +104,7 @@
   <app-edit-metadata-modal
     *ngIf="editMetadataOpen"
     heading="photoViewer.editDetails"
+    [photoId]="photo.id"
     [isSaving]="isSavingMetadata"
     [saveError]="metadataSaveError ? (metadataSaveError | t) : null"
     [title]="photo.title"

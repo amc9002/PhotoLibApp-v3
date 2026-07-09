@@ -150,6 +150,22 @@ export const translations: Record<string, Record<Lang, string>> = {
   'editMetadata.description': { be: 'Апісанне', en: 'Description' },
   'editMetadata.tags': { be: 'Тэгі', en: 'Tags' },
   'editMetadata.tagsPlaceholder': { be: 'напр. караблі, вінтаж', en: 'e.g. ships, vintage' },
+  'editMetadata.aiHeading': { be: 'Стварыць з дапамогай ШІ', en: 'Generate with AI' },
+  'editMetadata.aiStyle': { be: 'Стыль', en: 'Style' },
+  'editMetadata.aiStyleArtistic': { be: 'Мастацкі', en: 'Artistic' },
+  'editMetadata.aiStyleInformative': { be: 'Пазнавальны', en: 'Informative' },
+  'editMetadata.aiStyleScientific': { be: 'Навуковы', en: 'Scientific' },
+  'editMetadata.aiStyleJournalistic': { be: 'Публіцыстычны', en: 'Journalistic' },
+  'editMetadata.aiLength': { be: 'Аб’ём', en: 'Length' },
+  'editMetadata.aiLengthShort': { be: 'Кароткі', en: 'Short' },
+  'editMetadata.aiLengthMedium': { be: 'Сярэдні', en: 'Medium' },
+  'editMetadata.aiLengthLong': { be: 'Падрабязны', en: 'Long' },
+  'editMetadata.aiGenerate': { be: 'Стварыць', en: 'Generate' },
+  'editMetadata.aiGenerating': { be: 'Стварэнне…', en: 'Generating…' },
+  'editMetadata.aiFailed': {
+    be: 'Не ўдалося стварыць апісанне. Паспрабуйце яшчэ раз.',
+    en: 'Failed to generate a description. Please try again.',
+  },
 
   // ---------------- sync-review-modal ----------------
   'syncReview.heading': { be: 'Сінхранізацыя змен', en: 'Sync changes' },
