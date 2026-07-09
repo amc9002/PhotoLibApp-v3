@@ -23,5 +23,25 @@ services:
       - backend
     restart: unless-stopped
 
+  # Periodically snapshots the database and uploaded photos to ./backups on
+  # the host (not just a Docker volume) so a bad migration, accidental
+  # delete, or volume corruption doesn't mean total data loss. This alone
+  # isn't a full disaster-recovery plan - copy ./backups somewhere off this
+  # machine periodically for real protection.
+  backup:
+    build: ./backup
+    environment:
+      - BACKUP_INTERVAL_HOURS=${BACKUP_INTERVAL_HOURS:-24}
+      - BACKUP_KEEP=${BACKUP_KEEP:-14}
+    volumes:
+      # Not mounted read-only: sqlite3's backup command needs to create a
+      # transient lock/journal file alongside the source database even for
+      # a read-only snapshot - a read-only mount makes that fail outright.
+      - photolib-data:/data
+      - ./backups:/backups
+    depends_on:
+      - backend
+    restart: unless-stopped
+
 volumes:
   photolib-data:

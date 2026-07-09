@@ -82,10 +82,11 @@ cd photolib-ng-v3
 docker compose up -d
 ```
 
-Open **http://localhost:4200**. One command brings up two containers - the
-ASP.NET Core backend, and nginx serving the built Angular app and proxying
-`/api/*` requests to the backend - plus a persistent named Docker volume
-for the SQLite database and uploaded photos, so your data survives
+Open **http://localhost:4200**. One command brings up three containers -
+the ASP.NET Core backend, nginx serving the built Angular app and
+proxying `/api/*` requests to the backend, and a backup service (see
+**Backups** below) - plus a persistent named Docker volume for the
+SQLite database and uploaded photos, so your data survives
 `docker compose down` and container rebuilds. Database migrations run
 automatically on startup, so there's no separate setup step.
 
@@ -106,6 +107,31 @@ docker compose down -v     # stop and wipe the database/photos volume too
 This is the recommended path if you just want to run the app. For active
 development (hot reload, debugging, editing code) use the manual setup
 below instead.
+
+### Backups
+
+The `backup` container takes a consistent snapshot of the database and
+uploaded photos every 24 hours by default (configurable via
+`BACKUP_INTERVAL_HOURS`/`BACKUP_KEEP` in `.env`, default: keep the last
+14 of each) and writes them to `./backups` **on the host**, not just
+inside a Docker volume - so a bad migration, an accidental delete, or a
+corrupted volume doesn't mean total data loss.
+
+This is a *local* safety net, not a full disaster-recovery plan: if the
+machine's disk fails, `./backups` is gone too. Periodically copy that
+folder somewhere else (external drive, cloud storage) for real
+protection.
+
+To restore from a backup (stop the app first):
+
+```bash
+docker compose down
+gunzip -c backups/photolib-db-<timestamp>.db.gz > /path/to/restored/photolib.db
+tar -xzf backups/photolib-uploads-<timestamp>.tar.gz -C /path/to/restored
+# copy restored/photolib.db and restored/uploads into the photolib-data
+# volume (e.g. via a temporary container), then:
+docker compose up -d
+```
 
 ---
 

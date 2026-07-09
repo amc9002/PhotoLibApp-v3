@@ -70,3 +70,8 @@ appsettings.Development.json
 # Local scratch
 ###############################
 Screenshots/
+
+###############################
+# Docker Compose backup output (real user data - never committed)
+###############################
+/backups/

@@ -328,8 +328,13 @@ is reachable by strangers rather than just you:
 - [ ] Migrate off SQLite to a server-grade database (PostgreSQL is the
   common default) — SQLite's single-writer model doesn't hold up well
   under concurrent multi-user writes
-- [ ] Real backup strategy for both the database and the on-disk photo
-  files — currently neither is backed up at all
+- [x] Real backup strategy for both the database and the on-disk photo
+  files — currently neither is backed up at all. Done for the single-host
+  case: a `backup` Docker Compose service snapshots both to `./backups`
+  on the host on a schedule (`sqlite3 .backup` for a consistent DB copy,
+  tar for uploads), with pruning. Still not true off-site/disaster-proof
+  backup (same disk) and won't suffice once Phase 5's Postgres migration
+  happens - revisit then.
 - [ ] Basic uptime/error monitoring (even a simple hosted option) so you
   find out about outages before your customers tell you
 
