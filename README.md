@@ -36,6 +36,19 @@ Core.
   opens with the edit-details panel ready so title/description/tags can be
   filled in immediately.
 
+### AI-assisted descriptions (optional)
+- The photo edit-details modal has a "Generate with AI" section: pick a
+  writing style (artistic / informative / scientific / journalistic) and
+  length, optionally add free-form instructions (e.g. a target language or
+  facts you already know), and Claude drafts a title, description and tags
+  for the photo - using web search to identify the actual subject and
+  ground the text in real facts rather than just describing pixels. Nothing
+  is saved automatically; the draft lands in the form for you to edit and
+  save (or discard) like any other change.
+- Requires your own Anthropic API key - see **Development Setup** below.
+  Without one configured, the button fails with an inline error instead of
+  crashing; every other feature in the app works normally without it.
+
 ### Offline support
 The app keeps working - reading and writing - while the backend is
 unreachable:
@@ -100,6 +113,24 @@ dotnet run
 
 Runs on `http://localhost:5146` by default (see
 `backend/Properties/launchSettings.json`).
+
+#### AI-assisted descriptions (optional)
+
+The "Generate with AI" feature calls the Anthropic API and needs its own
+API key - separate from any Claude subscription, billed pay-as-you-go on
+[console.anthropic.com](https://console.anthropic.com) (a new account
+usually needs a minimum credit purchase, e.g. $5, before the key works;
+each generation costs a few cents). Configure it via .NET user-secrets so
+it never ends up in a committed file:
+
+```bash
+cd backend
+dotnet user-secrets init
+dotnet user-secrets set "Anthropic:ApiKey" "sk-ant-..."
+```
+
+Skip this if you don't want the feature - everything else works fine
+without it.
 
 ### Frontend
 
