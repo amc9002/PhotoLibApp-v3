@@ -3,11 +3,13 @@
 This document tracks planned work, ideas, and architectural notes.
 It is intentionally incomplete and evolves with the project.
 
-*Checkboxes reconciled against the actual codebase on 2026-07-08 - most
-backend CRUD/soft-delete items and several frontend items were already
-done but unchecked. Empty-gallery state and upload retry landed the same
-day. Remaining near-term gaps: right-click context menu (low priority,
-duplicates the "⋮" menu), autoplay/slideshow, viewer fullscreen toggle.*
+*Checkboxes reconciled against the actual codebase on 2026-07-09 - the
+2026-07-08 reconciliation missed same-day work that landed right after
+it: right-click context menu, collapsible viewer info panel, and the
+full gallery slideshow feature (order/interval/crossfade, settings
+persisted). Remaining near-term gaps: viewer fullscreen toggle, save
+button press animation, presentation/postcard viewer mode, and album
+concept + sharing.*
 
 ---
 
@@ -64,6 +66,11 @@ duplicates the "⋮" menu), autoplay/slideshow, viewer fullscreen toggle.*
 - [x] Lazy-load thumbnails
 - [x] Fetch original image only on user interaction — `photo-viewer-main` fetches the original only when the viewer opens
 - [x] Offline-first sync UI states — local mirror, outbox, sync review modal
+- [x] Settings menu with language switching (BE/EN) and app background themes — not originally on this list
+- [x] "Add from internet" bookmarklet capture — not originally on this list
+- [x] App branding (logo, favicon, colour system) — not originally on this list
+- [x] Performance work: bounded thumbnail cache, async photo file lookups, carousel trackBy, throttled mousemove change detection — not originally on this list
+- [x] Drag-and-drop reordering for galleries and photos — not originally on this list
 
 ---
 
@@ -72,7 +79,7 @@ duplicates the "⋮" menu), autoplay/slideshow, viewer fullscreen toggle.*
 - [x] Define unified photo actions (single & batch)
 - [x] Add selection mode in gallery (multi-select)
 - [x] Implement group actions (delete, copy/move to gallery) — no separate "album" concept, galleries fill that role
-- [ ] Add context menu (right-click) for photo actions — low priority, the "⋮" actions menu already covers the same actions
+- [x] Add context menu (right-click) for photo actions — `photo-context-menu` component, wired via `(contextmenu)` on gallery grid tiles; offers edit/info/copy/move/delete
 
 ## Frontend – Gallery & Photo Viewing
 
@@ -82,9 +89,10 @@ duplicates the "⋮" menu), autoplay/slideshow, viewer fullscreen toggle.*
 - [x] Thumbnail carousel in viewer mode
 - [x] Keyboard handling with proper focus awareness
 - [x] Full-size / original photo overlay
-- [ ] Autoplay (ordered)
-- [ ] Autoplay (random)
+- [x] Autoplay (ordered) — slideshow settings modal, forward/reverse order, configurable interval + crossfade duration, remembered across sessions
+- [x] Autoplay (random) — Fisher-Yates shuffle order in the same slideshow feature
 - [x] Empty gallery state (no photos yet)
+- [x] Collapsible info panel in viewer (title/description/tags side panel, foldable) — not originally on this list
 
 ---
 
