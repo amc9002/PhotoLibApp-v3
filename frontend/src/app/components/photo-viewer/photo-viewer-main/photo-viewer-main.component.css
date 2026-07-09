@@ -1,0 +1,70 @@
+/* The host itself is a flex item of .viewer-center; without a definite
+   size here it shrink-wraps to its content (.photo-viewer-main), which in
+   turn wants 100% of the host - a circular reference that collapses both
+   to 0 width. */
+:host {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.photo-viewer-main {
+  position: relative;
+  width: 100%;
+
+  overflow: hidden;
+
+  height: calc(100vh - 80px);
+}
+
+.photo-viewer-main img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+
+  transform: scale(0.96);
+  opacity: 0;
+  transition:
+    transform var(--ui-normal) var(--ui-ease),
+    opacity var(--ui-normal) var(--ui-ease);
+}
+
+.photo-viewer-main img.open {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* Outgoing photo during a slideshow crossfade - fades out in lockstep with
+   the incoming photo fading in over it (see .crossfade below). This is
+   always a freshly-mounted element (previousLayer goes through null
+   between fades, see photo-viewer-main.component.ts), so it never gets
+   the .open class's scale(1) the way the same photo did while it was the
+   *incoming* layer - without overriding transform here too, it would
+   inherit the base rule's scale(0.96) and visibly snap to that smaller
+   size the instant it becomes the outgoing layer, reading as a little
+   jolt right before the fade-out starts.
+*/
+.photo-viewer-main img.photo-below {
+  transform: scale(1);
+  opacity: 1;
+  transition: opacity 800ms ease;
+}
+
+.photo-viewer-main img.photo-below.fading-out {
+  opacity: 0;
+}
+
+/* Incoming photo during a slideshow crossfade - plain opacity dissolve,
+   no scale movement, so slides don't "pop" on every advance. */
+.photo-viewer-main img.crossfade {
+  transform: none;
+  opacity: 0;
+  transition: opacity 800ms ease;
+}
+
+.photo-viewer-main img.crossfade.crossfade-in {
+  opacity: 1;
+}

@@ -1,0 +1,87 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ heading | t }}</h2>
+      <button class="modal-close" (click)="close.emit()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="ai-generate" *ngIf="photoId">
+        <div class="ai-generate-heading">{{ "editMetadata.aiHeading" | t }}</div>
+        <div class="ai-generate-row">
+          <select [(ngModel)]="aiStyle" [disabled]="isGenerating" [attr.aria-label]="'editMetadata.aiStyle' | t">
+            <option value="artistic">{{ "editMetadata.aiStyleArtistic" | t }}</option>
+            <option value="informative">{{ "editMetadata.aiStyleInformative" | t }}</option>
+            <option value="scientific">{{ "editMetadata.aiStyleScientific" | t }}</option>
+            <option value="journalistic">{{ "editMetadata.aiStyleJournalistic" | t }}</option>
+          </select>
+          <select [(ngModel)]="aiLength" [disabled]="isGenerating" [attr.aria-label]="'editMetadata.aiLength' | t">
+            <option value="short">{{ "editMetadata.aiLengthShort" | t }}</option>
+            <option value="medium">{{ "editMetadata.aiLengthMedium" | t }}</option>
+            <option value="long">{{ "editMetadata.aiLengthLong" | t }}</option>
+          </select>
+          <button type="button" class="btn secondary" [disabled]="isGenerating" (click)="generateWithAi()">
+            {{ (isGenerating ? "editMetadata.aiGenerating" : "editMetadata.aiGenerate") | t }}
+          </button>
+        </div>
+        <textarea
+          class="ai-generate-instructions"
+          rows="2"
+          [placeholder]="'editMetadata.aiInstructionsPlaceholder' | t"
+          [disabled]="isGenerating"
+          [(ngModel)]="aiInstructions"
+        ></textarea>
+        <div class="form-error" *ngIf="generateError">{{ "editMetadata.aiFailed" | t }}</div>
+      </div>
+
+      <div class="form-field">
+        <label for="edit-title">{{ "editMetadata.title" | t }}</label>
+        <input
+          id="edit-title"
+          type="text"
+          [placeholder]="'editMetadata.title' | t"
+          [value]="title"
+          (input)="title = $any($event.target).value"
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="edit-description">{{ "editMetadata.description" | t }}</label>
+        <textarea
+          id="edit-description"
+          rows="4"
+          [placeholder]="'editMetadata.description' | t"
+          (input)="description = $any($event.target).value"
+          >{{ description }}</textarea
+        >
+      </div>
+
+      <div class="form-field">
+        <label for="edit-tags">{{ "editMetadata.tags" | t }}</label>
+        <input
+          id="edit-tags"
+          type="text"
+          [placeholder]="'editMetadata.tagsPlaceholder' | t"
+          list="edit-tag-options"
+          [(ngModel)]="tagsText"
+        />
+        <datalist id="edit-tag-options">
+          <option *ngFor="let t of availableTags; trackBy: trackByTag" [value]="t"></option>
+        </datalist>
+      </div>
+    </div>
+
+    <div class="form-error" *ngIf="saveError">{{ saveError }}</div>
+
+    <div class="modal-footer" appButtonGroupNav>
+      <button class="btn secondary" (click)="close.emit()">{{ "common.cancel" | t }}</button>
+      <button
+        class="btn primary"
+        [disabled]="isSaving || !isDirty"
+        (click)="onSave()"
+      >
+        {{ (isSaving ? "common.saving" : "common.save") | t }}
+      </button>
+    </div>
+  </div>
+</div>

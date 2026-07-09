@@ -1,0 +1,131 @@
+/* ===== CAROUSEL CONTAINER ===== */
+
+.photo-viewer-carousel {
+  height: 80px;
+  background: var(--canvas-elevated);
+  border-bottom: 1px solid var(--canvas-border);
+}
+
+/* ===== STRIP ===== */
+
+.carousel-strip {
+  height: 100%;
+  display: flex;
+  align-items: center;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  padding: 4px 8px;
+  box-sizing: border-box;
+}
+
+/* ===== ITEMS WRAPPER ===== */
+
+.carousel-items {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  margin: 0 auto;
+  padding: 0 12px;
+}
+
+/* ===== SINGLE ITEM ===== */
+
+.carousel-item {
+  width: 72px;
+  flex: 0 0 auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  cursor: pointer;
+}
+
+/* ===== THUMB ===== */
+
+.carousel-thumb {
+  width: 72px;
+  height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 4px;
+
+  transition: background 160ms ease;
+}
+
+.carousel-thumb app-photo-thumbnail {
+  width: 100%;
+  height: 100%;
+}
+
+.carousel-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+
+  transition: filter 160ms ease;
+}
+
+/* ===== TITLE ===== */
+
+.carousel-title {
+  height: 16px; /* 🔑 пастаянная вышыня */
+  line-height: 16px;
+
+  margin-top: 4px;
+  width: 100%;
+
+  font-size: 11px;
+  color: var(--text-muted);
+
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  transition:
+    margin-top 160ms ease,
+    font-size 160ms ease,
+    color 160ms ease;
+
+  position: relative; /* 🔑 */
+  z-index: 1;
+}
+
+/* ===== ACTIVE STATE ===== */
+
+.carousel-item.active .carousel-thumb {
+  background: rgba(255, 255, 255, 0.08);
+
+  outline: 2px solid var(--amber);
+  outline-offset: -1px;
+
+  border-radius: 4px;
+}
+
+.carousel-item.active .carousel-thumb img {
+  filter: brightness(1.08) contrast(1.05);
+}
+
+.carousel-item.active .carousel-title {
+  font-weight: 600;
+  color: var(--text);
+  z-index: 3;
+}
+
+/* ===== HOVER STATE (SUBTLE) ===== */
+
+.carousel-item:hover:not(.active) .carousel-thumb {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.carousel-item:hover:not(.active) .carousel-thumb img {
+  filter: brightness(1.03);
+}

@@ -1,11 +1,12 @@
-<header class="app-header" *ngIf="!isViewerOpen">
+<header class="app-header">
   <div class="header-left">
-    <span class="app-title">PhotoLib</span>
+    <img class="app-logo" src="logo-full.png" alt="PhotoLib" />
 
     <app-toolbar
       [galleries]="galleries"
       [selectedGallery]="selectedGallery"
       (gallerySelected)="selectGallery($event)"
+      (galleriesReordered)="onGalleriesReordered($event)"
     ></app-toolbar>
   </div>
 
@@ -15,7 +16,15 @@
       [selectedGallery]="selectedGallery"
       (newGallery)="openCreateGallery()"
       (addPhotos)="openFilePicker()"
+      (addFromInternet)="openAddFromInternet()"
       (properties)="openGalleryProperties()"
+      (deleteGallery)="openDeleteGalleryConfirm()"
+      (editGallery)="openEditGallery()"
+      (slideshow)="onSlideshow()"
+      (copySelected)="onCopySelected()"
+      (moveSelected)="onMoveSelected()"
+      (deleteSelected)="onDeleteSelected()"
+      (openSettings)="openSettings()"
     ></app-toolbar>
     <app-gallery-properties
       *ngIf="showGalleryProperties && selectedGallery"
@@ -26,15 +35,16 @@
 </header>
 
 <main class="app-content">
-  <app-gallery-view
+  <app-gallery-page
     *ngIf="selectedGallery"
     [gallery]="selectedGallery"
-    (viewerOpened)="isViewerOpen = true"
-    (viewerClosed)="isViewerOpen = false"
-  ></app-gallery-view>
+    [allGalleries]="galleries"
+    (galleryEmptied)="onGalleryEmptied()"
+    (galleryCreated)="onGalleryCreatedElsewhere($event)"
+  ></app-gallery-page>
 
   <div *ngIf="!selectedGallery" class="empty-state">
-    Select a gallery to view photos
+    {{ "app.selectGallery" | t }}
   </div>
 </main>
 
@@ -44,7 +54,7 @@
   multiple
   accept="image/*"
   class="hidden-file-input"
-  aria-label="Add photos to gallery"
+  [attr.aria-label]="'app.addPhotosInput' | t"
   (change)="onFilesSelected($event)"
 />
 
@@ -53,3 +63,39 @@
   (create)="createGallery($event)"
   (cancel)="closeCreateGallery()"
 ></app-create-gallery>
+
+<app-confirm-modal
+  *ngIf="deleteGalleryConfirmOpen"
+  [title]="deleteGalleryTitle | t"
+  [message]="deleteGalleryMessage | t"
+  [confirmText]="'common.delete' | t"
+  [isBusy]="isDeletingGallery"
+  (confirm)="confirmDeleteGallery()"
+  (cancel)="closeDeleteGalleryConfirm()"
+></app-confirm-modal>
+
+<app-edit-metadata-modal
+  *ngIf="editGalleryOpen && selectedGallery"
+  heading="app.editGallery"
+  [title]="selectedGallery.title"
+  [description]="selectedGallery.description ?? ''"
+  [tags]="selectedGallery.tags"
+  [isSaving]="isSavingGallery"
+  [saveError]="gallerySaveError ? (gallerySaveError | t) : null"
+  (save)="saveGalleryEdit($event)"
+  (close)="closeEditGallery()"
+></app-edit-metadata-modal>
+
+<app-add-from-internet-modal
+  *ngIf="showAddFromInternet && selectedGallery"
+  [galleryId]="selectedGallery.id"
+  [galleryTitle]="selectedGallery.title"
+  (close)="closeAddFromInternet()"
+></app-add-from-internet-modal>
+
+<app-settings-modal
+  *ngIf="showSettings"
+  (close)="closeSettings()"
+></app-settings-modal>
+
+<app-sync-review-modal></app-sync-review-modal>

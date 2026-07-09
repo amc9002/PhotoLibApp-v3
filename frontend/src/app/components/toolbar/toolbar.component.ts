@@ -7,12 +7,18 @@ import {
   HostListener,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Gallery } from '../../models/gallery.model';
+import { ThumbnailSizeService } from '../../services/thumbnail-size.service';
+import { PhotoSelectionService } from '../../services/photo-selection.service';
+import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { photosSelectedText } from '../../core/i18n/plurals';
+import { I18nService } from '../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-toolbar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DragDropModule, TranslatePipe],
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.css'],
 })
@@ -22,11 +28,29 @@ export class ToolbarComponent {
 
   @Input() layout: 'left' | 'right' = 'left';
   @Output() gallerySelected = new EventEmitter<Gallery>();
+  @Output() galleriesReordered = new EventEmitter<Gallery[]>();
   @Output() addPhotos = new EventEmitter<void>();
+  @Output() addFromInternet = new EventEmitter<void>();
   @Output() properties = new EventEmitter<void>();
   @Output() newGallery = new EventEmitter<void>();
+  @Output() deleteGallery = new EventEmitter<void>();
+  @Output() editGallery = new EventEmitter<void>();
+  @Output() slideshow = new EventEmitter<void>();
+  @Output() copySelected = new EventEmitter<void>();
+  @Output() moveSelected = new EventEmitter<void>();
+  @Output() deleteSelected = new EventEmitter<void>();
+  @Output() openSettings = new EventEmitter<void>();
 
-  constructor(private elementRef: ElementRef) {}
+  constructor(
+    private elementRef: ElementRef,
+    public thumbnailSize: ThumbnailSizeService,
+    public photoSelection: PhotoSelectionService,
+    public i18n: I18nService,
+  ) {}
+
+  get photosSelectedLabel(): string {
+    return photosSelectedText(this.photoSelection.count, this.i18n.lang);
+  }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
@@ -49,9 +73,26 @@ export class ToolbarComponent {
     this.dropdownOpen = false;
   }
 
+  trackById(index: number, gallery: Gallery): string {
+    return gallery.id;
+  }
+
+  onGalleryDropped(event: CdkDragDrop<Gallery[]>) {
+    if (event.previousIndex === event.currentIndex) return;
+
+    moveItemInArray(this.galleries, event.previousIndex, event.currentIndex);
+    this.galleriesReordered.emit(this.galleries);
+  }
+
   onAddPhotos() {
     this.closeServiceMenu();
     this.addPhotos.emit();
+  }
+
+  onAddFromInternet() {
+    this.closeServiceMenu();
+    if (!this.selectedGallery) return;
+    this.addFromInternet.emit();
   }
 
   onNewGallery() {
@@ -67,5 +108,46 @@ export class ToolbarComponent {
 
   closeServiceMenu() {
     this.serviceMenuOpen = false;
+  }
+
+  onDeleteGallery() {
+    this.closeServiceMenu();
+    if (!this.selectedGallery) return;
+    this.deleteGallery.emit();
+  }
+
+  onEditGallery() {
+    this.closeServiceMenu();
+    if (!this.selectedGallery) return;
+    this.editGallery.emit();
+  }
+
+  onSlideshow() {
+    this.closeServiceMenu();
+    if (!this.selectedGallery) return;
+    this.slideshow.emit();
+  }
+
+  onCopySelected() {
+    this.closeServiceMenu();
+    if (this.photoSelection.count === 0) return;
+    this.copySelected.emit();
+  }
+
+  onMoveSelected() {
+    this.closeServiceMenu();
+    if (this.photoSelection.count === 0) return;
+    this.moveSelected.emit();
+  }
+
+  onDeleteSelected() {
+    this.closeServiceMenu();
+    if (this.photoSelection.count === 0) return;
+    this.deleteSelected.emit();
+  }
+
+  onOpenSettings() {
+    this.closeServiceMenu();
+    this.openSettings.emit();
   }
 }

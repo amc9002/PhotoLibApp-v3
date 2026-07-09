@@ -1,0 +1,65 @@
+<div class="modal-backdrop" (click)="cancel.emit()">
+  <div class="modal slideshow-settings-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ "slideshow.heading" | t }}</h2>
+      <button class="modal-close" (click)="cancel.emit()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="settings-section">
+        <div class="settings-label">{{ "slideshow.order" | t }}</div>
+        <div class="settings-options">
+          <button
+            class="settings-option"
+            [class.active]="order === 'forward'"
+            (click)="setOrder('forward')"
+          >
+            {{ "slideshow.orderForward" | t }}
+          </button>
+          <button
+            class="settings-option"
+            [class.active]="order === 'reverse'"
+            (click)="setOrder('reverse')"
+          >
+            {{ "slideshow.orderReverse" | t }}
+          </button>
+          <button
+            class="settings-option"
+            [class.active]="order === 'random'"
+            (click)="setOrder('random')"
+          >
+            {{ "slideshow.orderRandom" | t }}
+          </button>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="slideshow-interval">{{ "slideshow.interval" | t }}</label>
+        <input
+          id="slideshow-interval"
+          type="number"
+          min="1"
+          max="60"
+          [(ngModel)]="intervalSeconds"
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="slideshow-transition">{{ "slideshow.transitionDuration" | t }}</label>
+        <input
+          id="slideshow-transition"
+          type="number"
+          min="0.2"
+          max="5"
+          step="0.1"
+          [(ngModel)]="transitionSeconds"
+        />
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="cancel.emit()">{{ "common.cancel" | t }}</button>
+      <button class="btn primary" (click)="onStart()">{{ "slideshow.start" | t }}</button>
+    </div>
+  </div>
+</div>

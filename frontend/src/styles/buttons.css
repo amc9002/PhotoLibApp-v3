@@ -1,0 +1,28 @@
+.btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: var(--amber);
+  color: var(--ink);
+}
+
+.btn.secondary {
+  background: var(--canvas-elevated);
+  color: var(--text);
+}
+
+.btn.danger {
+  background: var(--warn);
+  color: white;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

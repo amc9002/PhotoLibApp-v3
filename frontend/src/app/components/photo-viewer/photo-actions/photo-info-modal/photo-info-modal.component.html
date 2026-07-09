@@ -1,0 +1,72 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div
+    class="modal info-modal"
+    [class.expanded]="showFullExif"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="modal-header">
+      <h2>{{ "photoInfo.heading" | t }}</h2>
+      <button class="modal-close" (click)="close.emit()">✕</button>
+    </div>
+
+    <div class="modal-body" [class.two-col]="showFullExif">
+      <div class="facts-col">
+        <div class="info-facts" *ngIf="hasFacts">
+          <div *ngIf="make || model">
+            <span class="label">{{ "photoInfo.camera" | t }}</span> {{ make }} {{ model }}
+          </div>
+          <div *ngIf="dateTaken">
+            <span class="label">{{ "photoInfo.dateTaken" | t }}</span> {{ dateTaken }}
+          </div>
+          <div *ngIf="exposureTime">
+            <span class="label">{{ "photoInfo.exposure" | t }}</span> {{ exposureTime }}
+          </div>
+        </div>
+        <p class="muted" *ngIf="!hasFacts">{{ "photoInfo.noExif" | t }}</p>
+
+        <!-- Map stays inline here until the full EXIF list is expanded -->
+        <ng-container *ngIf="!showFullExif">
+          <div class="info-map" *ngIf="hasLocation">
+            <iframe [src]="mapUrl" width="100%" height="220"></iframe>
+            <div class="coords">
+              {{ photo.latitude | number: "1.5-5" }}, {{ photo.longitude | number: "1.5-5" }}
+            </div>
+          </div>
+          <p class="muted" *ngIf="!hasLocation">{{ "photoInfo.noLocation" | t }}</p>
+        </ng-container>
+
+        <button
+          class="btn secondary toggle-exif"
+          *ngIf="exifGroups.length"
+          (click)="toggleFullExif()"
+        >
+          {{ (showFullExif ? "photoInfo.hideFullExif" : "photoInfo.showFullExif") | t }}
+        </button>
+
+        <div class="full-exif" *ngIf="showFullExif">
+          <div class="exif-group" *ngFor="let g of exifGroups">
+            <div class="exif-group-name">{{ g.name }}</div>
+            <div class="exif-tag" *ngFor="let t of g.tags">
+              <span class="exif-tag-name">{{ t.name }}</span>: {{ t.description }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Once the full EXIF list is open, the map moves to a side column -->
+      <div class="map-col" *ngIf="showFullExif">
+        <div class="info-map" *ngIf="hasLocation">
+          <iframe [src]="mapUrl" width="100%" height="320"></iframe>
+          <div class="coords">
+            {{ photo.latitude | number: "1.5-5" }}, {{ photo.longitude | number: "1.5-5" }}
+          </div>
+        </div>
+        <p class="muted" *ngIf="!hasLocation">{{ "photoInfo.noLocation" | t }}</p>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="close.emit()">{{ "common.close" | t }}</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,32 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ "addFromInternet.heading" | t }}</h2>
+      <button class="modal-close" (click)="close.emit()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <p>
+        {{ "addFromInternet.instructions" | t }}
+        <strong>{{ galleryTitle }}</strong
+        >.
+      </p>
+
+      <a class="bookmarklet-btn" [href]="bookmarkletHref" (click)="$event.preventDefault()">
+        {{ "addFromInternet.bookmarkletPrefix" | t }}{{ galleryTitle }}{{ "addFromInternet.bookmarkletSuffix" | t }}
+      </a>
+
+      <p class="hint">
+        {{ "addFromInternet.hint1" | t }}
+      </p>
+
+      <p class="hint">
+        {{ "addFromInternet.hint2" | t }}
+      </p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="close.emit()">{{ "common.close" | t }}</button>
+    </div>
+  </div>
+</div>

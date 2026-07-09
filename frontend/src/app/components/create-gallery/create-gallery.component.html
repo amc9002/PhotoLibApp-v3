@@ -1,17 +1,32 @@
 <div class="overlay">
   <div class="window">
     <div class="window-header">
-      <span>New gallery</span>
+      <span>{{ "createGallery.heading" | t }}</span>
       <button (click)="cancel.emit()">✕</button>
     </div>
 
     <div class="window-content">
-      <input type="text" placeholder="Gallery title" [(ngModel)]="title" />
+      <input
+        type="text"
+        [placeholder]="'createGallery.titlePlaceholder' | t"
+        [(ngModel)]="title"
+        (keyup.enter)="requestCreate()"
+      />
 
       <div class="actions">
-        <button (click)="submit()">Create</button>
-        <button (click)="cancel.emit()">Cancel</button>
+        <button (click)="requestCreate()">{{ "common.create" | t }}</button>
+        <button (click)="cancel.emit()">{{ "common.cancel" | t }}</button>
       </div>
     </div>
   </div>
 </div>
+
+<app-confirm-modal
+  *ngIf="confirmOpen"
+  [title]="'createGallery.confirmTitle' | t"
+  [message]="confirmMessage"
+  [confirmText]="'common.create' | t"
+  variant="primary"
+  (confirm)="confirmCreate()"
+  (cancel)="cancelConfirm()"
+></app-confirm-modal>

@@ -3,6 +3,14 @@
 This document tracks planned work, ideas, and architectural notes.
 It is intentionally incomplete and evolves with the project.
 
+*Checkboxes reconciled against the actual codebase on 2026-07-09 - the
+2026-07-08 reconciliation missed same-day work that landed right after
+it: right-click context menu, collapsible viewer info panel, and the
+full gallery slideshow feature (order/interval/crossfade, settings
+persisted). Remaining near-term gaps: viewer fullscreen toggle, save
+button press animation, presentation/postcard viewer mode, and album
+concept + sharing.*
+
 ---
 
 ## Backend – Core API
@@ -12,77 +20,127 @@ It is intentionally incomplete and evolves with the project.
 - [x] Separate photo metadata from file endpoints
 - [x] Store originals and thumbnails separately
 - [x] Add thumbnail endpoint
-- [ ] Decide on delete strategy (soft vs hard)
-- [ ] Implement soft delete logic (IsDeleted)
-- [ ] Handle file cleanup on hard delete (if used)
-- [ ] Add metadata-only GET /photo/{id}
+- [x] Implement PUT endpoint for updating photo title and description
+- [x] Decide on delete strategy (soft vs hard) — soft delete for normal use; `admin/{id}` hard-delete endpoints exist for dev cleanup
+- [x] Implement soft delete logic (IsDeleted)
+- [x] Handle file cleanup on hard delete (if used) — `AdminHardDelete` removes original + thumbnail files via `PhotoFilePathHelper`
+- [x] Add metadata-only GET /photo/{id} — `GetById` returns the DTO only; file bytes are served separately by `/file` and `/thumbnail`
+
+### Photos – CRUD Completion
+
+- [x] Implement DELETE /photo/{id} (soft delete)
+- [x] Define photo delete strategy (soft vs hard)
+- [x] Add IsDeleted + DeletedAt fields — `IsDeleted` bool; no separate `DeletedAt`, `UpdatedAtUtc` doubles as the delete timestamp (see Architecture Notes in README)
+- [x] Exclude soft-deleted photos from default queries
+- [x] Handle hard delete (internal / maintenance only)
 
 ### Galleries
 
-- [ ] Review GalleryController endpoints
-- [ ] Decide gallery delete behavior
-- [ ] Add gallery-level sync support
+- [x] Review GalleryController endpoints
+- [x] Decide gallery delete behavior — soft delete, no automatic cascade to its photos (an emptied gallery prompts the user separately to delete it too)
+- [x] Add gallery-level sync support
+
+### Galleries – CRUD Completion
+
+- [x] Implement PUT /gallery/{id} (rename / metadata)
+- [x] Implement DELETE /gallery/{id}
+- [x] Define gallery delete behavior:
+  - no automatic cascade delete of photos
+  - not forbidden if non-empty (deletion is explicit, user-confirmed)
+  - soft delete gallery
 
 ---
 
 ## Backend – Storage & Architecture
 
 - [x] File-based storage for originals and thumbnails
-- [ ] Extract file path logic into helper/service
+- [x] Extract file path logic into helper/service — `Services/PhotoFilePathHelper.cs`
 - [ ] Consider future cloud storage abstraction
 - [ ] Add remarks/docs for storage evolution
 
 ---
 
-## Frontend – Angular
+## Frontend – Angular (General)
 
-- [ ] Align gallery view with thumbnail-only API
-- [ ] Lazy-load thumbnails
-- [ ] Fetch original image only on user interaction
-- [ ] Offline-first sync UI states
-
----
-
-## Sync & Offline
-
-- [x] Two-ID model (localId / serverId)
-- [ ] Soft delete propagation
-- [ ] Conflict resolution strategy
-- [ ] Retry logic for file upload
+- [x] Align gallery view with thumbnail-only API
+- [x] Lazy-load thumbnails
+- [x] Fetch original image only on user interaction — `photo-viewer-main` fetches the original only when the viewer opens
+- [x] Offline-first sync UI states — local mirror, outbox, sync review modal
+- [x] Settings menu with language switching (BE/EN) and app background themes — not originally on this list
+- [x] "Add from internet" bookmarklet capture — not originally on this list
+- [x] App branding (logo, favicon, colour system) — not originally on this list
+- [x] Performance work: bounded thumbnail cache, async photo file lookups, carousel trackBy, throttled mousemove change detection — not originally on this list
+- [x] Drag-and-drop reordering for galleries and photos — not originally on this list
 
 ---
 
-## Non-Functional
+## Frontend – Gallery & Photo Actions (Planned)
 
-- [ ] Authentication & authorization
-- [ ] Basic logging
-- [ ] Error handling strategy
-- [ ] Prepare for CI/CD
-
----
+- [x] Define unified photo actions (single & batch)
+- [x] Add selection mode in gallery (multi-select)
+- [x] Implement group actions (delete, copy/move to gallery) — no separate "album" concept, galleries fill that role
+- [x] Add context menu (right-click) for photo actions — `photo-context-menu` component, wired via `(contextmenu)` on gallery grid tiles; offers edit/info/copy/move/delete
 
 ## Frontend – Gallery & Photo Viewing
 
-- [ ] Gallery grid view (thumbnail-only, masonry / quilt layout)
-- [ ] Photo viewer mode (single photo focus)
-- [ ] Next / previous navigation
-- [ ] Thumbnail carousel in viewer mode
-- [ ] Full-size / original photo overlay
-- [ ] Autoplay (ordered)
-- [ ] Autoplay (random)
-- [ ] Empty gallery state (no photos yet)
+- [x] Gallery grid view (thumbnail-only, masonry / quilt-style layout)
+- [x] Photo viewer mode (single photo focus)
+- [x] Next / previous navigation (keyboard + buttons)
+- [x] Thumbnail carousel in viewer mode
+- [x] Keyboard handling with proper focus awareness
+- [x] Full-size / original photo overlay
+- [x] Autoplay (ordered) — slideshow settings modal, forward/reverse order, configurable interval + crossfade duration, remembered across sessions
+- [x] Autoplay (random) — Fisher-Yates shuffle order in the same slideshow feature
+- [x] Empty gallery state (no photos yet)
+- [x] Collapsible info panel in viewer (title/description/tags side panel, foldable) — not originally on this list
+
+---
+
+## Frontend – Photo Metadata Editing
+
+- [x] Edit photo title and description via modal
+- [x] PUT metadata integration
+- [x] Disable Save button while saving
+- [x] Show “Saving…” state during PUT request
+- [x] Prevent viewer keyboard navigation while editing text
+- [x] Disable Save button until metadata is actually changed (dirty state)
+- [x] Show inline error message on failed save
+- [ ] Add subtle button press / saving animation
+
+---
+
+## Frontend – Viewer UX Modes (Planned)
+
+- [ ] Toggle presentation mode:
+  - left: photo
+  - bottom: title
+  - right: description
+  - postcard / illustration-style layout
+- [ ] Toggle back to utility-focused viewer mode
+- [ ] Fullscreen toggle (viewer-only, no browser UI)
 
 ---
 
 ## Frontend – Gallery Presentation & Sharing
 
-- [x] Gallery grid view (masonry / quilt-style layout) <!-- толькі што зроблена -->
 - [ ] Gallery view as photo album (album-like presentation mode)
 - [ ] Allow creating virtual photo albums from selected photos
 - [ ] Allow sharing:
   - [ ] individual photos
   - [ ] photo albums
 - [ ] Define album as a virtual collection (not a physical gallery)
+
+---
+
+## Sync & Offline
+
+- [x] Two-ID model (localId / serverId) — `ClientTempId`, remapped once the server assigns a real id
+- [x] Soft delete propagation
+- [x] Conflict resolution strategy — `sync-coordinator.service.ts` compares `baseUpdatedAtUtc` vs the server's current value, surfaced via the sync review modal
+- [x] Retry logic for file upload — 3 attempts with backoff on transient 5xx/408/429, before falling back to the offline queue
+- [x] Propagate photo delete via sync
+- [x] Handle gallery delete in offline mode
+- [x] Resolve delete vs update conflicts — server-side delete while offline shows as a conflict requiring explicit "apply anyway"
 
 ---
 
@@ -96,7 +154,7 @@ It is intentionally incomplete and evolves with the project.
 
 ## Media Types – Future Vision
 
-- [ ] Support short video clips inside galleries (inspired by Harry Potter moving photos)
+- [ ] Support short video clips inside galleries
 - [ ] Define unified media model (photo / video)
 
 ---
@@ -106,13 +164,15 @@ It is intentionally incomplete and evolves with the project.
 - [ ] Photo animation using neural networks
 - [ ] Define AI-generated media as derived content (not original)
 
+---
+
 ## Ideas / Notes
 
 - Cloud storage support (Blob / S3) – future version
 - Multiple thumbnail sizes
 - EXIF parsing on backend
 - Distinct UI modes:
-- Gallery overview (grid / masonry)
-- Photo viewer (focused)
-- Overlay windows (properties, full-size)
+  - Gallery overview (grid / masonry)
+  - Photo viewer (focused)
+  - Overlay windows (properties, full-size)
 - Consider enforcing gallery creation only together with first photo upload

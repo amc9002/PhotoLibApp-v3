@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhotoLibApi.Data;
 using PhotoLibApi.Models;
+using PhotoLibApi.Services;
 
 namespace PhotoLibApi.Controllers
 {
@@ -13,10 +14,12 @@ namespace PhotoLibApi.Controllers
     public class GalleryController : ControllerBase
     {
         private readonly PhotoDbContext _db;
+        private readonly TagResolver _tagResolver;
 
-        public GalleryController(PhotoDbContext db)
+        public GalleryController(PhotoDbContext db, TagResolver tagResolver)
         {
             _db = db;
+            _tagResolver = tagResolver;
         }
 
         /// <summary>
@@ -29,7 +32,7 @@ namespace PhotoLibApi.Controllers
         /// <response code="200">A list of galleries belonging to the user.</response>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<Gallery>>> GetAll()
+        public async Task<IActionResult> GetAll()
         {
             // simple owner resolution: use authenticated user name or null for local testing
             var ownerId = User?.Identity?.Name;
@@ -37,10 +40,55 @@ namespace PhotoLibApi.Controllers
             var galleries = await _db.Galleries
                 .AsNoTracking()
                 .Where(g => g.OwnerId == ownerId && !g.IsDeleted)
-                .OrderBy(g => g.CreatedAtUtc)
+                .OrderBy(g => g.SortOrder)
+                .Select(g => new
+                {
+                    g.Id,
+                    g.Title,
+                    g.Description,
+                    g.IsDeleted,
+                    g.CreatedAtUtc,
+                    g.UpdatedAtUtc,
+                    Tags = g.Tags.Select(t => t.Name)
+                })
                 .ToListAsync();
 
             return Ok(galleries);
+        }
+
+        /// <summary>
+        /// Persists a new drag-and-drop display order for the user's galleries.
+        /// </summary>
+        /// <param name="request">Gallery identifiers in the desired order.</param>
+        /// <response code="204">Order saved.</response>
+        /// <response code="400">Invalid request data.</response>
+        [HttpPut("reorder")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Reorder([FromBody] ReorderGalleriesRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var ownerId = User?.Identity?.Name;
+
+            var galleries = await _db.Galleries
+                .Where(g => g.OwnerId == ownerId && request.GalleryIds.Contains(g.Id))
+                .ToListAsync();
+
+            var galleryById = galleries.ToDictionary(g => g.Id);
+
+            for (var i = 0; i < request.GalleryIds.Count; i++)
+            {
+                if (galleryById.TryGetValue(request.GalleryIds[i], out var gallery))
+                {
+                    gallery.SortOrder = i;
+                }
+            }
+
+            await _db.SaveChangesAsync();
+
+            return NoContent();
         }
 
 #if DEBUG
@@ -98,6 +146,13 @@ namespace PhotoLibApi.Controllers
         /// <summary>
         /// Returns gallery metadata by identifier.
         /// </summary>
+        /// <remarks>
+        /// Unlike the list endpoints, this does not filter out soft-deleted
+        /// galleries - it returns the row with <c>isDeleted: true</c>
+        /// instead, matching <see cref="PhotoController.GetById"/>. Offline
+        /// sync's conflict check relies on being able to tell "deleted"
+        /// apart from "never existed" for both entity types the same way.
+        /// </remarks>
         /// <param name="id">Gallery identifier.</param>
         /// <response code="200">Gallery metadata returned.</response>
         /// <response code="404">Gallery not found.</response>
@@ -110,13 +165,16 @@ namespace PhotoLibApi.Controllers
 
             var gallery = await _db.Galleries
                 .AsNoTracking()
-                .Where(g => g.Id == id && g.OwnerId == ownerId && !g.IsDeleted)
+                .Where(g => g.Id == id && g.OwnerId == ownerId)
                 .Select(g => new
                 {
                     g.Id,
                     g.Title,
+                    g.Description,
                     g.CreatedAtUtc,
-                    g.UpdatedAtUtc
+                    g.UpdatedAtUtc,
+                    g.IsDeleted,
+                    Tags = g.Tags.Select(t => t.Name)
                 })
                 .FirstOrDefaultAsync();
 
@@ -144,19 +202,107 @@ namespace PhotoLibApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            var ownerId = User?.Identity?.Name;
+
+            // Idempotent replay: a sync retry with the same ClientTempId
+            // returns the row that already exists instead of duplicating it.
+            if (!string.IsNullOrEmpty(request.ClientTempId))
+            {
+                var existing = await _db.Galleries
+                    .FirstOrDefaultAsync(g =>
+                        g.OwnerId == ownerId &&
+                        g.ClientTempId == request.ClientTempId &&
+                        !g.IsDeleted);
+
+                if (existing != null)
+                    return StatusCode(StatusCodes.Status201Created, existing);
+            }
+
+            var nextSortOrder = await _db.Galleries
+                .Where(g => g.OwnerId == ownerId)
+                .Select(g => (int?)g.SortOrder)
+                .MaxAsync() ?? -1;
+
             var gallery = new Gallery
             {
                 Id = Guid.NewGuid(),
                 Title = request.Title,
-                OwnerId = User?.Identity?.Name,
+                OwnerId = ownerId,
+                ClientTempId = request.ClientTempId,
                 CreatedAtUtc = DateTime.UtcNow,
-                UpdatedAtUtc = DateTime.UtcNow
+                UpdatedAtUtc = DateTime.UtcNow,
+                SortOrder = nextSortOrder + 1,
             };
 
             _db.Galleries.Add(gallery);
             await _db.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetAll), gallery);
+        }
+
+        /// <summary>
+        /// Updates gallery metadata.
+        /// </summary>
+        /// <param name="id">Gallery identifier.</param>
+        /// <param name="request"></param>
+        /// <response code="204">Gallery updated successfully.</response>
+        /// <response code="400">Invalid request data.</response>
+        /// <response code="404">Gallery not found.</response>
+        [HttpPut("{id:guid}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Update(
+            Guid id,
+            [FromBody] UpdateGalleryRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var gallery = await _db.Galleries.FindAsync(id);
+
+            if (gallery == null || gallery.IsDeleted)
+                return NotFound();
+
+            gallery.Title = request.Title;
+            gallery.Description = request.Description;
+            gallery.UpdatedAtUtc = DateTime.UtcNow;
+
+            await _db.SaveChangesAsync();
+
+            // Callers (in particular the offline mirror) need the server's
+            // authoritative UpdatedAtUtc to avoid caching a stale/guessed
+            // value that would later trip a false sync conflict.
+            return Ok(new { updatedAtUtc = gallery.UpdatedAtUtc });
+        }
+
+        /// <summary>
+        /// Replaces the full tag set of a gallery.
+        /// </summary>
+        /// <param name="id">Gallery identifier.</param>
+        /// <param name="request">The complete list of tag names to attach.</param>
+        /// <response code="200">Updated tag names.</response>
+        /// <response code="404">Gallery not found.</response>
+        [HttpPut("{id:guid}/tags")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> SetTags(Guid id, [FromBody] SetTagsRequest request)
+        {
+            var gallery = await _db.Galleries
+                .Include(g => g.Tags)
+                .FirstOrDefaultAsync(g => g.Id == id);
+
+            if (gallery == null || gallery.IsDeleted)
+                return NotFound();
+
+            await _tagResolver.ApplyAsync(gallery, request.TagNames);
+            await _db.SaveChangesAsync();
+
+            return Ok(new
+            {
+                tagNames = gallery.Tags.Select(t => t.Name),
+                updatedAtUtc = gallery.UpdatedAtUtc,
+            });
         }
 
         /// <summary>

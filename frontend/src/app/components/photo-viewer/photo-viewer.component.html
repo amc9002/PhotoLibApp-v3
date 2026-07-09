@@ -1,0 +1,122 @@
+<div class="photo-viewer-overlay open" (click)="onBackdropClick()">
+  <div class="photo-viewer-grid" (click)="$event.stopPropagation()">
+    <!-- CAROUSEL -->
+    <div class="viewer-carousel">
+      <app-photo-carousel
+        [photos]="photos"
+        [activePhotoId]="activePhotoId"
+        (photoSelected)="manualSelect($event)"
+      ></app-photo-carousel>
+    </div>
+
+    <!-- LEFT -->
+    <div class="viewer-left">
+      <div class="viewer-side-top"></div>
+
+      <div class="viewer-side-center">
+        <button
+          class="nav-arrow"
+          (click)="selectPrev()"
+          [attr.aria-label]="'photoViewer.previousPhoto' | t"
+        >
+          ‹
+        </button>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="viewer-center">
+      <app-photo-viewer-main
+        [photoId]="activePhotoId"
+        [open]="true"
+        [crossfade]="slideshowActive"
+        [crossfadeMs]="slideshowConfig?.transitionMs ?? 800"
+        (loaded)="onMainPhotoLoaded()"
+      ></app-photo-viewer-main>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="viewer-right">
+      <div class="viewer-side-top">
+        <button class="viewer-close" (click)="close.emit()">✕</button>
+
+        <button
+          class="viewer-stop-slideshow"
+          *ngIf="slideshowActive"
+          (click)="stopSlideshow()"
+          [attr.aria-label]="'photoViewer.stopSlideshow' | t"
+          [title]="'photoViewer.stopSlideshow' | t"
+        >
+          ⏸
+        </button>
+
+        <app-photo-actions
+          (editMetadata)="openEditMetadata()"
+          (showInfo)="onShowInfo()"
+          (copyPhoto)="onCopyRequested()"
+          (movePhoto)="onMoveRequested()"
+          (deletePhoto)="onDeleteRequested()"
+        ></app-photo-actions>
+      </div>
+
+      <div class="viewer-side-center">
+        <button
+          class="nav-arrow"
+          (click)="selectNext()"
+          [attr.aria-label]="'photoViewer.nextPhoto' | t"
+        >
+          ›
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INFO PANEL -->
+  <aside
+    class="viewer-info-panel"
+    [class.collapsed]="infoPanelCollapsed"
+    (click)="$event.stopPropagation()"
+  >
+    <button
+      class="info-panel-toggle"
+      (click)="toggleInfoPanel()"
+      [attr.aria-label]="(infoPanelCollapsed ? 'photoViewer.expandInfo' : 'photoViewer.collapseInfo') | t"
+      [title]="(infoPanelCollapsed ? 'photoViewer.expandInfo' : 'photoViewer.collapseInfo') | t"
+    >
+      {{ infoPanelCollapsed ? '‹' : '›' }}
+    </button>
+
+    <div class="info-panel-content" *ngIf="!infoPanelCollapsed && activePhoto as photo">
+      <h2 class="info-title">{{ photo.title || ('photoViewer.untitled' | t) }}</h2>
+
+      <p class="info-description" [class.muted]="!activePhotoHasDescription">
+        {{ activePhotoHasDescription ? photo.description : ('photoViewer.noDescription' | t) }}
+      </p>
+
+      <div class="info-tags" *ngIf="photo.tags?.length">
+        <span class="info-tag" *ngFor="let tag of photo.tags">{{ tag }}</span>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<ng-container *ngIf="activePhoto as photo">
+  <app-edit-metadata-modal
+    *ngIf="editMetadataOpen"
+    heading="photoViewer.editDetails"
+    [photoId]="photo.id"
+    [isSaving]="isSavingMetadata"
+    [saveError]="metadataSaveError ? (metadataSaveError | t) : null"
+    [title]="photo.title"
+    [description]="photo.description ?? ''"
+    [tags]="photo.tags"
+    (save)="onSaveMetadata($event)"
+    (close)="closeEditMetadata()"
+  ></app-edit-metadata-modal>
+</ng-container>
+
+<app-photo-info-modal
+  *ngIf="infoOpen && infoPhoto"
+  [photo]="infoPhoto"
+  (close)="closeInfo()"
+></app-photo-info-modal>

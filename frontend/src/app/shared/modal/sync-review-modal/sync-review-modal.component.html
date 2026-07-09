@@ -1,0 +1,86 @@
+<div class="modal-backdrop" *ngIf="items.length">
+  <div class="modal sync-review-modal">
+    <div class="modal-header">
+      <h2>{{ "syncReview.heading" | t }}</h2>
+    </div>
+
+    <div class="modal-body">
+      <p class="sync-intro">
+        {{ "syncReview.intro" | t }}
+      </p>
+
+      <div class="sync-section" *ngIf="conflicted.length">
+        <h3 class="conflict-heading">{{ "syncReview.conflictsHeading" | t }} ({{ conflicted.length }})</h3>
+        <p class="sync-hint">{{ "syncReview.conflictsHint" | t }}</p>
+        <div class="sync-item conflict" *ngFor="let item of conflicted; trackBy: trackByOpId">
+          <app-photo-thumbnail
+            *ngIf="item.thumbnailPhotoId"
+            [photoId]="item.thumbnailPhotoId"
+            [hasThumbnail]="true"
+          ></app-photo-thumbnail>
+          <div class="sync-item-info">
+            <span class="sync-item-title">{{ item.title }}</span>
+            <span class="conflict-reason">{{ item.conflictReason }}</span>
+          </div>
+          <div class="sync-item-actions">
+            <button class="btn secondary" [disabled]="busy" (click)="discard(item)">{{ "syncReview.discard" | t }}</button>
+            <button class="btn primary" [disabled]="busy" (click)="confirm(item)">{{ "syncReview.applyAnyway" | t }}</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sync-section" *ngIf="added.length">
+        <h3>{{ "syncReview.addedHeading" | t }} ({{ added.length }})</h3>
+        <div class="sync-item" *ngFor="let item of added; trackBy: trackByOpId">
+          <app-photo-thumbnail
+            *ngIf="item.thumbnailPhotoId"
+            [photoId]="item.thumbnailPhotoId"
+            [hasThumbnail]="true"
+          ></app-photo-thumbnail>
+          <span class="sync-item-title">{{ item.title }}</span>
+          <div class="sync-item-actions">
+            <button class="btn secondary" [disabled]="busy" (click)="discard(item)">{{ "common.cancel" | t }}</button>
+            <button class="btn primary" [disabled]="busy" (click)="confirm(item)">{{ "common.confirm" | t }}</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sync-section" *ngIf="deleted.length">
+        <h3>{{ "syncReview.deletedHeading" | t }} ({{ deleted.length }})</h3>
+        <div class="sync-item" *ngFor="let item of deleted; trackBy: trackByOpId">
+          <app-photo-thumbnail
+            *ngIf="item.thumbnailPhotoId"
+            [photoId]="item.thumbnailPhotoId"
+            [hasThumbnail]="true"
+          ></app-photo-thumbnail>
+          <span class="sync-item-title">{{ item.title }}</span>
+          <div class="sync-item-actions">
+            <button class="btn secondary" [disabled]="busy" (click)="discard(item)">{{ "syncReview.restore" | t }}</button>
+            <button class="btn danger" [disabled]="busy" (click)="confirm(item)">{{ "common.confirm" | t }}</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sync-section" *ngIf="changed.length">
+        <h3>{{ "syncReview.changedHeading" | t }} ({{ changed.length }})</h3>
+        <div class="sync-item" *ngFor="let item of changed; trackBy: trackByOpId">
+          <app-photo-thumbnail
+            *ngIf="item.thumbnailPhotoId"
+            [photoId]="item.thumbnailPhotoId"
+            [hasThumbnail]="true"
+          ></app-photo-thumbnail>
+          <span class="sync-item-title">{{ item.title }}</span>
+          <div class="sync-item-actions">
+            <button class="btn secondary" [disabled]="busy" (click)="discard(item)">{{ "common.cancel" | t }}</button>
+            <button class="btn primary" [disabled]="busy" (click)="confirm(item)">{{ "common.confirm" | t }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn secondary" [disabled]="busy" (click)="discardAll()">{{ "syncReview.discardAll" | t }}</button>
+      <button class="btn primary" [disabled]="busy" (click)="confirmAll()">{{ "syncReview.confirmAll" | t }}</button>
+    </div>
+  </div>
+</div>

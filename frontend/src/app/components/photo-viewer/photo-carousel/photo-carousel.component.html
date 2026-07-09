@@ -1,0 +1,24 @@
+<div class="photo-viewer-carousel">
+  <div class="carousel-strip">
+    <div class="carousel-items">
+      <div
+        class="carousel-item thumb"
+        *ngFor="let photo of photos; trackBy: trackById"
+        [class.active]="photo.id === activePhotoId"
+        (click)="selectPhoto(photo.id)"
+      >
+        <div class="carousel-thumb">
+          <app-photo-thumbnail
+            [photoId]="photo.id"
+            [hasThumbnail]="photo.hasThumbnail"
+            [title]="photo.title"
+          ></app-photo-thumbnail>
+        </div>
+
+        <div class="carousel-title">
+          {{ photo.title }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

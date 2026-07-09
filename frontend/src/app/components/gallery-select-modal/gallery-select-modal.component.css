@@ -1,0 +1,56 @@
+.gallery-picker-list {
+  max-height: 240px;
+  overflow-y: auto;
+
+  border: 1px solid var(--canvas-border);
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.gallery-picker-item {
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.gallery-picker-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.gallery-picker-item + .gallery-picker-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gallery-picker-empty {
+  padding: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.gallery-picker-new {
+  display: flex;
+  gap: 8px;
+}
+
+.gallery-picker-new input {
+  flex: 1;
+
+  background: var(--canvas-elevated);
+  border: 1px solid var(--canvas-border);
+  border-radius: 4px;
+  padding: 8px;
+
+  color: var(--text);
+  font-size: 13px;
+}
+
+.gallery-picker-new input:focus {
+  outline: none;
+  border-color: var(--amber);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}

@@ -1,0 +1,50 @@
+<div
+  class="gallery-grid"
+  cdkDropList
+  cdkDropListOrientation="mixed"
+  [style.--thumb-size.px]="thumbnailSize.size"
+  (mousedown)="onGridMouseDown($event)"
+  (cdkDropListDropped)="onPhotoDropped($event)"
+>
+  <div
+    class="photo-item"
+    *ngFor="let photo of photos; trackBy: trackById"
+    cdkDrag
+    [attr.data-title]="photo.title"
+    [attr.data-photo-id]="photo.id"
+    [class.active]="photo.id === activePhotoId"
+    [class.selected]="selection.isSelected(photo.id)"
+  >
+    <div
+      class="photo-tile thumb"
+      (click)="onPhotoClick($event, photo.id)"
+      (contextmenu)="onPhotoContextMenu($event, photo.id)"
+    >
+      <app-photo-thumbnail
+        [photoId]="photo.id"
+        [hasThumbnail]="photo.hasThumbnail"
+      ></app-photo-thumbnail>
+    </div>
+
+    <div class="photo-title">
+      {{ photo.title }}
+    </div>
+
+    <div class="photo-tags" *ngIf="photo.tags.length">
+      <span class="tag-chip" *ngFor="let t of photo.tags">{{ t }}</span>
+    </div>
+  </div>
+
+  <div class="marquee" *ngIf="dragging" [ngStyle]="marqueeStyle"></div>
+
+  <app-photo-context-menu
+    *ngIf="contextMenuPhotoId as photoId"
+    [x]="contextMenuX"
+    [y]="contextMenuY"
+    (editInfo)="editPhotoRequest.emit(photoId); closeContextMenu()"
+    (showInfo)="showPhotoInfoRequest.emit(photoId); closeContextMenu()"
+    (copyTo)="copyPhotoRequest.emit(photoId); closeContextMenu()"
+    (moveTo)="movePhotoRequest.emit(photoId); closeContextMenu()"
+    (deletePhoto)="deletePhotoRequest.emit(photoId); closeContextMenu()"
+  ></app-photo-context-menu>
+</div>

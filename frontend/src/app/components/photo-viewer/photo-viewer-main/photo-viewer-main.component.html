@@ -1,0 +1,19 @@
+<div class="photo-viewer-main">
+  <img
+    *ngIf="previousLayer as p"
+    class="photo-below"
+    [class.fading-out]="fadingOut"
+    [style.transitionDuration.ms]="crossfadeMs"
+    [src]="p.url"
+    alt="Photo"
+  />
+  <img
+    *ngFor="let c of currentLayerList; trackBy: trackByLayerId"
+    [src]="c.url"
+    [class.open]="open"
+    [class.crossfade]="crossfade"
+    [class.crossfade-in]="crossfade && fadingIn"
+    [style.transitionDuration.ms]="crossfade ? crossfadeMs : null"
+    alt="Photo"
+  />
+</div>

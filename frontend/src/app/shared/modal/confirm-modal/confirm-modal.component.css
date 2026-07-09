@@ -1,0 +1,15 @@
+.btn.danger {
+  background: var(--warn);
+  color: white;
+  border: none;
+}
+
+.btn.danger:hover {
+  background: color-mix(in srgb, var(--warn) 80%, black);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
