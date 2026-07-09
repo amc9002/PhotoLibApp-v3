@@ -1,0 +1,19 @@
+<cdk-virtual-scroll-viewport [itemSize]="feedItemHeight" class="photo-feed-viewport">
+  <app-photo-feed-item
+    *cdkVirtualFor="let photo of photos; trackBy: trackById"
+    [photo]="photo"
+    [height]="feedItemHeight"
+    (menu)="openContextMenu($event, photo.id)"
+  ></app-photo-feed-item>
+</cdk-virtual-scroll-viewport>
+
+<app-photo-context-menu
+  *ngIf="contextMenuPhotoId as photoId"
+  [x]="contextMenuX"
+  [y]="contextMenuY"
+  (editInfo)="editPhotoRequest.emit(photoId); closeContextMenu()"
+  (showInfo)="showPhotoInfoRequest.emit(photoId); closeContextMenu()"
+  (copyTo)="copyPhotoRequest.emit(photoId); closeContextMenu()"
+  (moveTo)="movePhotoRequest.emit(photoId); closeContextMenu()"
+  (deletePhoto)="deletePhotoRequest.emit(photoId); closeContextMenu()"
+></app-photo-context-menu>

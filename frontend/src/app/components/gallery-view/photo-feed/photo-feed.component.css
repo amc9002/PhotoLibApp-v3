@@ -1,0 +1,13 @@
+:host {
+  display: block;
+}
+
+.photo-feed-viewport {
+  /* 40px fixed app header + 40px .app-content top padding + 16px
+     .gallery-view top padding (see app.component.css /
+     gallery-view.component.css) - an approximation, not pixel-exact,
+     but close enough that the feed fills the screen without a visible
+     gap or a second nested scrollbar. */
+  height: calc(100vh - 96px);
+  width: 100%;
+}

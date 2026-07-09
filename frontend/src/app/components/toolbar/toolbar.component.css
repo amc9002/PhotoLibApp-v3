@@ -76,6 +76,16 @@
   cursor: default;
 }
 
+.toolbar-btn.active {
+  background-color: var(--amber);
+  border-color: var(--amber);
+  color: var(--canvas);
+}
+
+.toolbar-btn.active:hover {
+  background-color: var(--amber);
+}
+
 .gallery-btn {
   font-weight: 500;
 }

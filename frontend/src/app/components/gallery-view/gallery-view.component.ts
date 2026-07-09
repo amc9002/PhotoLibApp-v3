@@ -12,14 +12,16 @@ import { Gallery } from '../../models/gallery.model';
 import { PhotoListItemDto } from '../../models/photoLisrItem.dto';
 import { PhotoApiService } from '../../services/photo-api.service';
 import { GalleryGridComponent } from './gallery-grid/gallery-grid.component';
+import { PhotoFeedComponent } from './photo-feed/photo-feed.component';
 import { PhotoViewerComponent } from '../photo-viewer/photo-viewer.component';
 import { PhotoSelectionService } from '../../services/photo-selection.service';
+import { ViewModeService } from '../../services/view-mode.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
   selector: 'app-gallery-view',
   standalone: true,
-  imports: [CommonModule, GalleryGridComponent, PhotoViewerComponent, TranslatePipe],
+  imports: [CommonModule, GalleryGridComponent, PhotoFeedComponent, PhotoViewerComponent, TranslatePipe],
   templateUrl: './gallery-view.component.html',
   styleUrls: ['./gallery-view.component.css'],
 })
@@ -44,6 +46,7 @@ export class GalleryViewComponent implements OnChanges {
   constructor(
     private photoApi: PhotoApiService,
     private photoSelection: PhotoSelectionService,
+    public viewMode: ViewModeService,
   ) {}
 
   ngOnChanges(changes: SimpleChanges) {

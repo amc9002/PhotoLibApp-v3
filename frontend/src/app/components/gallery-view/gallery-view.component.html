@@ -4,6 +4,7 @@
   </div>
 
   <app-gallery-grid
+    *ngIf="viewMode.mode === 'grid'"
     [photos]="photos"
     (photoClicked)="onPhotoClicked($event)"
     (photosReordered)="onPhotosReordered($event)"
@@ -13,4 +14,14 @@
     (movePhotoRequest)="movePhotoRequest.emit($event)"
     (deletePhotoRequest)="deletePhotoRequest.emit($event)"
   ></app-gallery-grid>
+
+  <app-photo-feed
+    *ngIf="viewMode.mode === 'feed'"
+    [photos]="photos"
+    (editPhotoRequest)="editPhotoRequest.emit($event)"
+    (showPhotoInfoRequest)="showPhotoInfoRequest.emit($event)"
+    (copyPhotoRequest)="copyPhotoRequest.emit($event)"
+    (movePhotoRequest)="movePhotoRequest.emit($event)"
+    (deletePhotoRequest)="deletePhotoRequest.emit($event)"
+  ></app-photo-feed>
 </div>
