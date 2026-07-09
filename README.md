@@ -73,6 +73,10 @@ unreachable:
 
 ## Quick Start (Docker)
 
+> Not familiar with git/Docker/terminals at all? See
+> [`INSTALL-SIMPLE.md`](INSTALL-SIMPLE.md) for a no-jargon, click-by-click
+> walkthrough instead.
+
 The fastest way to run PhotoLib without installing .NET, Node, or any
 other tooling - just [Docker](https://www.docker.com/products/docker-desktop/):
 
