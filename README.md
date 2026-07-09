@@ -15,6 +15,7 @@ Core.
 - **ORM**: Entity Framework Core
 - **Storage**: Local file system (originals + thumbnails, served via dedicated endpoints)
 - **Offline cache**: IndexedDB via the `idb` package
+- **Containerization**: Docker Compose (see Quick Start below)
 
 ---
 
@@ -70,6 +71,40 @@ unreachable:
 
 ---
 
+## Quick Start (Docker)
+
+The fastest way to run PhotoLib without installing .NET, Node, or any
+other tooling - just [Docker](https://www.docker.com/products/docker-desktop/):
+
+```bash
+git clone <this repo>
+cd photolib-ng-v3
+docker compose up -d
+```
+
+Open **http://localhost:4200**. One command brings up two containers - the
+ASP.NET Core backend, and nginx serving the built Angular app and proxying
+`/api/*` requests to the backend - plus a persistent named Docker volume
+for the SQLite database and uploaded photos, so your data survives
+`docker compose down` and container rebuilds. Database migrations run
+automatically on startup, so there's no separate setup step.
+
+To enable the optional **AI-assisted descriptions** feature, copy
+`.env.example` to `.env` and set `ANTHROPIC_API_KEY` *before* running
+`docker compose up` (see that section below for how to get a key).
+Everything else works normally without it.
+
+```bash
+docker compose down        # stop, keep your data
+docker compose down -v     # stop and wipe the database/photos volume too
+```
+
+This is the recommended path if you just want to run the app. For active
+development (hot reload, debugging, editing code) use the manual setup
+below instead.
+
+---
+
 ## Architecture Notes
 
 - Photo/gallery metadata lives in the database; image files are stored
@@ -101,6 +136,10 @@ frontend/           Angular app
 ---
 
 ## Development Setup
+
+Manual setup, for working on the code (hot reload, debugging, EF
+migrations). If you just want to run the app, see **Quick Start (Docker)**
+above instead.
 
 ### Backend
 
