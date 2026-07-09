@@ -74,6 +74,23 @@ concept + sharing.*
 
 ---
 
+## Frontend – Mobile / Responsive (Planned)
+
+- [ ] Smartphone-adapted layout — the app is currently only really usable
+  at desktop widths (toolbar, gallery grid, viewer, modals aren't
+  designed for narrow/touch screens)
+- [ ] Touch-friendly gallery grid (tap targets, no hover-only affordances
+  like the context-menu trigger)
+- [ ] Touch gestures in the viewer/feed (swipe left/right between photos,
+  swipe/pinch to zoom) instead of relying on mouse wheel / arrow buttons
+- [ ] Responsive modals (edit-metadata, settings, sync-review) that fit a
+  phone screen rather than a fixed desktop-sized dialog
+- [ ] Re-test drag-and-drop reordering on touch - HTML5 drag-and-drop
+  (used today) generally doesn't work on touch devices at all, may need
+  a touch-specific reorder interaction
+
+---
+
 ## Frontend – Gallery & Photo Actions (Planned)
 
 - [x] Define unified photo actions (single & batch)
@@ -148,7 +165,19 @@ concept + sharing.*
 
 - [ ] Share photos between users (read-only)
 - [ ] Share photo albums between users
-- [ ] Define access levels (owner / viewer)
+- [ ] Visibility levels on galleries and photos (replaces the earlier
+  vague "owner / viewer" idea) — a per-gallery (and possibly
+  per-photo-override) `Visibility` field:
+  - **Public** — visible to anyone, including logged-out visitors
+  - **Friends** — visible to any of the owner's confirmed friends/follows
+  - **Selected friends** — visible only to an explicitly chosen subset of
+    friends (needs a many-to-many "share list" per gallery, not just one flag)
+  - **Private** — visible only to the owner (today's implicit behavior)
+  - Depends on Phase 1 (real user accounts) from the SaaS section below,
+    plus a "friends/follows" relationship between users, which doesn't
+    exist yet at all - this is a bigger data-model change than it looks
+    (every read endpoint needs to filter by visibility + requester
+    identity, not just by owner)
 
 ---
 
