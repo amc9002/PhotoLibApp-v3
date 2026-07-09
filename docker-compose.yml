@@ -8,6 +8,9 @@ services:
       # Optional - only needed for the "Generate with AI" photo-description
       # feature. Leave unset to run everything else without it.
       - Anthropic__ApiKey=${ANTHROPIC_API_KEY:-}
+      # Hard kill switch for the AI endpoint, independent of whether a key
+      # is set - set to false to disable it outright on a shared instance.
+      - Ai__Enabled=${AI_ENABLED:-true}
     volumes:
       - photolib-data:/data
     restart: unless-stopped

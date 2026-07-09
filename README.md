@@ -92,7 +92,11 @@ automatically on startup, so there's no separate setup step.
 To enable the optional **AI-assisted descriptions** feature, copy
 `.env.example` to `.env` and set `ANTHROPIC_API_KEY` *before* running
 `docker compose up` (see that section below for how to get a key).
-Everything else works normally without it.
+Everything else works normally without it. If you're hosting a single
+shared instance for others rather than everyone running their own
+container, note that the AI endpoint has no per-user auth or quota yet -
+just a per-IP rate limit - so consider setting `AI_ENABLED=false` in
+`.env` until that exists (see `TODO,md`).
 
 ```bash
 docker compose down        # stop, keep your data

@@ -571,12 +571,14 @@ namespace PhotoLibApi.Controllers
         /// <response code="404">Photo not found, or has no image file to analyze.</response>
         /// <response code="429">Too many AI requests from this client recently - try again later.</response>
         /// <response code="502">The AI request failed.</response>
+        /// <response code="503">AI features are disabled on this server (<c>Ai:Enabled</c> config flag).</response>
         [HttpPost("{id:guid}/generate-description")]
         [EnableRateLimiting("AiGeneration")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [ProducesResponseType(StatusCodes.Status502BadGateway)]
+        [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
         public async Task<IActionResult> GenerateDescription(
             Guid id,
             [FromBody] GenerateDescriptionRequest request,
@@ -593,6 +595,10 @@ namespace PhotoLibApi.Controllers
             {
                 var draft = await _descriptionAi.GenerateAsync(photo, request, cancellationToken);
                 return Ok(draft);
+            }
+            catch (AiFeatureDisabledException ex)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = ex.Message });
             }
             catch (FileNotFoundException ex)
             {

@@ -188,7 +188,9 @@ caller). Two different sharing modes have very different exposure:
   `POST /Photo/{id}/generate-description`, and/or a hard on/off switch
   (config flag) to disable the endpoint entirely for a shared instance
   until Phase 1/2 are done. Done: per-IP fixed-window limiter (10
-  requests/hour), 429 response, distinct frontend message.
+  requests/hour), 429 response, distinct frontend message; plus an
+  `Ai:Enabled` config flag (`AI_ENABLED` in Docker) that hard-disables
+  the endpoint (503) regardless of the rate limit.
 
 ### Phase 1 — Authentication & multi-tenancy (do this first, no billing yet)
 

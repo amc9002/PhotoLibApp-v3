@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Anthropic;
 using Anthropic.Models.Messages;
+using Microsoft.Extensions.Configuration;
 using PhotoLibApi.Models;
 
 namespace PhotoLibApi.Services
@@ -15,11 +16,16 @@ namespace PhotoLibApi.Services
     {
         private readonly AnthropicClient _client;
         private readonly PhotoFilePathHelper _filePathHelper;
+        private readonly IConfiguration _configuration;
 
-        public PhotoDescriptionAiService(AnthropicClient client, PhotoFilePathHelper filePathHelper)
+        public PhotoDescriptionAiService(
+            AnthropicClient client,
+            PhotoFilePathHelper filePathHelper,
+            IConfiguration configuration)
         {
             _client = client;
             _filePathHelper = filePathHelper;
+            _configuration = configuration;
         }
 
         public async Task<GenerateDescriptionResponse> GenerateAsync(
@@ -27,6 +33,11 @@ namespace PhotoLibApi.Services
             GenerateDescriptionRequest request,
             CancellationToken cancellationToken = default)
         {
+            // Hard kill switch for a shared hosted instance (see TODO,md) -
+            // checked before touching any file or spending an API call.
+            if (!_configuration.GetValue("Ai:Enabled", true))
+                throw new AiFeatureDisabledException();
+
             var imagePath = photo.HasOriginal
                 ? _filePathHelper.GetOriginalFilePath(photo.Id)
                 : _filePathHelper.GetThumbnailFilePath(photo.Id);
