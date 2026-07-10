@@ -7,8 +7,8 @@ It is intentionally incomplete and evolves with the project.
 2026-07-08 reconciliation missed same-day work that landed right after
 it: right-click context menu, collapsible viewer info panel, and the
 full gallery slideshow feature (order/interval/crossfade, settings
-persisted). Remaining near-term gaps: viewer fullscreen toggle,
-presentation/postcard viewer mode, and album concept + sharing.*
+persisted). Remaining near-term gaps: presentation/postcard viewer
+mode and album concept + sharing.*
 
 ---
 
@@ -133,7 +133,9 @@ presentation/postcard viewer mode, and album concept + sharing.*
   - right: description
   - postcard / illustration-style layout
 - [ ] Toggle back to utility-focused viewer mode
-- [ ] Fullscreen toggle (viewer-only, no browser UI)
+- [x] Fullscreen toggle (viewer-only, no browser UI) — button uses the
+  native Fullscreen API on the viewer overlay; Escape exits fullscreen
+  first without also closing the viewer on the same keypress
 
 ---
 

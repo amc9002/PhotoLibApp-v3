@@ -118,6 +118,8 @@ export const translations: Record<string, Record<Lang, string>> = {
   'photoViewer.collapseInfo': { be: 'Схаваць звесткі пра фота', en: 'Hide photo info' },
   'photoViewer.expandInfo': { be: 'Паказаць звесткі пра фота', en: 'Show photo info' },
   'photoViewer.stopSlideshow': { be: 'Спыніць слайд-шоу', en: 'Stop slideshow' },
+  'photoViewer.enterFullscreen': { be: 'На ўвесь экран', en: 'Enter fullscreen' },
+  'photoViewer.exitFullscreen': { be: 'Выйсці з поўнага экрана', en: 'Exit fullscreen' },
 
   // ---------------- slideshow-settings-modal ----------------
   'slideshow.heading': { be: 'Слайд-шоу', en: 'Slideshow' },

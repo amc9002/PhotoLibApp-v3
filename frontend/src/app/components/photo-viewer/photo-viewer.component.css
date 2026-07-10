@@ -83,6 +83,7 @@
 }
 
 .viewer-close,
+.viewer-fullscreen-toggle,
 .viewer-stop-slideshow {
   width: 40px;
   height: 40px;
@@ -97,8 +98,18 @@
 }
 
 .viewer-close:hover,
+.viewer-fullscreen-toggle:hover,
 .viewer-stop-slideshow:hover {
   background: rgba(0, 0, 0, 0.55);
+}
+
+.viewer-fullscreen-toggle.active {
+  background: var(--amber);
+  color: var(--ink);
+}
+
+.viewer-fullscreen-toggle.active:hover {
+  background: var(--amber);
 }
 
 /* === Fix stacking order: controls above photo === */

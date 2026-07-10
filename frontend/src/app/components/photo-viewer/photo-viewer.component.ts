@@ -1,4 +1,13 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnDestroy,
+  OnInit,
+  Output,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
 import { PhotoListItemDto } from '../../models/photoLisrItem.dto';
@@ -42,6 +51,8 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
   @Output() requestCopy = new EventEmitter<string>();
   @Output() requestMove = new EventEmitter<string>();
 
+  @ViewChild('viewerRoot', { static: true }) viewerRootRef!: ElementRef<HTMLElement>;
+
   photoMenuOpen = false;
   editMetadataOpen = false;
   isSavingMetadata = false;
@@ -51,6 +62,12 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
 
   /** Whether the title/description side panel is folded away to give the photo full width. */
   infoPanelCollapsed = false;
+
+  /** True while the viewer occupies the real (browser-chrome-free) Fullscreen API state. */
+  isFullscreen = false;
+  private readonly onFullscreenChange = () => {
+    this.isFullscreen = document.fullscreenElement === this.viewerRootRef.nativeElement;
+  };
 
   /** True while auto-advancing through `slideshowSequence`. */
   slideshowActive = false;
@@ -72,6 +89,11 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
   onKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
       if (this.editMetadataOpen || this.infoOpen) {
+        return;
+      }
+      if (this.isFullscreen) {
+        // The browser already exits fullscreen natively on Escape - just
+        // don't also close the viewer on the same keypress.
         return;
       }
       event.preventDefault();
@@ -133,10 +155,15 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
     if (this.slideshowConfig) {
       this.startSlideshow(this.slideshowConfig);
     }
+    document.addEventListener('fullscreenchange', this.onFullscreenChange);
   }
 
   ngOnDestroy() {
     this.clearSlideshowTimer();
+    document.removeEventListener('fullscreenchange', this.onFullscreenChange);
+    if (this.isFullscreen) {
+      document.exitFullscreen?.().catch(() => {});
+    }
   }
 
   get activePhoto() {
@@ -153,6 +180,14 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
 
   toggleInfoPanel() {
     this.infoPanelCollapsed = !this.infoPanelCollapsed;
+  }
+
+  toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      this.viewerRootRef.nativeElement.requestFullscreen?.().catch(() => {});
+    } else {
+      document.exitFullscreen?.().catch(() => {});
+    }
   }
 
   // Backdrop closes viewer; overlay actions must stop event bubbling
