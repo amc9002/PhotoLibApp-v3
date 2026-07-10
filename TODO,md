@@ -7,9 +7,8 @@ It is intentionally incomplete and evolves with the project.
 2026-07-08 reconciliation missed same-day work that landed right after
 it: right-click context menu, collapsible viewer info panel, and the
 full gallery slideshow feature (order/interval/crossfade, settings
-persisted). Remaining near-term gaps: viewer fullscreen toggle, save
-button press animation, presentation/postcard viewer mode, and album
-concept + sharing.*
+persisted). Remaining near-term gaps: viewer fullscreen toggle,
+presentation/postcard viewer mode, and album concept + sharing.*
 
 ---
 
@@ -122,7 +121,7 @@ concept + sharing.*
 - [x] Prevent viewer keyboard navigation while editing text
 - [x] Disable Save button until metadata is actually changed (dirty state)
 - [x] Show inline error message on failed save
-- [ ] Add subtle button press / saving animation
+- [x] Add subtle button press / saving animation — scale-down `:active` feedback on the shared `.btn` class, plus a spinner on the Save button while `isSaving`
 
 ---
 

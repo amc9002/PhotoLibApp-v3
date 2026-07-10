@@ -5,6 +5,21 @@
 
   font-size: 13px;
   cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn {
+    transition: none;
+  }
+
+  .btn:active:not(:disabled) {
+    transform: none;
+  }
 }
 
 .btn.primary {

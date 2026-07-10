@@ -78,9 +78,11 @@
       <button class="btn secondary" (click)="close.emit()">{{ "common.cancel" | t }}</button>
       <button
         class="btn primary"
+        [class.saving]="isSaving"
         [disabled]="isSaving || !isDirty"
         (click)="onSave()"
       >
+        <span class="btn-spinner" *ngIf="isSaving"></span>
         {{ (isSaving ? "common.saving" : "common.save") | t }}
       </button>
     </div>
