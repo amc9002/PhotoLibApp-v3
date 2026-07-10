@@ -6,6 +6,16 @@
     </div>
 
     <div class="modal-body">
+      <div class="settings-section" *ngIf="authService.currentUser as user">
+        <div class="settings-label">{{ "settings.account" | t }}</div>
+        <div class="settings-account-row">
+          <span class="settings-account-email">{{ user.email }}</span>
+          <button class="btn secondary" (click)="logout.emit()">
+            {{ "auth.logout" | t }}
+          </button>
+        </div>
+      </div>
+
       <div class="settings-section">
         <div class="settings-label">{{ "settings.language" | t }}</div>
         <div class="settings-options">

@@ -27,10 +27,12 @@ namespace PhotoLibApi.Models
         public string? Description { get; set; }
 
         /// <summary>
-        /// Identifier of the user who owns this gallery.
-        /// /// Used to ensure each user sees only their own content.
+        /// Identifier of the <see cref="User"/> who owns this gallery.
+        /// Used to ensure each user sees only their own content. Nullable
+        /// only to represent legacy pre-authentication data; every gallery
+        /// created after authentication was added always has an owner.
         /// </summary>
-        public string? OwnerId { get; set; }
+        public Guid? OwnerId { get; set; }
 
         /// <summary>
         /// Timestamp of when the gallery was created (UTC).

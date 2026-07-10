@@ -1,3 +1,4 @@
+<ng-container *ngIf="authService.currentUser; else loginView">
 <header class="app-header">
   <div class="header-left">
     <img class="app-logo" src="logo-full.png" alt="PhotoLib" />
@@ -96,6 +97,12 @@
 <app-settings-modal
   *ngIf="showSettings"
   (close)="closeSettings()"
+  (logout)="logout()"
 ></app-settings-modal>
 
 <app-sync-review-modal></app-sync-review-modal>
+</ng-container>
+
+<ng-template #loginView>
+  <app-login (loggedIn)="onLoggedIn()"></app-login>
+</ng-template>

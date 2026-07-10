@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Threading.RateLimiting;
 using Anthropic;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +35,35 @@ builder.Services.AddDbContext<PhotoDbContext>(options =>
     options.UseSqlite(conn));
 
 builder.Services.AddScoped<TagResolver>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<CurrentUserService>();
+builder.Services.AddScoped<GalleryAccessService>();
+
+// Session cookie for signed-in users. API-only backend, so the default
+// MVC behavior (302 redirect to a login page on an unauthenticated
+// [Authorize] request) is overridden to return a bare status code instead -
+// there's no server-rendered login page to redirect to, and the frontend
+// needs a clean 401/403 to react to.
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.ExpireTimeSpan = TimeSpan.FromDays(30);
+        options.SlidingExpiration = true;
+        options.Events.OnRedirectToLogin = ctx =>
+        {
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        };
+        options.Events.OnRedirectToAccessDenied = ctx =>
+        {
+            ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        };
+    });
+builder.Services.AddAuthorization();
 
 // Config-driven and stateless once built, so a single shared instance is safe.
 builder.Services.AddSingleton(sp =>
@@ -74,6 +104,31 @@ builder.Services.AddRateLimiter(options =>
             factory: _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = 10,
+                Window = TimeSpan.FromHours(1),
+                QueueLimit = 0,
+            }));
+
+    // Same per-IP fixed-window shape as AiGeneration above, sized for
+    // credential-stuffing/brute-force protection now that real account
+    // passwords exist.
+    options.AddPolicy("AuthLogin", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(15),
+                QueueLimit = 0,
+            }));
+
+    // Stricter: a successful guess of the admin key lets an attacker mint
+    // arbitrary accounts, not just log into one.
+    options.AddPolicy("AuthAdminRegister", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
                 Window = TimeSpan.FromHours(1),
                 QueueLimit = 0,
             }));
@@ -132,6 +187,7 @@ app.Use(async (context, next) =>
 });
 
 app.UseCors();
+app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 app.MapControllers();

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhotoLibApi.Data;
@@ -11,31 +12,29 @@ namespace PhotoLibApi.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class GalleryController : ControllerBase
     {
         private readonly PhotoDbContext _db;
         private readonly TagResolver _tagResolver;
+        private readonly CurrentUserService _currentUser;
 
-        public GalleryController(PhotoDbContext db, TagResolver tagResolver)
+        public GalleryController(PhotoDbContext db, TagResolver tagResolver, CurrentUserService currentUser)
         {
             _db = db;
             _tagResolver = tagResolver;
+            _currentUser = currentUser;
         }
 
         /// <summary>
         /// Returns the list of galleries for the current user.
         /// </summary>
-        /// <remarks>
-        /// Uses the current authenticated user if available.
-        /// For local testing (no auth), it returns galleries where OwnerId is null.
-        /// </remarks>
         /// <response code="200">A list of galleries belonging to the user.</response>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAll()
         {
-            // simple owner resolution: use authenticated user name or null for local testing
-            var ownerId = User?.Identity?.Name;
+            var ownerId = _currentUser.UserId;
 
             var galleries = await _db.Galleries
                 .AsNoTracking()
@@ -70,7 +69,7 @@ namespace PhotoLibApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var ownerId = User?.Identity?.Name;
+            var ownerId = _currentUser.UserId;
 
             var galleries = await _db.Galleries
                 .Where(g => g.OwnerId == ownerId && request.GalleryIds.Contains(g.Id))
@@ -98,7 +97,7 @@ namespace PhotoLibApi.Controllers
         [HttpGet("dev")]
         public async Task<IActionResult> DevGetAll()
         {
-            var ownerId = User?.Identity?.Name;
+            var ownerId = _currentUser.UserId;
 
             var galleries = await _db.Galleries
                 .AsNoTracking()
@@ -125,7 +124,7 @@ namespace PhotoLibApi.Controllers
         [HttpGet("dev/deleted")]
         public async Task<IActionResult> DevGetDeleted()
         {
-            var ownerId = User?.Identity?.Name;
+            var ownerId = _currentUser.UserId;
 
             var galleries = await _db.Galleries
                 .AsNoTracking()
@@ -161,7 +160,7 @@ namespace PhotoLibApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(Guid id)
         {
-            var ownerId = User?.Identity?.Name;
+            var ownerId = _currentUser.UserId;
 
             var gallery = await _db.Galleries
                 .AsNoTracking()
@@ -185,12 +184,8 @@ namespace PhotoLibApi.Controllers
         }
 
         /// <summary>
-        /// Creates a new gallery.
+        /// Creates a new gallery, owned by the current user.
         /// </summary>
-        ///  <remarks>
-        /// Currently, the gallery is created without authentication.
-        /// OwnerId will be null until authentication is added.
-        /// </remarks>
         /// <response code="201">Gallery created successfully.</response>
         /// <response code="400">Invalid request data.</response>
         [HttpPost]
@@ -202,7 +197,7 @@ namespace PhotoLibApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var ownerId = User?.Identity?.Name;
+            var ownerId = _currentUser.UserId;
 
             // Idempotent replay: a sync retry with the same ClientTempId
             // returns the row that already exists instead of duplicating it.
@@ -261,7 +256,7 @@ namespace PhotoLibApi.Controllers
 
             var gallery = await _db.Galleries.FindAsync(id);
 
-            if (gallery == null || gallery.IsDeleted)
+            if (gallery == null || gallery.IsDeleted || gallery.OwnerId != _currentUser.UserId)
                 return NotFound();
 
             gallery.Title = request.Title;
@@ -292,7 +287,7 @@ namespace PhotoLibApi.Controllers
                 .Include(g => g.Tags)
                 .FirstOrDefaultAsync(g => g.Id == id);
 
-            if (gallery == null || gallery.IsDeleted)
+            if (gallery == null || gallery.IsDeleted || gallery.OwnerId != _currentUser.UserId)
                 return NotFound();
 
             await _tagResolver.ApplyAsync(gallery, request.TagNames);
@@ -318,7 +313,7 @@ namespace PhotoLibApi.Controllers
         {
             var gallery = await _db.Galleries.FindAsync(id);
 
-            if (gallery == null || gallery.IsDeleted)
+            if (gallery == null || gallery.IsDeleted || gallery.OwnerId != _currentUser.UserId)
                 return NotFound();
 
             gallery.IsDeleted = true;
@@ -343,7 +338,7 @@ namespace PhotoLibApi.Controllers
         {
             var gallery = await _db.Galleries.FindAsync(id);
 
-            if (gallery == null)
+            if (gallery == null || gallery.OwnerId != _currentUser.UserId)
                 return NotFound();
 
             _db.Galleries.Remove(gallery);

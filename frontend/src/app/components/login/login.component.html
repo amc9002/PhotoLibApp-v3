@@ -1,0 +1,48 @@
+<div class="login-screen">
+  <form class="modal login-card" (ngSubmit)="submit()">
+    <div class="modal-header">
+      <h2>{{ "auth.login" | t }}</h2>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-field">
+        <label for="login-email">{{ "auth.email" | t }}</label>
+        <input
+          id="login-email"
+          type="email"
+          autocomplete="username"
+          [(ngModel)]="email"
+          name="email"
+          [disabled]="isSubmitting"
+          required
+        />
+      </div>
+
+      <div class="form-field">
+        <label for="login-password">{{ "auth.password" | t }}</label>
+        <input
+          id="login-password"
+          type="password"
+          autocomplete="current-password"
+          [(ngModel)]="password"
+          name="password"
+          [disabled]="isSubmitting"
+          required
+        />
+      </div>
+
+      <div class="form-error" *ngIf="error">{{ error | t }}</div>
+    </div>
+
+    <div class="modal-footer">
+      <button
+        type="submit"
+        class="btn primary"
+        [disabled]="isSubmitting || !email || !password"
+      >
+        <span class="btn-spinner" *ngIf="isSubmitting"></span>
+        {{ (isSubmitting ? "auth.loggingIn" : "auth.login") | t }}
+      </button>
+    </div>
+  </form>
+</div>

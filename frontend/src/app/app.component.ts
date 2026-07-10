@@ -19,6 +19,8 @@ import { SyncCoordinatorService } from './core/offline/sync-coordinator.service'
 import { ThemeService } from './core/theme/theme.service';
 import { TranslatePipe } from './core/i18n/translate.pipe';
 import { SettingsModalComponent } from './shared/modal/settings-modal/settings-modal.component';
+import { LoginComponent } from './components/login/login.component';
+import { AuthService } from './core/auth/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -34,6 +36,7 @@ import { SettingsModalComponent } from './shared/modal/settings-modal/settings-m
     AddFromInternetModalComponent,
     SyncReviewModalComponent,
     SettingsModalComponent,
+    LoginComponent,
     TranslatePipe,
   ],
   templateUrl: './app.component.html',
@@ -58,16 +61,33 @@ export class AppComponent implements OnInit {
     // Injected only so it constructs (and applies the stored theme
     // attribute) before first render - not read directly here.
     private themeService: ThemeService,
+    public authService: AuthService,
   ) {}
 
   ngOnInit(): void {
-    this.loadGalleries();
+    // AuthService.initialize() already ran (blocking, via
+    // provideAppInitializer) before this component's first render, so
+    // currentUser is settled by now - only load galleries if signed in.
+    // A fresh sign-in instead calls onLoggedIn() below.
+    if (this.authService.currentUser) {
+      this.loadGalleries();
+    }
 
     // Fires once a sync pass finishes, whether it ran in this tab or
     // another one - refresh whatever's on screen either way.
     this.syncCoordinator.syncCompleted$.subscribe(() => {
       this.loadGalleries();
       this.galleryPage?.refreshPhotos();
+    });
+  }
+
+  onLoggedIn(): void {
+    this.loadGalleries();
+  }
+
+  logout(): void {
+    this.authService.logout().subscribe({
+      error: (err) => console.error('Logout failed', err),
     });
   }
 

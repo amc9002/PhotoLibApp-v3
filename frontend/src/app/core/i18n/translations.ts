@@ -18,6 +18,21 @@ export const translations: Record<string, Record<Lang, string>> = {
   'common.confirm': { be: 'Пацвердзіць', en: 'Confirm' },
   'common.areYouSure': { be: 'Вы ўпэўнены?', en: 'Are you sure?' },
 
+  // ---------------- auth ----------------
+  'auth.email': { be: 'Email', en: 'Email' },
+  'auth.password': { be: 'Пароль', en: 'Password' },
+  'auth.login': { be: 'Увайсці', en: 'Log in' },
+  'auth.loggingIn': { be: 'Уваходжу…', en: 'Logging in…' },
+  'auth.invalidCredentials': {
+    be: 'Няправільны email або пароль.',
+    en: 'Invalid email or password.',
+  },
+  'auth.loginFailed': {
+    be: 'Не ўдалося ўвайсці. Паспрабуйце яшчэ раз.',
+    en: 'Failed to log in. Please try again.',
+  },
+  'auth.logout': { be: 'Выйсці', en: 'Log out' },
+
   // ---------------- app shell ----------------
   'app.selectGallery': { be: 'Абярыце галерэю, каб паглядзець фота', en: 'Select a gallery to view photos' },
   'app.addPhotosInput': { be: 'Дадаць фота ў галерэю', en: 'Add photos to gallery' },
@@ -201,6 +216,7 @@ export const translations: Record<string, Record<Lang, string>> = {
 
   // ---------------- settings modal ----------------
   'settings.heading': { be: 'Налады', en: 'Settings' },
+  'settings.account': { be: 'Акаўнт', en: 'Account' },
   'settings.language': { be: 'Мова', en: 'Language' },
   'settings.languageBe': { be: 'Беларуская', en: 'Belarusian' },
   'settings.languageEn': { be: 'Англійская', en: 'English' },

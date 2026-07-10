@@ -227,33 +227,55 @@ caller). Two different sharing modes have very different exposure:
 This is the biggest structural change to the app so far — every backend
 endpoint currently assumes a single implicit owner.
 
-- [ ] Choose an auth approach:
-  - **Roll your own** (ASP.NET Core Identity + email/password) — full
-    control, but *you* become responsible for password storage, reset
-    flows, email verification, brute-force protection.
-  - **OAuth-only sign-in** (e.g. "Sign in with Google") — no passwords to
-    manage at all, less code, users trust an identity they already have.
-    Recommended starting point given payments are also new territory —
-    fewer unfamiliar things to get right at once.
-  - **Managed auth service** (Auth0, Clerk, Supabase Auth) — handles
-    sessions/tokens/social-login/2FA for you at a per-user cost; worth it
-    once user count grows, possibly overkill for a launch.
-- [ ] Add a real `User` entity (id, email, created date, plan/tier) and a
-  non-nullable `OwnerId` FK on `Gallery` (and transitively `Photo` through
-  its gallery)
-- [ ] Add auth middleware ([Authorize]) to every controller action;
-  audit each endpoint in `GalleryController`/`PhotoController`/
-  `TagController` to filter/scope queries by the current user — **this is
-  the critical security boundary**: user A must never be able to read,
-  edit, or delete user B's galleries/photos via a guessed/enumerated ID
-- [ ] Decide session mechanism: short-lived JWT (stateless, simpler to
-  scale) vs server-side session cookie (simpler to revoke immediately) —
-  either is fine for a small service; cookie is usually the easier default
-  for a browser-only app like this one
-- [ ] Frontend: login/signup UI, auth token/cookie attached to every
-  `ApiService` call, redirect-to-login on 401, sign-out
-- [ ] Decide what happens to today's single-owner data on migration (the
-  existing dev database has no owner at all)
+- [x] Choose an auth approach — went with **roll your own** email/password
+  (not OAuth/managed service): the app is reached over a private Tailscale
+  network for a small invite-only friend group rather than the public
+  internet, so the "fewer unfamiliar things to get right" rationale for
+  OAuth applied less; a plain `PasswordHasher<User>` (ships in the ASP.NET
+  Core shared framework, no extra package) kept it simple. No
+  self-registration — accounts are created by the app owner via a
+  `POST /api/Auth/admin/register` endpoint gated by a shared `X-Admin-Key`
+  secret (`Auth:AdminKey` config, mirrors the existing `Anthropic:ApiKey`
+  pattern). `#if DEBUG` was considered for gating that endpoint but
+  rejected — the Docker image is always built `-c Release`, so `#if DEBUG`
+  code is compiled out regardless of `ASPNETCORE_ENVIRONMENT` and the
+  endpoint wouldn't exist on the real hosted instance.
+- [x] Add a real `User` entity (id, email, created date) and an `OwnerId`
+  FK on `Gallery` (and transitively `Photo` through its gallery) — `OwnerId`
+  is `Guid?` rather than strictly non-nullable at the DB level, since
+  SQLite/EF Core can't add a NOT NULL FK against existing rows in one step;
+  every gallery created after this point always gets a real owner in
+  application code (`GalleryController.Create`), so it's non-null in
+  practice. `plan/tier` wasn't added - no billing tiers exist yet.
+- [x] Add auth middleware ([Authorize]) to every controller action;
+  `GalleryController`/`PhotoController`/`TagController` all scope by
+  owner via a shared `GalleryAccessService` (`Photo` has no `OwnerId` of
+  its own - resolved through its parent `Gallery`). Every failed ownership
+  check returns `404`, never `403`, so a guessed/enumerated id belonging to
+  another user is indistinguishable from one that doesn't exist. `Tag`
+  stays a shared/global vocabulary across users (not owner-scoped) since
+  tag names aren't sensitive. One accepted exception: the "Add from
+  internet" bookmarklet's `from-url` endpoint stays unauthenticated
+  (`AllowAnyOrigin` CORS is incompatible with credentialed requests) -
+  same GUID-capability trust model it already had pre-auth, documented
+  in a code comment.
+- [x] Decide session mechanism — went with an **HttpOnly session cookie**
+  (`SameSite=Lax`, 30-day sliding expiration), not JWT. Required overriding
+  `CookieAuthenticationHandler`'s default 302-redirect-to-login-page
+  behavior to return a bare `401`/`403` instead, since this is an API-only
+  backend with no server-rendered login page.
+- [x] Frontend: full-screen `LoginComponent` (not dismissible), a function-based
+  `HttpInterceptorFn` that reacts to any `401` by clearing the signed-in
+  user, `provideAppInitializer` to check the session before first render
+  (avoids a flash of the gallery UI), sign-out via Settings. No signup UI -
+  invite-only, see above. The session cookie is attached automatically by
+  the browser on every same-origin request (no interceptor logic needed
+  for that part, unlike a JWT-in-header approach).
+- [x] Decide what happens to today's single-owner data on migration — the
+  *first* account ever created via `admin/register` automatically claims
+  every pre-existing `OwnerId == null` gallery in the same request. Works
+  because registration is invite-only and gated by the admin key, so the
+  first account is, by construction, the app owner's own.
 
 ### Phase 2 — AI usage metering & quotas (build before charging anyone)
 

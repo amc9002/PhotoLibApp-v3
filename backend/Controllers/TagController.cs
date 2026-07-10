@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using PhotoLibApi.Data;
@@ -6,9 +7,13 @@ namespace PhotoLibApi.Controllers
 {
     /// <summary>
     /// Read-only access to the full set of known tags, used for autocomplete.
+    /// Shared across all users rather than scoped per-owner - tag names
+    /// aren't sensitive, and one combined vocabulary is more useful for
+    /// autocomplete than isolated empty lists per account.
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class TagController : ControllerBase
     {
         private readonly PhotoDbContext _db;

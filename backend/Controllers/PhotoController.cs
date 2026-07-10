@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -13,6 +14,7 @@ namespace PhotoLibApi.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class PhotoController : ControllerBase
     {
         /// <summary>Upper bound on how many bytes a from-url download may use.</summary>
@@ -24,6 +26,8 @@ namespace PhotoLibApi.Controllers
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PhotoImageProcessingService _imageProcessing;
         private readonly PhotoDescriptionAiService _descriptionAi;
+        private readonly CurrentUserService _currentUser;
+        private readonly GalleryAccessService _galleryAccess;
 
         /// <summary>
         /// Creates the controller with its DB context and supporting services.
@@ -34,7 +38,9 @@ namespace PhotoLibApi.Controllers
             TagResolver tagResolver,
             IHttpClientFactory httpClientFactory,
             PhotoImageProcessingService imageProcessing,
-            PhotoDescriptionAiService descriptionAi)
+            PhotoDescriptionAiService descriptionAi,
+            CurrentUserService currentUser,
+            GalleryAccessService galleryAccess)
         {
             _db = db;
             _filePathHelper = filePathHelper;
@@ -42,6 +48,8 @@ namespace PhotoLibApi.Controllers
             _httpClientFactory = httpClientFactory;
             _imageProcessing = imageProcessing;
             _descriptionAi = descriptionAi;
+            _currentUser = currentUser;
+            _galleryAccess = galleryAccess;
         }
 
         /// <summary>
@@ -51,8 +59,12 @@ namespace PhotoLibApi.Controllers
         /// <response code="200">List of photos.</response>
         [HttpGet("by-gallery/{galleryId:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<IEnumerable<Photo>>> GetByGallery(Guid galleryId)
         {
+            if (!await _galleryAccess.IsOwnedAsync(galleryId, _currentUser.UserId))
+                return NotFound();
+
             var photos = await _db.Photos
                 .AsNoTracking()
                 .Where(p => p.GalleryId == galleryId && !p.IsDeleted)
@@ -80,6 +92,9 @@ namespace PhotoLibApi.Controllers
         [HttpGet("dev/by-gallery/{galleryId:guid}")]
         public async Task<IActionResult> DevGetAllByGallery(Guid galleryId)
         {
+            if (!await _galleryAccess.IsOwnedAsync(galleryId, _currentUser.UserId))
+                return NotFound();
+
             var photos = await _db.Photos
                 .AsNoTracking()
                 .Where(p => p.GalleryId == galleryId)
@@ -105,6 +120,9 @@ namespace PhotoLibApi.Controllers
         [HttpGet("dev/deleted/by-gallery/{galleryId:guid}")]
         public async Task<IActionResult> DevGetDeletedByGallery(Guid galleryId)
         {
+            if (!await _galleryAccess.IsOwnedAsync(galleryId, _currentUser.UserId))
+                return NotFound();
+
             var photos = await _db.Photos
                 .AsNoTracking()
                 .Where(p => p.GalleryId == galleryId && p.IsDeleted)
@@ -156,6 +174,9 @@ namespace PhotoLibApi.Controllers
             if (photo == null)
                 return NotFound();
 
+            if (!await _galleryAccess.IsOwnedAsync(photo.GalleryId, _currentUser.UserId))
+                return NotFound();
+
             return Ok(photo);
         }
 
@@ -170,9 +191,7 @@ namespace PhotoLibApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetFile(Guid id)
         {
-
-            // Check that photo exists and has original
-            var photo = await _db.Photos.FindAsync(id);
+            var photo = await _galleryAccess.GetOwnedPhotoAsync(id, _currentUser.UserId);
             if (photo == null || !photo.HasOriginal)
                 return NotFound();
 
@@ -199,8 +218,7 @@ namespace PhotoLibApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetThumbnail(Guid id)
         {
-            // Check that photo exists and has thumbnail
-            var photo = await _db.Photos.FindAsync(id);
+            var photo = await _galleryAccess.GetOwnedPhotoAsync(id, _currentUser.UserId);
             if (photo == null || !photo.HasThumbnail)
                 return NotFound();
 
@@ -237,8 +255,8 @@ namespace PhotoLibApi.Controllers
             if (request.GalleryId == Guid.Empty)
                 return BadRequest("GalleryId must not be empty.");
 
-            // 2️⃣ Check that the gallery exists
-            if (!await GalleryExistsAsync(request.GalleryId))
+            // 2️⃣ Check that the gallery exists and is owned by the caller
+            if (!await _galleryAccess.IsOwnedAsync(request.GalleryId, _currentUser.UserId))
                 return NotFound($"Gallery with id '{request.GalleryId}' not found.");
 
             // Idempotent replay: a sync retry with the same ClientTempId
@@ -296,8 +314,8 @@ namespace PhotoLibApi.Controllers
                 if (file == null || file.Length == 0)
                     return BadRequest("File is required.");
 
-                // Check: photo exists in DB
-                var photo = await _db.Photos.FindAsync(id);
+                // Check: photo exists in DB and belongs to the caller
+                var photo = await _galleryAccess.GetOwnedPhotoAsync(id, _currentUser.UserId);
                 if (photo == null)
                     return NotFound();
 
@@ -343,6 +361,7 @@ namespace PhotoLibApi.Controllers
         /// to break out into a script context.
         /// </remarks>
         [HttpGet("capture")]
+        [AllowAnonymous]
         public ContentResult Capture([FromQuery] string imageUrl, [FromQuery] Guid galleryId)
         {
             var encodedImageUrl = System.Net.WebUtility.HtmlEncode(imageUrl ?? "");
@@ -415,12 +434,21 @@ namespace PhotoLibApi.Controllers
         /// Cross-origin CORS is enabled here too, in case a page's CSP
         /// allows fetches but the popup was blocked and a caller posts to
         /// this endpoint directly instead.
+        ///
+        /// Accepted risk: <c>AllowAnyOrigin</c> CORS is incompatible with
+        /// credentialed requests, so this endpoint cannot carry the session
+        /// cookie and stays unauthenticated - <c>[AllowAnonymous]</c>,
+        /// relying only on <see cref="CreatePhotoFromUrlRequest.GalleryId"/>
+        /// being an unguessable GUID, same as before authentication existed.
+        /// On a Tailscale-only shared instance the residual risk is limited
+        /// to one invited user guessing another's gallery id.
         /// </remarks>
         /// <param name="request">Destination gallery and image URL.</param>
         /// <response code="201">Photo created and downloaded successfully.</response>
         /// <response code="400">Invalid URL, or the URL did not return an image.</response>
         /// <response code="404">Destination gallery not found.</response>
         [HttpPost("from-url")]
+        [AllowAnonymous]
         [EnableCors("BookmarkletUpload")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -540,7 +568,7 @@ namespace PhotoLibApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var photo = await _db.Photos.FindAsync(id);
+            var photo = await _galleryAccess.GetOwnedPhotoAsync(id, _currentUser.UserId);
 
             if (photo == null)
                 return NotFound();
@@ -587,7 +615,7 @@ namespace PhotoLibApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var photo = await _db.Photos.FindAsync(new object?[] { id }, cancellationToken);
+            var photo = await _galleryAccess.GetOwnedPhotoAsync(id, _currentUser.UserId);
             if (photo == null || photo.IsDeleted || (!photo.HasOriginal && !photo.HasThumbnail))
                 return NotFound();
 
@@ -629,6 +657,9 @@ namespace PhotoLibApi.Controllers
             if (photo == null || photo.IsDeleted)
                 return NotFound();
 
+            if (!await _galleryAccess.IsOwnedAsync(photo.GalleryId, _currentUser.UserId))
+                return NotFound();
+
             await _tagResolver.ApplyAsync(photo, request.TagNames);
             await _db.SaveChangesAsync();
 
@@ -656,11 +687,11 @@ namespace PhotoLibApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var photo = await _db.Photos.FindAsync(id);
+            var photo = await _galleryAccess.GetOwnedPhotoAsync(id, _currentUser.UserId);
             if (photo == null || photo.IsDeleted)
                 return NotFound();
 
-            if (!await GalleryExistsAsync(request.GalleryId))
+            if (!await _galleryAccess.IsOwnedAsync(request.GalleryId, _currentUser.UserId))
                 return NotFound($"Gallery with id '{request.GalleryId}' not found.");
 
             photo.SortOrder = await NextSortOrderAsync(request.GalleryId);
@@ -689,11 +720,11 @@ namespace PhotoLibApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var source = await _db.Photos.FindAsync(id);
+            var source = await _galleryAccess.GetOwnedPhotoAsync(id, _currentUser.UserId);
             if (source == null || source.IsDeleted)
                 return NotFound();
 
-            if (!await GalleryExistsAsync(request.GalleryId))
+            if (!await _galleryAccess.IsOwnedAsync(request.GalleryId, _currentUser.UserId))
                 return NotFound($"Gallery with id '{request.GalleryId}' not found.");
 
             var copy = new Photo
@@ -743,7 +774,7 @@ namespace PhotoLibApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var photo = await _db.Photos.FindAsync(id);
+            var photo = await _galleryAccess.GetOwnedPhotoAsync(id, _currentUser.UserId);
 
             if (photo == null || photo.IsDeleted)
                 return NotFound();
@@ -765,10 +796,14 @@ namespace PhotoLibApi.Controllers
         [HttpPut("reorder")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Reorder([FromBody] ReorderPhotosRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            if (!await _galleryAccess.IsOwnedAsync(request.GalleryId, _currentUser.UserId))
+                return NotFound();
 
             var photos = await _db.Photos
                 .Where(p => p.GalleryId == request.GalleryId && request.PhotoIds.Contains(p.Id))

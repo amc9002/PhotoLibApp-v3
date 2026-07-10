@@ -4,6 +4,7 @@ import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { Lang } from '../../../core/i18n/translations';
 import { ThemeId, ThemeService, THEME_IDS } from '../../../core/theme/theme.service';
+import { AuthService } from '../../../core/auth/auth.service';
 
 const THEME_LABEL_KEYS: Record<ThemeId, string> = {
   navy: 'settings.themeNavy',
@@ -27,12 +28,14 @@ const THEME_PREVIEW: Record<ThemeId, { canvas: string; elevated: string }> = {
 })
 export class SettingsModalComponent {
   @Output() close = new EventEmitter<void>();
+  @Output() logout = new EventEmitter<void>();
 
   readonly themeIds = THEME_IDS;
 
   constructor(
     public i18n: I18nService,
     public theme: ThemeService,
+    public authService: AuthService,
   ) {}
 
   setLang(lang: Lang) {

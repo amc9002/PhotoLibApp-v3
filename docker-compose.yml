@@ -11,6 +11,8 @@ services:
       # Hard kill switch for the AI endpoint, independent of whether a key
       # is set - set to false to disable it outright on a shared instance.
       - Ai__Enabled=${AI_ENABLED:-true}
+      # Required to create accounts - see .env.example for details.
+      - Auth__AdminKey=${AUTH_ADMIN_KEY:-}
     volumes:
       - photolib-data:/data
     restart: unless-stopped
