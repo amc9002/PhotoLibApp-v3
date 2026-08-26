@@ -14,6 +14,63 @@
             {{ "auth.logout" | t }}
           </button>
         </div>
+
+        <button
+          class="btn link change-password-toggle"
+          (click)="toggleChangePassword()"
+        >
+          {{ (showChangePassword ? "common.cancel" : "auth.changePassword") | t }}
+        </button>
+
+        <form
+          class="change-password-form"
+          *ngIf="showChangePassword"
+          (ngSubmit)="submitChangePassword()"
+        >
+          <div class="form-field">
+            <label for="current-password">{{ "auth.currentPassword" | t }}</label>
+            <input
+              id="current-password"
+              type="password"
+              autocomplete="current-password"
+              [(ngModel)]="currentPassword"
+              name="currentPassword"
+              [disabled]="isChangingPassword"
+              required
+            />
+          </div>
+
+          <div class="form-field">
+            <label for="new-password">{{ "auth.newPassword" | t }}</label>
+            <input
+              id="new-password"
+              type="password"
+              autocomplete="new-password"
+              [(ngModel)]="newPassword"
+              name="newPassword"
+              [disabled]="isChangingPassword"
+              minlength="8"
+              required
+            />
+            <span class="form-hint">{{ "auth.passwordHint" | t }}</span>
+          </div>
+
+          <div class="form-error" *ngIf="changePasswordError">
+            {{ changePasswordError | t }}
+          </div>
+          <div class="form-success" *ngIf="changePasswordSuccess">
+            {{ "auth.passwordChanged" | t }}
+          </div>
+
+          <button
+            type="submit"
+            class="btn primary"
+            [disabled]="isChangingPassword || !currentPassword || !newPassword"
+          >
+            <span class="btn-spinner" *ngIf="isChangingPassword"></span>
+            {{ (isChangingPassword ? "auth.changingPassword" : "auth.changePassword") | t }}
+          </button>
+        </form>
       </div>
 
       <div class="settings-section">

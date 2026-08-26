@@ -4,6 +4,17 @@ import { catchError, throwError } from 'rxjs';
 import { AuthService } from './auth.service';
 
 /**
+ * Requests where a 401 is an expected, normal outcome (wrong credentials
+ * against an as-yet-unauthenticated request) rather than a sign of an
+ * expired/invalid session - the caller's own .subscribe({ error }) already
+ * handles these, so the interceptor must not also treat them as a sign-out
+ * signal. change-password is deliberately not here: it's [Authorize]-gated
+ * and returns 403 (not 401) for "wrong current password", so any 401 it
+ * does produce genuinely means the session is no longer valid.
+ */
+const AUTH_FLOW_URLS = ['/api/Auth/login'];
+
+/**
  * Flips AuthService.currentUser back to null whenever the server reports
  * the session is no longer valid, so AppComponent's template reactively
  * swaps back to the login screen. Never swallows the error - existing
@@ -16,12 +27,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((err) => {
-      // A failed login attempt is an expected 401, not a session expiry -
-      // don't treat it as a sign-out signal.
       if (
         err instanceof HttpErrorResponse &&
         err.status === 401 &&
-        !req.url.includes('/api/Auth/login')
+        !AUTH_FLOW_URLS.some((url) => req.url.includes(url))
       ) {
         authService.handleUnauthorized();
       }

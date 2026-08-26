@@ -229,17 +229,22 @@ endpoint currently assumes a single implicit owner.
 
 - [x] Choose an auth approach — went with **roll your own** email/password
   (not OAuth/managed service): the app is reached over a private Tailscale
-  network for a small invite-only friend group rather than the public
-  internet, so the "fewer unfamiliar things to get right" rationale for
-  OAuth applied less; a plain `PasswordHasher<User>` (ships in the ASP.NET
-  Core shared framework, no extra package) kept it simple. No
-  self-registration — accounts are created by the app owner via a
-  `POST /api/Auth/admin/register` endpoint gated by a shared `X-Admin-Key`
-  secret (`Auth:AdminKey` config, mirrors the existing `Anthropic:ApiKey`
-  pattern). `#if DEBUG` was considered for gating that endpoint but
-  rejected — the Docker image is always built `-c Release`, so `#if DEBUG`
-  code is compiled out regardless of `ASPNETCORE_ENVIRONMENT` and the
-  endpoint wouldn't exist on the real hosted instance.
+  network for a small friend group rather than the public internet, so the
+  "fewer unfamiliar things to get right" rationale for OAuth applied less;
+  a plain `PasswordHasher<User>` (ships in the ASP.NET Core shared
+  framework, no extra package) kept it simple. Two account-creation paths:
+  an open `POST /api/Auth/register` for anyone who can reach the instance
+  (safe because reachability itself is gated by Tailscale, not by the
+  endpoint), and `POST /api/Auth/admin/register` gated by a shared
+  `X-Admin-Key` secret (`Auth:AdminKey` config, mirrors the existing
+  `Anthropic:ApiKey` pattern) reserved for the app owner's own first
+  account, since only that path claims legacy data (see below).
+  `#if DEBUG` was considered for gating the admin endpoint but rejected —
+  the Docker image is always built `-c Release`, so `#if DEBUG` code is
+  compiled out regardless of `ASPNETCORE_ENVIRONMENT` and the endpoint
+  wouldn't exist on the real hosted instance. See
+  `FRIENDS-ACCESS-GUIDE.md` for the Tailscale-sharing + registration
+  walkthrough to send to friends.
 - [x] Add a real `User` entity (id, email, created date) and an `OwnerId`
   FK on `Gallery` (and transitively `Photo` through its gallery) — `OwnerId`
   is `Guid?` rather than strictly non-nullable at the DB level, since
@@ -264,18 +269,20 @@ endpoint currently assumes a single implicit owner.
   `CookieAuthenticationHandler`'s default 302-redirect-to-login-page
   behavior to return a bare `401`/`403` instead, since this is an API-only
   backend with no server-rendered login page.
-- [x] Frontend: full-screen `LoginComponent` (not dismissible), a function-based
+- [x] Frontend: full-screen `LoginComponent` (not dismissible) with a
+  toggle between sign-in and self-service registration, a function-based
   `HttpInterceptorFn` that reacts to any `401` by clearing the signed-in
   user, `provideAppInitializer` to check the session before first render
-  (avoids a flash of the gallery UI), sign-out via Settings. No signup UI -
-  invite-only, see above. The session cookie is attached automatically by
-  the browser on every same-origin request (no interceptor logic needed
-  for that part, unlike a JWT-in-header approach).
+  (avoids a flash of the gallery UI), sign-out via Settings. The session
+  cookie is attached automatically by the browser on every same-origin
+  request (no interceptor logic needed for that part, unlike a
+  JWT-in-header approach).
 - [x] Decide what happens to today's single-owner data on migration — the
-  *first* account ever created via `admin/register` automatically claims
-  every pre-existing `OwnerId == null` gallery in the same request. Works
-  because registration is invite-only and gated by the admin key, so the
-  first account is, by construction, the app owner's own.
+  *first* account ever created via `admin/register` (not the open
+  `register` endpoint) automatically claims every pre-existing `OwnerId ==
+  null` gallery in the same request. Only the admin-key path can trigger
+  this, so a friend self-registering afterwards always starts with an
+  empty library, never accidentally claiming the owner's data.
 
 ### Phase 2 — AI usage metering & quotas (build before charging anyone)
 

@@ -29,8 +29,18 @@ export class AuthService {
     return this.authApi.login(email, password).pipe(tap((user) => (this.currentUser = user)));
   }
 
+  /** Creates a new account and, on success, signs it straight in (mirrors the backend). */
+  register(email: string, password: string) {
+    return this.authApi.register(email, password).pipe(tap((user) => (this.currentUser = user)));
+  }
+
   logout() {
     return this.authApi.logout().pipe(tap(() => (this.currentUser = null)));
+  }
+
+  /** Session/identity are unaffected - just forwards to the API. */
+  changePassword(currentPassword: string, newPassword: string) {
+    return this.authApi.changePassword(currentPassword, newPassword);
   }
 
   /** Called by the 401 interceptor when a session has expired or was revoked. */

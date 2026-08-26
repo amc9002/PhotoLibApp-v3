@@ -1,15 +1,17 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
+import { authErrorKey } from '../../core/auth/auth-error.util';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
+type LoginMode = 'login' | 'register';
+
 /**
- * Full-screen sign-in gate shown by AppComponent whenever there's no
- * signed-in user. Unlike the app's modals, this is not dismissible - there's
- * no backdrop-click or Escape handler, since there's nothing to fall back to
- * behind it.
+ * Full-screen sign-in/registration gate shown by AppComponent whenever
+ * there's no signed-in user. Unlike the app's modals, this is not
+ * dismissible - there's no backdrop-click or Escape handler, since there's
+ * nothing to fall back to behind it.
  */
 @Component({
   selector: 'app-login',
@@ -21,6 +23,7 @@ import { TranslatePipe } from '../../core/i18n/translate.pipe';
 export class LoginComponent {
   @Output() loggedIn = new EventEmitter<void>();
 
+  mode: LoginMode = 'login';
   email = '';
   password = '';
   isSubmitting = false;
@@ -28,25 +31,42 @@ export class LoginComponent {
 
   constructor(private authService: AuthService) {}
 
+  switchMode(mode: LoginMode) {
+    this.mode = mode;
+    this.error = null;
+  }
+
   submit() {
     if (this.isSubmitting || !this.email || !this.password) return;
 
     this.isSubmitting = true;
     this.error = null;
 
-    this.authService.login(this.email, this.password).subscribe({
+    const request =
+      this.mode === 'login'
+        ? this.authService.login(this.email, this.password)
+        : this.authService.register(this.email, this.password);
+
+    request.subscribe({
       next: () => {
         this.isSubmitting = false;
         this.loggedIn.emit();
       },
       error: (err) => {
-        console.error('Login failed', err);
+        console.error(`${this.mode} failed`, err);
         this.isSubmitting = false;
-        this.error =
-          err instanceof HttpErrorResponse && err.status === 401
-            ? 'auth.invalidCredentials'
-            : 'auth.loginFailed';
+        this.error = this.errorKey(err);
       },
     });
+  }
+
+  private errorKey(err: unknown): string {
+    return this.mode === 'login'
+      ? authErrorKey(err, { 401: 'auth.invalidCredentials' }, 'auth.loginFailed')
+      : authErrorKey(
+          err,
+          { 409: 'auth.emailTaken', 400: 'auth.passwordTooShort' },
+          'auth.registerFailed',
+        );
   }
 }

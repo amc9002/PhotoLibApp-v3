@@ -132,6 +132,34 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromHours(1),
                 QueueLimit = 0,
             }));
+
+    // Self-service registration is only reachable at all from inside the
+    // private network (see AuthController.Register's remarks), but it's
+    // still cheap defense-in-depth against a compromised/misbehaving
+    // device on that network spamming account creation.
+    options.AddPolicy("AuthRegister", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromHours(1),
+                QueueLimit = 0,
+            }));
+
+    // Deliberately separate from AuthLogin: an already-signed-in user
+    // changing their password is a different threat model (guessing their
+    // own current password) than an anonymous credential-stuffing attempt,
+    // and the two shouldn't share a quota bucket per IP.
+    options.AddPolicy("AuthChangePassword", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(15),
+                QueueLimit = 0,
+            }));
 });
 
 // Cross-origin access for the "Add from internet" bookmarklet: the bookmarklet

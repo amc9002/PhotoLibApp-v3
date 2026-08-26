@@ -1,7 +1,7 @@
 <div class="login-screen">
   <form class="modal login-card" (ngSubmit)="submit()">
     <div class="modal-header">
-      <h2>{{ "auth.login" | t }}</h2>
+      <h2>{{ (mode === "login" ? "auth.login" : "auth.createAccount") | t }}</h2>
     </div>
 
     <div class="modal-body">
@@ -23,25 +23,36 @@
         <input
           id="login-password"
           type="password"
-          autocomplete="current-password"
+          [autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
           [(ngModel)]="password"
           name="password"
           [disabled]="isSubmitting"
+          [minlength]="mode === 'register' ? 8 : null"
           required
         />
+        <span class="form-hint" *ngIf="mode === 'register'">{{ "auth.passwordHint" | t }}</span>
       </div>
 
       <div class="form-error" *ngIf="error">{{ error | t }}</div>
     </div>
 
-    <div class="modal-footer">
+    <div class="modal-footer login-footer">
+      <button
+        type="button"
+        class="btn link"
+        [disabled]="isSubmitting"
+        (click)="switchMode(mode === 'login' ? 'register' : 'login')"
+      >
+        {{ (mode === "login" ? "auth.needAccount" : "auth.haveAccount") | t }}
+      </button>
+
       <button
         type="submit"
         class="btn primary"
         [disabled]="isSubmitting || !email || !password"
       >
         <span class="btn-spinner" *ngIf="isSubmitting"></span>
-        {{ (isSubmitting ? "auth.loggingIn" : "auth.login") | t }}
+        {{ (isSubmitting ? (mode === "login" ? "auth.loggingIn" : "auth.registering") : (mode === "login" ? "auth.login" : "auth.createAccount")) | t }}
       </button>
     </div>
   </form>

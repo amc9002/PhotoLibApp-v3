@@ -32,6 +32,36 @@ export const translations: Record<string, Record<Lang, string>> = {
     en: 'Failed to log in. Please try again.',
   },
   'auth.logout': { be: 'Выйсці', en: 'Log out' },
+  'auth.createAccount': { be: 'Стварыць акаўнт', en: 'Create account' },
+  'auth.registering': { be: 'Рэгіструю…', en: 'Creating account…' },
+  'auth.registerFailed': {
+    be: 'Не ўдалося стварыць акаўнт. Паспрабуйце яшчэ раз.',
+    en: 'Failed to create account. Please try again.',
+  },
+  'auth.emailTaken': {
+    be: 'Акаўнт з такім email ужо існуе.',
+    en: 'An account with this email already exists.',
+  },
+  'auth.passwordTooShort': {
+    be: 'Пароль мусіць мець прынамсі 8 сімвалаў.',
+    en: 'Password must be at least 8 characters.',
+  },
+  'auth.passwordHint': { be: 'Прынамсі 8 сімвалаў', en: 'At least 8 characters' },
+  'auth.needAccount': { be: 'Няма акаўнта? Зарэгістравацца', en: "Don't have an account? Register" },
+  'auth.haveAccount': { be: 'Ужо ёсць акаўнт? Увайсці', en: 'Already have an account? Log in' },
+  'auth.changePassword': { be: 'Змяніць пароль', en: 'Change password' },
+  'auth.changingPassword': { be: 'Змяняю…', en: 'Changing…' },
+  'auth.currentPassword': { be: 'Бягучы пароль', en: 'Current password' },
+  'auth.newPassword': { be: 'Новы пароль', en: 'New password' },
+  'auth.currentPasswordWrong': {
+    be: 'Бягучы пароль няправільны.',
+    en: 'Current password is incorrect.',
+  },
+  'auth.passwordChanged': { be: 'Пароль зменены.', en: 'Password changed.' },
+  'auth.changePasswordFailed': {
+    be: 'Не ўдалося змяніць пароль. Паспрабуйце яшчэ раз.',
+    en: 'Failed to change password. Please try again.',
+  },
 
   // ---------------- app shell ----------------
   'app.selectGallery': { be: 'Абярыце галерэю, каб паглядзець фота', en: 'Select a gallery to view photos' },

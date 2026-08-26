@@ -15,8 +15,16 @@ export class AuthApiService {
     return this.api.post<User>('Auth/login', { email, password });
   }
 
+  register(email: string, password: string) {
+    return this.api.post<User>('Auth/register', { email, password });
+  }
+
   logout() {
     return this.api.post<void>('Auth/logout', {});
+  }
+
+  changePassword(currentPassword: string, newPassword: string) {
+    return this.api.post<void>('Auth/change-password', { currentPassword, newPassword });
   }
 
   me() {
