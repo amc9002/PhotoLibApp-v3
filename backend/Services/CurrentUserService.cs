@@ -12,6 +12,7 @@ namespace PhotoLibApi.Services
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
 
+        /// <param name="httpContextAccessor">Gives access to the current request's claims.</param>
         public CurrentUserService(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;

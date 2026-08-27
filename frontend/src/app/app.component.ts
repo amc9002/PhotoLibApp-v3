@@ -1,12 +1,12 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { EMPTY, catchError, forkJoin, from, mergeMap, switchMap, tap } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { Gallery } from './models/gallery.model';
 import { GalleryApiService } from './services/gallery-api.service';
 import { CommonModule } from '@angular/common';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { GalleryPropertiesComponent } from './components/gallery-properties/gallery-properties.component';
 import { CreateGalleryComponent } from './components/create-gallery/create-gallery.component';
-import { PhotoApiService } from './services/photo-api.service';
+import { PhotoUploadService } from './services/photo-upload.service';
 import { PhotoListItemDto } from './models/photoLisrItem.dto';
 import { GalleryPageComponent } from './components/gallery-page/gallery-page.component';
 import { ConfirmModalComponent } from './shared/modal/confirm-modal/confirm-modal.component';
@@ -21,6 +21,8 @@ import { TranslatePipe } from './core/i18n/translate.pipe';
 import { SettingsModalComponent } from './shared/modal/settings-modal/settings-modal.component';
 import { LoginComponent } from './components/login/login.component';
 import { AuthService } from './core/auth/auth.service';
+import { userInitials } from './shared/utils/user-initials';
+import { ModalState } from './shared/utils/modal-state';
 
 @Component({
   selector: 'app-root',
@@ -54,7 +56,7 @@ export class AppComponent implements OnInit {
 
   constructor(
     private galleryApi: GalleryApiService,
-    private photoApi: PhotoApiService,
+    private photoUpload: PhotoUploadService,
     public photoSelection: PhotoSelectionService,
     private thumbnailSize: ThumbnailSizeService,
     private syncCoordinator: SyncCoordinatorService,
@@ -85,7 +87,16 @@ export class AppComponent implements OnInit {
     this.loadGalleries();
   }
 
+  userInitials(name: string): string {
+    return userInitials(name);
+  }
+
   logout(): void {
+    // Settings can trigger this from its own logout button while still
+    // open - close it too, or a later sign-in reopens it unprompted since
+    // settingsModal lives on this always-alive component, not reset just
+    // because the *ngIf-gated children behind it were destroyed.
+    this.closeSettings();
     this.authService.logout().subscribe({
       error: (err) => console.error('Logout failed', err),
     });
@@ -99,7 +110,9 @@ export class AppComponent implements OnInit {
   }
 
   selectGallery(gallery: Gallery) {
-    // прымусова "змяняем" значэнне
+    // Force a clear-then-set so `*ngIf="selectedGallery"` tears down and
+    // remounts app-gallery-page with fresh internal state, even if the
+    // newly selected gallery happens to be the same one as before.
     this.selectedGallery = undefined;
 
     setTimeout(() => {
@@ -108,108 +121,60 @@ export class AppComponent implements OnInit {
     });
   }
 
-  showGalleryProperties = false;
+  galleryPropertiesModal = new ModalState();
 
   openFilePicker() {
     if (!this.selectedGallery) return;
     this.fileInput.nativeElement.click();
   }
 
-  /**
-   * Caps how many files a multi-select upload sends to the server at once.
-   * Each upload makes the backend decode the full-resolution original into
-   * memory to build a thumbnail, so firing all of them in parallel (as a
-   * plain `forEach` once did) could hold dozens of decoded images in memory
-   * simultaneously and exhaust it; capping concurrency bounds that to a
-   * handful without meaningfully slowing a normal-sized batch down.
-   */
-  private static readonly MAX_CONCURRENT_UPLOADS = 3;
-
   onFilesSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files || !this.selectedGallery) return;
 
     const files = Array.from(input.files);
-    const singleFile = files.length === 1;
     const galleryId = this.selectedGallery.id;
 
-    from(files)
-      .pipe(
-        mergeMap(
-          (file) => this.createAndUploadOne(file, galleryId, singleFile),
-          AppComponent.MAX_CONCURRENT_UPLOADS,
-        ),
-      )
-      .subscribe();
+    this.photoUpload.uploadAll(files, galleryId, (photoId, singleFile) => {
+      this.galleryPage?.refreshPhotos(() => {
+        // Only for a single upload - a batch would otherwise chain one edit
+        // modal after another.
+        if (singleFile) {
+          this.galleryPage?.openViewer(photoId, true);
+        }
+      });
+    });
 
     input.value = '';
   }
 
-  /**
-   * Creates a photo's metadata, then uploads its file, then refreshes the
-   * grid - the per-file unit of work `onFilesSelected` runs with bounded
-   * concurrency via `mergeMap`. Errors are logged and swallowed here (rather
-   * than propagated) so one failing file in a batch doesn't cancel the
-   * `mergeMap` and abort the rest of the upload.
-   */
-  private createAndUploadOne(file: File, galleryId: string, singleFile: boolean) {
-    return this.photoApi.create({ galleryId, title: file.name }).pipe(
-      switchMap((photo) =>
-        this.photoApi.upload(photo.id, file).pipe(
-          tap(() => {
-            this.galleryPage?.refreshPhotos(() => {
-              // Only for a single upload - a batch would otherwise chain
-              // one edit modal after another.
-              if (singleFile) {
-                this.galleryPage?.openViewer(photo.id, true);
-              }
-            });
-          }),
-          // withRetry (in PhotoApiService) already absorbs transient server
-          // hiccups, and a real connectivity error is queued for background
-          // sync rather than rejected here - so a rejection reaching this
-          // point is a genuine, non-retryable failure worth logging rather
-          // than failing silently.
-          catchError((err) => {
-            console.error('Failed to upload photo file', file.name, err);
-            return EMPTY;
-          }),
-        ),
-      ),
-      catchError((err) => {
-        console.error('Failed to create photo', file.name, err);
-        return EMPTY;
-      }),
-    );
-  }
-
   openGalleryProperties() {
-    this.showGalleryProperties = true;
+    this.galleryPropertiesModal.open();
   }
 
   closeGalleryProperties() {
-    this.showGalleryProperties = false;
+    this.galleryPropertiesModal.close();
   }
 
-  showAddFromInternet = false;
+  addFromInternetModal = new ModalState();
 
   openAddFromInternet() {
     if (!this.selectedGallery) return;
-    this.showAddFromInternet = true;
+    this.addFromInternetModal.open();
   }
 
   closeAddFromInternet() {
-    this.showAddFromInternet = false;
+    this.addFromInternetModal.close();
   }
 
-  showCreateGallery = false;
+  createGalleryModal = new ModalState();
 
   openCreateGallery() {
-    this.showCreateGallery = true;
+    this.createGalleryModal.open();
   }
 
   closeCreateGallery() {
-    this.showCreateGallery = false;
+    this.createGalleryModal.close();
   }
 
   createGallery(title: string) {
@@ -218,7 +183,7 @@ export class AppComponent implements OnInit {
         this.galleries = [...this.galleries, gallery];
         this.selectedGallery = gallery;
         this.thumbnailSize.setGallery(gallery.id);
-        this.showCreateGallery = false;
+        this.createGalleryModal.close();
       },
       error: (err) => {
         console.error('create gallery error:', err);
@@ -346,13 +311,13 @@ export class AppComponent implements OnInit {
     this.galleryPage?.openSlideshowSettings();
   }
 
-  showSettings = false;
+  settingsModal = new ModalState();
 
   openSettings() {
-    this.showSettings = true;
+    this.settingsModal.open();
   }
 
   closeSettings() {
-    this.showSettings = false;
+    this.settingsModal.close();
   }
 }

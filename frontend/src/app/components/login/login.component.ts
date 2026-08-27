@@ -26,6 +26,8 @@ export class LoginComponent {
   mode: LoginMode = 'login';
   email = '';
   password = '';
+  name = '';
+  showPassword = false;
   isSubmitting = false;
   error: string | null = null;
 
@@ -36,8 +38,13 @@ export class LoginComponent {
     this.error = null;
   }
 
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+  }
+
   submit() {
     if (this.isSubmitting || !this.email || !this.password) return;
+    if (this.mode === 'register' && !this.name.trim()) return;
 
     this.isSubmitting = true;
     this.error = null;
@@ -45,7 +52,7 @@ export class LoginComponent {
     const request =
       this.mode === 'login'
         ? this.authService.login(this.email, this.password)
-        : this.authService.register(this.email, this.password);
+        : this.authService.register(this.email, this.password, this.name.trim());
 
     request.subscribe({
       next: () => {

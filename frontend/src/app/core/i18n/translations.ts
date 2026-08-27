@@ -20,6 +20,7 @@ export const translations: Record<string, Record<Lang, string>> = {
 
   // ---------------- auth ----------------
   'auth.email': { be: 'Email', en: 'Email' },
+  'auth.name': { be: 'Імя', en: 'Name' },
   'auth.password': { be: 'Пароль', en: 'Password' },
   'auth.login': { be: 'Увайсці', en: 'Log in' },
   'auth.loggingIn': { be: 'Уваходжу…', en: 'Logging in…' },
@@ -47,6 +48,8 @@ export const translations: Record<string, Record<Lang, string>> = {
     en: 'Password must be at least 8 characters.',
   },
   'auth.passwordHint': { be: 'Прынамсі 8 сімвалаў', en: 'At least 8 characters' },
+  'auth.showPassword': { be: 'Паказаць', en: 'Show' },
+  'auth.hidePassword': { be: 'Схаваць', en: 'Hide' },
   'auth.needAccount': { be: 'Няма акаўнта? Зарэгістравацца', en: "Don't have an account? Register" },
   'auth.haveAccount': { be: 'Ужо ёсць акаўнт? Увайсці', en: 'Already have an account? Log in' },
   'auth.changePassword': { be: 'Змяніць пароль', en: 'Change password' },
@@ -247,6 +250,26 @@ export const translations: Record<string, Record<Lang, string>> = {
   // ---------------- settings modal ----------------
   'settings.heading': { be: 'Налады', en: 'Settings' },
   'settings.account': { be: 'Акаўнт', en: 'Account' },
+  'settings.changeAvatar': { be: 'Змяніць фота', en: 'Change photo' },
+  'settings.uploadingAvatar': { be: 'Загрузка…', en: 'Uploading…' },
+  'settings.avatarUploadFailed': {
+    be: 'Не ўдалося загрузіць фота. Праверце фармат і паспрабуйце яшчэ раз.',
+    en: 'Failed to upload photo. Check the format and try again.',
+  },
+  'settings.name': { be: 'Імя', en: 'Name' },
+  'settings.bio': { be: 'Пра сябе (неабавязкова)', en: 'About you (optional)' },
+  'settings.bioPlaceholder': {
+    be: 'Некалькі словаў пра сябе…',
+    en: 'A few words about yourself…',
+  },
+  'settings.saveProfile': { be: 'Захаваць профіль', en: 'Save profile' },
+  'settings.savingProfile': { be: 'Захоўваю…', en: 'Saving…' },
+  'settings.profileSaved': { be: 'Профіль абноўлены.', en: 'Profile updated.' },
+  'settings.profileSaveFailed': {
+    be: 'Не ўдалося захаваць профіль. Паспрабуйце яшчэ раз.',
+    en: 'Failed to save profile. Please try again.',
+  },
+  'settings.nameRequired': { be: 'Імя абавязковае.', en: 'Name is required.' },
   'settings.language': { be: 'Мова', en: 'Language' },
   'settings.languageBe': { be: 'Беларуская', en: 'Belarusian' },
   'settings.languageEn': { be: 'Англійская', en: 'English' },

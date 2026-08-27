@@ -5,6 +5,20 @@
     </div>
 
     <div class="modal-body">
+      <div class="form-field" *ngIf="mode === 'register'">
+        <label for="login-name">{{ "auth.name" | t }}</label>
+        <input
+          id="login-name"
+          type="text"
+          autocomplete="name"
+          [(ngModel)]="name"
+          name="name"
+          [disabled]="isSubmitting"
+          maxlength="100"
+          required
+        />
+      </div>
+
       <div class="form-field">
         <label for="login-email">{{ "auth.email" | t }}</label>
         <input
@@ -20,16 +34,28 @@
 
       <div class="form-field">
         <label for="login-password">{{ "auth.password" | t }}</label>
-        <input
-          id="login-password"
-          type="password"
-          [autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
-          [(ngModel)]="password"
-          name="password"
-          [disabled]="isSubmitting"
-          [minlength]="mode === 'register' ? 8 : null"
-          required
-        />
+        <div class="password-input-wrap">
+          <input
+            id="login-password"
+            [type]="showPassword ? 'text' : 'password'"
+            [autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
+            [(ngModel)]="password"
+            name="password"
+            [disabled]="isSubmitting"
+            [minlength]="mode === 'register' ? 8 : null"
+            required
+          />
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+            [disabled]="isSubmitting"
+            [attr.aria-label]="(showPassword ? 'auth.hidePassword' : 'auth.showPassword') | t"
+            [title]="(showPassword ? 'auth.hidePassword' : 'auth.showPassword') | t"
+          >
+            {{ (showPassword ? "auth.hidePassword" : "auth.showPassword") | t }}
+          </button>
+        </div>
         <span class="form-hint" *ngIf="mode === 'register'">{{ "auth.passwordHint" | t }}</span>
       </div>
 
@@ -49,7 +75,7 @@
       <button
         type="submit"
         class="btn primary"
-        [disabled]="isSubmitting || !email || !password"
+        [disabled]="isSubmitting || !email || !password || (mode === 'register' && !name)"
       >
         <span class="btn-spinner" *ngIf="isSubmitting"></span>
         {{ (isSubmitting ? (mode === "login" ? "auth.loggingIn" : "auth.registering") : (mode === "login" ? "auth.login" : "auth.createAccount")) | t }}

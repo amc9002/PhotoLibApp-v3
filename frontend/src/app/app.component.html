@@ -12,6 +12,14 @@
   </div>
 
   <div class="header-right">
+    <div class="user-badge" *ngIf="authService.currentUser as user" [title]="user.email">
+      <span class="user-avatar">
+        <img *ngIf="authService.avatarUrl() as avatarUrl" [src]="avatarUrl" alt="" />
+        <span *ngIf="!authService.avatarUrl()" class="user-avatar-initials">{{ userInitials(user.name) }}</span>
+      </span>
+      <span class="user-name">{{ user.name }}</span>
+    </div>
+
     <app-toolbar
       layout="right"
       [selectedGallery]="selectedGallery"
@@ -28,7 +36,7 @@
       (openSettings)="openSettings()"
     ></app-toolbar>
     <app-gallery-properties
-      *ngIf="showGalleryProperties && selectedGallery"
+      *ngIf="galleryPropertiesModal.isOpen && selectedGallery"
       [gallery]="selectedGallery"
       (close)="closeGalleryProperties()"
     ></app-gallery-properties>
@@ -60,7 +68,7 @@
 />
 
 <app-create-gallery
-  *ngIf="showCreateGallery"
+  *ngIf="createGalleryModal.isOpen"
   (create)="createGallery($event)"
   (cancel)="closeCreateGallery()"
 ></app-create-gallery>
@@ -88,14 +96,14 @@
 ></app-edit-metadata-modal>
 
 <app-add-from-internet-modal
-  *ngIf="showAddFromInternet && selectedGallery"
+  *ngIf="addFromInternetModal.isOpen && selectedGallery"
   [galleryId]="selectedGallery.id"
   [galleryTitle]="selectedGallery.title"
   (close)="closeAddFromInternet()"
 ></app-add-from-internet-modal>
 
 <app-settings-modal
-  *ngIf="showSettings"
+  *ngIf="settingsModal.isOpen"
   (close)="closeSettings()"
   (logout)="logout()"
 ></app-settings-modal>

@@ -18,12 +18,19 @@ namespace PhotoLibApi.Controllers
         private readonly PhotoDbContext _db;
         private readonly TagResolver _tagResolver;
         private readonly CurrentUserService _currentUser;
+        private readonly GalleryAccessService _galleryAccess;
 
-        public GalleryController(PhotoDbContext db, TagResolver tagResolver, CurrentUserService currentUser)
+        /// <summary>Creates the controller with its DB context and supporting services.</summary>
+        public GalleryController(
+            PhotoDbContext db,
+            TagResolver tagResolver,
+            CurrentUserService currentUser,
+            GalleryAccessService galleryAccess)
         {
             _db = db;
             _tagResolver = tagResolver;
             _currentUser = currentUser;
+            _galleryAccess = galleryAccess;
         }
 
         /// <summary>
@@ -75,15 +82,7 @@ namespace PhotoLibApi.Controllers
                 .Where(g => g.OwnerId == ownerId && request.GalleryIds.Contains(g.Id))
                 .ToListAsync();
 
-            var galleryById = galleries.ToDictionary(g => g.Id);
-
-            for (var i = 0; i < request.GalleryIds.Count; i++)
-            {
-                if (galleryById.TryGetValue(request.GalleryIds[i], out var gallery))
-                {
-                    gallery.SortOrder = i;
-                }
-            }
+            SortOrderHelper.Apply(galleries, request.GalleryIds, g => g.Id, (g, i) => g.SortOrder = i);
 
             await _db.SaveChangesAsync();
 
@@ -254,9 +253,9 @@ namespace PhotoLibApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var gallery = await _db.Galleries.FindAsync(id);
+            var gallery = await _galleryAccess.GetOwnedGalleryAsync(id, _currentUser.UserId);
 
-            if (gallery == null || gallery.IsDeleted || gallery.OwnerId != _currentUser.UserId)
+            if (gallery == null)
                 return NotFound();
 
             gallery.Title = request.Title;
@@ -283,11 +282,9 @@ namespace PhotoLibApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> SetTags(Guid id, [FromBody] SetTagsRequest request)
         {
-            var gallery = await _db.Galleries
-                .Include(g => g.Tags)
-                .FirstOrDefaultAsync(g => g.Id == id);
+            var gallery = await _galleryAccess.GetOwnedGalleryAsync(id, _currentUser.UserId);
 
-            if (gallery == null || gallery.IsDeleted || gallery.OwnerId != _currentUser.UserId)
+            if (gallery == null)
                 return NotFound();
 
             await _tagResolver.ApplyAsync(gallery, request.TagNames);
@@ -311,9 +308,9 @@ namespace PhotoLibApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(Guid id)
         {
-            var gallery = await _db.Galleries.FindAsync(id);
+            var gallery = await _galleryAccess.GetOwnedGalleryAsync(id, _currentUser.UserId);
 
-            if (gallery == null || gallery.IsDeleted || gallery.OwnerId != _currentUser.UserId)
+            if (gallery == null)
                 return NotFound();
 
             gallery.IsDeleted = true;

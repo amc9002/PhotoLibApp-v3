@@ -31,6 +31,26 @@ namespace PhotoLibApi.Models
         public string PasswordHash { get; set; } = "";
 
         /// <summary>
+        /// Display name, shown in the toolbar and (later) on this user's
+        /// public profile. Required, unlike <see cref="Bio"/>.
+        /// </summary>
+        [Required]
+        public string Name { get; set; } = "";
+
+        /// <summary>
+        /// Optional free-text personal info the user can add about
+        /// themselves (e.g. shown on a future public profile page).
+        /// </summary>
+        public string? Bio { get; set; }
+
+        /// <summary>
+        /// Whether an avatar image exists for this user on disk. Mirrors
+        /// <see cref="Photo.HasThumbnail"/>'s pattern - the file itself is
+        /// stored separately and served via a dedicated endpoint.
+        /// </summary>
+        public bool HasAvatar { get; set; } = false;
+
+        /// <summary>
         /// Timestamp of when the account was created (UTC).
         /// </summary>
         public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;

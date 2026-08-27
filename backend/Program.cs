@@ -2,10 +2,12 @@ using System.Reflection;
 using System.Threading.RateLimiting;
 using Anthropic;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using PhotoLibApi.Data;
+using PhotoLibApi.Models;
 using PhotoLibApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -38,6 +40,7 @@ builder.Services.AddScoped<TagResolver>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CurrentUserService>();
 builder.Services.AddScoped<GalleryAccessService>();
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 // Session cookie for signed-in users. API-only backend, so the default
 // MVC behavior (302 redirect to a login page on an unauthenticated
@@ -76,6 +79,18 @@ builder.Services.AddSingleton(sp =>
     return new PhotoFilePathHelper(photosRoot);
 });
 builder.Services.AddScoped<PhotoImageProcessingService>();
+
+// Same rationale as the PhotoFilePathHelper registration above.
+builder.Services.AddSingleton(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var avatarsRoot = Path.Combine(
+        Directory.GetCurrentDirectory(),
+        configuration["Storage:AvatarsPath"]!);
+
+    return new AvatarFilePathHelper(avatarsRoot);
+});
+builder.Services.AddScoped<AvatarImageProcessingService>();
 
 // Config-driven and stateless once built, so a single shared instance is safe
 // (same rationale as the PhotoFilePathHelper registration above). The key is

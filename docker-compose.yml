@@ -5,6 +5,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Data Source=/data/photolib.db
       - Storage__PhotosPath=/data/uploads/photos
+      - Storage__AvatarsPath=/data/uploads/avatars
       # Optional - only needed for the "Generate with AI" photo-description
       # feature. Leave unset to run everything else without it.
       - Anthropic__ApiKey=${ANTHROPIC_API_KEY:-}

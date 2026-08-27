@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, defer, firstValueFrom, from } from 'rxjs';
 import { ApiService } from '../core/api/api.service';
+import { attemptOnline } from '../core/offline/connectivity-error.util';
 import { ConnectivityService } from '../core/offline/connectivity.service';
 import { LocalDbService } from '../core/offline/local-db.service';
 import { GALLERY_REORDER_ENTITY_ID } from '../core/offline/outbox.model';
@@ -56,28 +56,24 @@ export class GalleryApiService {
   private async resolveAll(): Promise<Gallery[]> {
     const outboxCount = await this.localDb.countOutboxEntries();
 
-    if (this.connectivity.isOnline && outboxCount === 0) {
-      try {
-        const galleries = await firstValueFrom(this.api.get<Gallery[]>('Gallery'));
-        await this.localDb.replaceGalleries(galleries);
-        return galleries;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
-      }
+    const attempt = await attemptOnline(this.connectivity.isOnline && outboxCount === 0, () =>
+      firstValueFrom(this.api.get<Gallery[]>('Gallery')),
+    );
+    if (attempt.ok) {
+      await this.localDb.replaceGalleries(attempt.value);
+      return attempt.value;
     }
 
     return this.localDb.getMirroredGalleries();
   }
 
   private async resolveCreate(dto: Partial<GalleryDto>): Promise<Gallery> {
-    if (this.connectivity.isOnline) {
-      try {
-        const gallery = await firstValueFrom(this.api.post<Gallery>('Gallery', dto));
-        await this.localDb.upsertMirroredGallery(gallery);
-        return gallery;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
-      }
+    const attempt = await attemptOnline(this.connectivity.isOnline, () =>
+      firstValueFrom(this.api.post<Gallery>('Gallery', dto)),
+    );
+    if (attempt.ok) {
+      await this.localDb.upsertMirroredGallery(attempt.value);
+      return attempt.value;
     }
 
     const clientTempId = crypto.randomUUID();
@@ -108,24 +104,20 @@ export class GalleryApiService {
     id: string,
     dto: { title: string; description?: string },
   ): Promise<{ updatedAtUtc: string } | void> {
-    if (this.connectivity.isOnline) {
-      try {
-        const result = await firstValueFrom(
-          this.api.put<{ updatedAtUtc: string }>(`Gallery/${id}`, dto),
-        );
-        const existing = await this.localDb.getMirroredGallery(id);
-        if (existing) {
-          await this.localDb.upsertMirroredGallery({
-            ...existing,
-            title: dto.title,
-            description: dto.description,
-            updatedAtUtc: result.updatedAtUtc,
-          });
-        }
-        return result;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
+    const attempt = await attemptOnline(this.connectivity.isOnline, () =>
+      firstValueFrom(this.api.put<{ updatedAtUtc: string }>(`Gallery/${id}`, dto)),
+    );
+    if (attempt.ok) {
+      const existing = await this.localDb.getMirroredGallery(id);
+      if (existing) {
+        await this.localDb.upsertMirroredGallery({
+          ...existing,
+          title: dto.title,
+          description: dto.description,
+          updatedAtUtc: attempt.value.updatedAtUtc,
+        });
       }
+      return attempt.value;
     }
 
     const existing = await this.localDb.getMirroredGallery(id);
@@ -156,14 +148,12 @@ export class GalleryApiService {
   }
 
   private async resolveDelete(id: string): Promise<void> {
-    if (this.connectivity.isOnline) {
-      try {
-        await firstValueFrom(this.api.delete<void>(`Gallery/${id}`));
-        await this.localDb.tombstoneMirroredGallery(id);
-        return;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
-      }
+    const attempt = await attemptOnline(this.connectivity.isOnline, () =>
+      firstValueFrom(this.api.delete<void>(`Gallery/${id}`)),
+    );
+    if (attempt.ok) {
+      await this.localDb.tombstoneMirroredGallery(id);
+      return;
     }
 
     const existing = await this.localDb.getMirroredGallery(id);
@@ -187,23 +177,21 @@ export class GalleryApiService {
   }
 
   private async resolveSetTags(id: string, tagNames: string[]): Promise<string[]> {
-    if (this.connectivity.isOnline) {
-      try {
-        const result = await firstValueFrom(
-          this.api.put<{ tagNames: string[]; updatedAtUtc: string }>(`Gallery/${id}/tags`, { tagNames }),
-        );
-        const existing = await this.localDb.getMirroredGallery(id);
-        if (existing) {
-          await this.localDb.upsertMirroredGallery({
-            ...existing,
-            tags: result.tagNames,
-            updatedAtUtc: result.updatedAtUtc,
-          });
-        }
-        return result.tagNames;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
+    const attempt = await attemptOnline(this.connectivity.isOnline, () =>
+      firstValueFrom(
+        this.api.put<{ tagNames: string[]; updatedAtUtc: string }>(`Gallery/${id}/tags`, { tagNames }),
+      ),
+    );
+    if (attempt.ok) {
+      const existing = await this.localDb.getMirroredGallery(id);
+      if (existing) {
+        await this.localDb.upsertMirroredGallery({
+          ...existing,
+          tags: attempt.value.tagNames,
+          updatedAtUtc: attempt.value.updatedAtUtc,
+        });
       }
+      return attempt.value.tagNames;
     }
 
     const existing = await this.localDb.getMirroredGallery(id);
@@ -229,14 +217,12 @@ export class GalleryApiService {
   }
 
   private async resolveReorder(galleryIds: string[]): Promise<void> {
-    if (this.connectivity.isOnline) {
-      try {
-        await firstValueFrom(this.api.put<void>('Gallery/reorder', { galleryIds }));
-        await this.localDb.patchMirroredGalleryOrder(galleryIds);
-        return;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
-      }
+    const attempt = await attemptOnline(this.connectivity.isOnline, () =>
+      firstValueFrom(this.api.put<void>('Gallery/reorder', { galleryIds })),
+    );
+    if (attempt.ok) {
+      await this.localDb.patchMirroredGalleryOrder(galleryIds);
+      return;
     }
 
     await this.localDb.patchMirroredGalleryOrder(galleryIds);
@@ -251,10 +237,6 @@ export class GalleryApiService {
         .map((e) => this.localDb.removeOutboxEntry(e.opId!)),
     );
   }
-}
-
-function isConnectivityError(err: unknown): boolean {
-  return err instanceof HttpErrorResponse && err.status === 0;
 }
 
 function blankGallery(id: string): Gallery {

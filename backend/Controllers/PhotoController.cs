@@ -195,16 +195,12 @@ namespace PhotoLibApi.Controllers
             if (photo == null || !photo.HasOriginal)
                 return NotFound();
 
-            var filePath = _filePathHelper.GetOriginalFilePath(id);
-
-            // Check if file exists
-            if (!System.IO.File.Exists(filePath))
+            if (!_filePathHelper.OriginalExists(id))
                 return NotFound();
 
-            // Return file as-is
             return PhysicalFile(
-                filePath,
-                "image/jpeg");
+                _filePathHelper.GetOriginalFilePath(id),
+                ImageContentTypes.Jpeg);
         }
 
         /// <summary>
@@ -222,14 +218,12 @@ namespace PhotoLibApi.Controllers
             if (photo == null || !photo.HasThumbnail)
                 return NotFound();
 
-            var filePath = _filePathHelper.GetThumbnailFilePath(id);
-            // Check if file exists
-            if (!System.IO.File.Exists(filePath))
+            if (!_filePathHelper.ThumbnailExists(id))
                 return NotFound();
 
             return PhysicalFile(
-                filePath,
-                "image/jpeg");
+                _filePathHelper.GetThumbnailFilePath(id),
+                ImageContentTypes.Jpeg);
         }
 
         /// <summary>
@@ -257,7 +251,7 @@ namespace PhotoLibApi.Controllers
 
             // 2️⃣ Check that the gallery exists and is owned by the caller
             if (!await _galleryAccess.IsOwnedAsync(request.GalleryId, _currentUser.UserId))
-                return NotFound($"Gallery with id '{request.GalleryId}' not found.");
+                return NotFound(new { message = $"Gallery with id '{request.GalleryId}' not found." });
 
             // Idempotent replay: a sync retry with the same ClientTempId
             // returns the row that already exists instead of duplicating it.
@@ -308,41 +302,34 @@ namespace PhotoLibApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Upload(Guid id, [FromForm] IFormFile file)
         {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "File is required." });
+
+            var photo = await _galleryAccess.GetOwnedPhotoAsync(id, _currentUser.UserId);
+            if (photo == null)
+                return NotFound();
+
+            Directory.CreateDirectory(_filePathHelper.GetOriginalsDirectory());
+            var filePath = _filePathHelper.GetOriginalFilePath(id);
+
+            await using (var stream = System.IO.File.Create(filePath))
+            {
+                await file.CopyToAsync(stream);
+            }
+
             try
             {
-                // Validate file
-                if (file == null || file.Length == 0)
-                    return BadRequest("File is required.");
-
-                // Check: photo exists in DB and belongs to the caller
-                var photo = await _galleryAccess.GetOwnedPhotoAsync(id, _currentUser.UserId);
-                if (photo == null)
-                    return NotFound();
-
-                // Ensure originals directory exists
-                Directory.CreateDirectory(_filePathHelper.GetOriginalsDirectory());
-                var filePath = _filePathHelper.GetOriginalFilePath(id);
-
-                // Save file to disk
-                await using (var stream = System.IO.File.Create(filePath))
-                {
-                    await file.CopyToAsync(stream);
-                }
-
-                // mark original as existing
-                photo.HasOriginal = true;
-
                 _imageProcessing.GenerateThumbnailAndExif(photo, filePath);
-
-                await _db.SaveChangesAsync();
-
-                return NoContent();
             }
-            catch (Exception ex)
+            catch (SixLabors.ImageSharp.UnknownImageFormatException)
             {
-                return StatusCode(500, ex.Message);
+                return BadRequest(new { message = "File is not a recognizable image." });
             }
 
+            photo.HasOriginal = true;
+            await _db.SaveChangesAsync();
+
+            return NoContent();
         }
 
         /// <summary>
@@ -465,7 +452,7 @@ namespace PhotoLibApi.Controllers
             }
 
             if (!await GalleryExistsAsync(request.GalleryId))
-                return NotFound($"Gallery with id '{request.GalleryId}' not found.");
+                return NotFound(new { message = $"Gallery with id '{request.GalleryId}' not found." });
 
             var client = _httpClientFactory.CreateClient();
             client.Timeout = TimeSpan.FromSeconds(15);
@@ -692,7 +679,7 @@ namespace PhotoLibApi.Controllers
                 return NotFound();
 
             if (!await _galleryAccess.IsOwnedAsync(request.GalleryId, _currentUser.UserId))
-                return NotFound($"Gallery with id '{request.GalleryId}' not found.");
+                return NotFound(new { message = $"Gallery with id '{request.GalleryId}' not found." });
 
             photo.SortOrder = await NextSortOrderAsync(request.GalleryId);
             photo.GalleryId = request.GalleryId;
@@ -725,7 +712,7 @@ namespace PhotoLibApi.Controllers
                 return NotFound();
 
             if (!await _galleryAccess.IsOwnedAsync(request.GalleryId, _currentUser.UserId))
-                return NotFound($"Gallery with id '{request.GalleryId}' not found.");
+                return NotFound(new { message = $"Gallery with id '{request.GalleryId}' not found." });
 
             var copy = new Photo
             {
@@ -809,15 +796,7 @@ namespace PhotoLibApi.Controllers
                 .Where(p => p.GalleryId == request.GalleryId && request.PhotoIds.Contains(p.Id))
                 .ToListAsync();
 
-            var photoById = photos.ToDictionary(p => p.Id);
-
-            for (var i = 0; i < request.PhotoIds.Count; i++)
-            {
-                if (photoById.TryGetValue(request.PhotoIds[i], out var photo))
-                {
-                    photo.SortOrder = i;
-                }
-            }
+            SortOrderHelper.Apply(photos, request.PhotoIds, p => p.Id, (p, i) => p.SortOrder = i);
 
             await _db.SaveChangesAsync();
 

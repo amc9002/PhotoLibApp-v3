@@ -12,6 +12,7 @@ namespace PhotoLibApi.Services
     {
         private readonly PhotoDbContext _db;
 
+        /// <param name="db">Database context used to resolve and create tags.</param>
         public TagResolver(PhotoDbContext db)
         {
             _db = db;

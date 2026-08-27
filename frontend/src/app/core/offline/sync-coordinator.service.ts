@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Subject, filter, firstValueFrom, pairwise, startWith } from 'rxjs';
 import { ApiService } from '../api/api.service';
+import { isConnectivityError } from './connectivity-error.util';
 import { ConnectivityService } from './connectivity.service';
 import { LocalDbService } from './local-db.service';
 import { OutboxEntry } from './outbox.model';
@@ -401,8 +402,4 @@ export class SyncCoordinatorService {
     const entries = await this.localDb.getOutboxEntries();
     return entries.find((e) => e.opId === opId);
   }
-}
-
-function isConnectivityError(err: unknown): boolean {
-  return err instanceof HttpErrorResponse && err.status === 0;
 }

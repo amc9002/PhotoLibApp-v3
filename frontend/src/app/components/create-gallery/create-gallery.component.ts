@@ -29,9 +29,13 @@ export class CreateGalleryComponent {
     );
   }
 
-  @HostListener('keydown.escape')
-  onEscape() {
+  @HostListener('keydown.escape', ['$event'])
+  onEscape(event: KeyboardEvent) {
     if (this.confirmOpen) return; // let the confirm dialog handle its own Escape
+
+    // Also rendered as a sibling of app-photo-viewer in some flows - stop
+    // propagation so Escape doesn't also close the viewer underneath.
+    event.stopPropagation();
     this.cancel.emit();
   }
 

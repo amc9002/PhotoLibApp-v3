@@ -14,6 +14,14 @@ import { User } from '../../models/user.model';
 export class AuthService {
   currentUser: User | null = null;
 
+  /**
+   * Bumped on every successful avatar upload and appended to `avatarUrl()`
+   * as a cache-busting query param - the avatar endpoint URL is otherwise
+   * identical before and after a change, so the browser (and any HTTP
+   * cache in between) would keep serving the old image.
+   */
+  private avatarVersion = 0;
+
   constructor(private authApi: AuthApiService) {}
 
   /** Checks for an existing session cookie on app startup. */
@@ -30,8 +38,10 @@ export class AuthService {
   }
 
   /** Creates a new account and, on success, signs it straight in (mirrors the backend). */
-  register(email: string, password: string) {
-    return this.authApi.register(email, password).pipe(tap((user) => (this.currentUser = user)));
+  register(email: string, password: string, name: string) {
+    return this.authApi
+      .register(email, password, name)
+      .pipe(tap((user) => (this.currentUser = user)));
   }
 
   logout() {
@@ -41,6 +51,26 @@ export class AuthService {
   /** Session/identity are unaffected - just forwards to the API. */
   changePassword(currentPassword: string, newPassword: string) {
     return this.authApi.changePassword(currentPassword, newPassword);
+  }
+
+  updateProfile(name: string, bio: string | null) {
+    return this.authApi
+      .updateProfile(name, bio)
+      .pipe(tap((user) => (this.currentUser = user)));
+  }
+
+  uploadAvatar(file: File) {
+    return this.authApi.uploadAvatar(file).pipe(
+      tap((user) => {
+        this.currentUser = user;
+        this.avatarVersion++;
+      }),
+    );
+  }
+
+  /** Cache-busted URL for the signed-in user's own avatar, or `null` if they haven't set one. */
+  avatarUrl(): string | null {
+    return this.currentUser?.hasAvatar ? `/api/Avatar/me?v=${this.avatarVersion}` : null;
   }
 
   /** Called by the 401 interceptor when a session has expired or was revoked. */

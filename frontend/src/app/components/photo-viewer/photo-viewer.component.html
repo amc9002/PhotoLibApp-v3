@@ -29,7 +29,7 @@
       <app-photo-viewer-main
         [photoId]="activePhotoId"
         [open]="true"
-        [crossfade]="slideshowActive"
+        [crossfade]="slideshow.active"
         [crossfadeMs]="slideshowConfig?.transitionMs ?? 800"
         (loaded)="onMainPhotoLoaded()"
       ></app-photo-viewer-main>
@@ -52,7 +52,7 @@
 
         <button
           class="viewer-stop-slideshow"
-          *ngIf="slideshowActive"
+          *ngIf="slideshow.active"
           (click)="stopSlideshow()"
           [attr.aria-label]="'photoViewer.stopSlideshow' | t"
           [title]="'photoViewer.stopSlideshow' | t"
@@ -112,21 +112,21 @@
 
 <ng-container *ngIf="activePhoto as photo">
   <app-edit-metadata-modal
-    *ngIf="editMetadataOpen"
+    *ngIf="metadataEditing.editOpen"
     heading="photoViewer.editDetails"
     [photoId]="photo.id"
-    [isSaving]="isSavingMetadata"
-    [saveError]="metadataSaveError ? (metadataSaveError | t) : null"
+    [isSaving]="metadataEditing.isSaving"
+    [saveError]="metadataEditing.saveError ? (metadataEditing.saveError | t) : null"
     [title]="photo.title"
     [description]="photo.description ?? ''"
     [tags]="photo.tags"
     (save)="onSaveMetadata($event)"
-    (close)="closeEditMetadata()"
+    (close)="metadataEditing.closeEdit()"
   ></app-edit-metadata-modal>
 </ng-container>
 
 <app-photo-info-modal
-  *ngIf="infoOpen && infoPhoto"
+  *ngIf="metadataEditing.infoOpen && metadataEditing.infoPhoto as infoPhoto"
   [photo]="infoPhoto"
-  (close)="closeInfo()"
+  (close)="metadataEditing.closeInfo()"
 ></app-photo-info-modal>

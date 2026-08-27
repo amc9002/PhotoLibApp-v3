@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using PhotoLibApi.Data;
 using PhotoLibApi.Models;
+using PhotoLibApi.Services;
 
 namespace PhotoLibApi.Controllers
 {
@@ -23,11 +24,20 @@ namespace PhotoLibApi.Controllers
     {
         private readonly PhotoDbContext _db;
         private readonly IConfiguration _configuration;
+        private readonly CurrentUserService _currentUser;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-        public AuthController(PhotoDbContext db, IConfiguration configuration)
+        /// <summary>Creates the controller with its DB context and supporting services.</summary>
+        public AuthController(
+            PhotoDbContext db,
+            IConfiguration configuration,
+            CurrentUserService currentUser,
+            IPasswordHasher<User> passwordHasher)
         {
             _db = db;
             _configuration = configuration;
+            _currentUser = currentUser;
+            _passwordHasher = passwordHasher;
         }
 
         /// <summary>
@@ -55,14 +65,13 @@ namespace PhotoLibApi.Controllers
             if (user == null)
                 return Unauthorized(new { message = "Invalid email or password." });
 
-            var hasher = new PasswordHasher<User>();
-            var verification = hasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
+            var verification = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
             if (verification == PasswordVerificationResult.Failed)
                 return Unauthorized(new { message = "Invalid email or password." });
 
             await SignInAsync(user);
 
-            return Ok(new { id = user.Id, email = user.Email });
+            return Ok(UserResponseMapper.ToResponse(user));
         }
 
         /// <summary>
@@ -94,7 +103,7 @@ namespace PhotoLibApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var user = await TryCreateUserAsync(request.Email, request.Password);
+            var user = await TryCreateUserAsync(request.Email, request.Password, request.Name);
             if (user == null)
                 return Conflict(new { message = "An account with this email already exists." });
 
@@ -103,7 +112,7 @@ namespace PhotoLibApi.Controllers
 
             await SignInAsync(user);
 
-            return StatusCode(StatusCodes.Status201Created, new { id = user.Id, email = user.Email });
+            return StatusCode(StatusCodes.Status201Created, UserResponseMapper.ToResponse(user));
         }
 
         /// <summary>
@@ -134,13 +143,12 @@ namespace PhotoLibApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var id = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var id = _currentUser.UserId;
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id);
             if (user == null)
                 return Unauthorized();
 
-            var hasher = new PasswordHasher<User>();
-            var verification = hasher.VerifyHashedPassword(user, user.PasswordHash, request.CurrentPassword);
+            var verification = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.CurrentPassword);
             if (verification == PasswordVerificationResult.Failed)
                 // 403, not 401: this endpoint is already [Authorize]-gated, so a 401 here
                 // is reserved for "the session cookie itself is missing/expired" - the
@@ -148,7 +156,7 @@ namespace PhotoLibApi.Controllers
                 // sign the user out (see auth.interceptor.ts).
                 return StatusCode(StatusCodes.Status403Forbidden, new { message = "Current password is incorrect." });
 
-            user.PasswordHash = hasher.HashPassword(user, request.NewPassword);
+            user.PasswordHash = _passwordHasher.HashPassword(user, request.NewPassword);
             await _db.SaveChangesAsync();
 
             return NoContent();
@@ -178,13 +186,42 @@ namespace PhotoLibApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Me()
         {
-            var id = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var id = _currentUser.UserId;
             var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id);
 
             if (user == null)
                 return Unauthorized();
 
-            return Ok(new { id = user.Id, email = user.Email });
+            return Ok(UserResponseMapper.ToResponse(user));
+        }
+
+        /// <summary>
+        /// Updates the signed-in user's own display name and bio.
+        /// </summary>
+        /// <param name="request">New name (required) and bio (optional).</param>
+        /// <response code="200">Profile updated.</response>
+        /// <response code="400">Invalid request data (e.g. missing name).</response>
+        /// <response code="401">Not signed in, or the session has expired.</response>
+        [HttpPut("me")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var id = _currentUser.UserId;
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (user == null)
+                return Unauthorized();
+
+            user.Name = request.Name.Trim();
+            user.Bio = string.IsNullOrWhiteSpace(request.Bio) ? null : request.Bio.Trim();
+            await _db.SaveChangesAsync();
+
+            return Ok(UserResponseMapper.ToResponse(user));
         }
 
         /// <summary>
@@ -224,7 +261,7 @@ namespace PhotoLibApi.Controllers
 
             var isFirstUser = !await _db.Users.AnyAsync();
 
-            var user = await TryCreateUserAsync(request.Email, request.Password);
+            var user = await TryCreateUserAsync(request.Email, request.Password, request.Name);
             if (user == null)
                 return Conflict(new { message = "An account with this email already exists." });
 
@@ -240,7 +277,7 @@ namespace PhotoLibApi.Controllers
             if (!await TrySaveNewUserAsync())
                 return Conflict(new { message = "An account with this email already exists." });
 
-            return StatusCode(StatusCodes.Status201Created, new { id = user.Id, email = user.Email });
+            return StatusCode(StatusCodes.Status201Created, UserResponseMapper.ToResponse(user));
         }
 
         /// <summary>
@@ -266,7 +303,7 @@ namespace PhotoLibApi.Controllers
         /// <c>null</c> if the (normalized) email is already registered.
         /// Shared by <see cref="Register"/> and <see cref="AdminRegister"/>.
         /// </summary>
-        private async Task<User?> TryCreateUserAsync(string email, string password)
+        private async Task<User?> TryCreateUserAsync(string email, string password, string name)
         {
             var normalizedEmail = email.Trim().ToLowerInvariant();
 
@@ -277,9 +314,10 @@ namespace PhotoLibApi.Controllers
             {
                 Id = Guid.NewGuid(),
                 Email = normalizedEmail,
+                Name = name.Trim(),
                 CreatedAtUtc = DateTime.UtcNow,
             };
-            user.PasswordHash = new PasswordHasher<User>().HashPassword(user, password);
+            user.PasswordHash = _passwordHasher.HashPassword(user, password);
 
             _db.Users.Add(user);
             return user;

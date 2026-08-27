@@ -20,5 +20,12 @@ namespace PhotoLibApi.Models
         [Required]
         [MinLength(8)]
         public string Password { get; set; } = "";
+
+        /// <summary>
+        /// Display name for the new account.
+        /// </summary>
+        [Required]
+        [MaxLength(100)]
+        public string Name { get; set; } = "";
     }
 }

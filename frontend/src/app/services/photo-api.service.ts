@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Observable, defer, firstValueFrom, from } from 'rxjs';
 import { ApiService } from '../core/api/api.service';
+import { attemptOnline } from '../core/offline/connectivity-error.util';
 import { ConnectivityService } from '../core/offline/connectivity.service';
 import { LocalDbService } from '../core/offline/local-db.service';
 import { PhotoDto } from '../models/photo.dto';
@@ -103,30 +104,24 @@ export class PhotoApiService {
   private async resolveByGallery(galleryId: string): Promise<PhotoListItemDto[]> {
     const outboxCount = await this.localDb.countOutboxEntries();
 
-    if (this.connectivity.isOnline && outboxCount === 0) {
-      try {
-        const photos = await firstValueFrom(
-          this.api.get<PhotoListItemDto[]>(`Photo/by-gallery/${galleryId}`),
-        );
-        await this.localDb.replaceGalleryPhotos(galleryId, photos);
-        return photos;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
-      }
+    const attempt = await attemptOnline(this.connectivity.isOnline && outboxCount === 0, () =>
+      firstValueFrom(this.api.get<PhotoListItemDto[]>(`Photo/by-gallery/${galleryId}`)),
+    );
+    if (attempt.ok) {
+      await this.localDb.replaceGalleryPhotos(galleryId, attempt.value);
+      return attempt.value;
     }
 
     return this.localDb.getMirroredPhotos(galleryId);
   }
 
   private async resolveCreate(dto: Partial<PhotoDto>): Promise<PhotoDto> {
-    if (this.connectivity.isOnline) {
-      try {
-        const photo = await firstValueFrom(this.api.post<PhotoDto>('Photo', dto));
-        await this.localDb.upsertMirroredPhoto(toListItem(photo), photo.galleryId!);
-        return photo;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
-      }
+    const attempt = await attemptOnline(this.connectivity.isOnline, () =>
+      firstValueFrom(this.api.post<PhotoDto>('Photo', dto)),
+    );
+    if (attempt.ok) {
+      await this.localDb.upsertMirroredPhoto(toListItem(attempt.value), attempt.value.galleryId!);
+      return attempt.value;
     }
 
     // Offline draft only - no outbox entry yet. upload() (always called
@@ -154,19 +149,14 @@ export class PhotoApiService {
     const mirrored = await this.localDb.getMirroredPhoto(photoId);
     const isPendingCreate = mirrored?.pendingOp === 'create';
 
-    if (this.connectivity.isOnline && !isPendingCreate) {
+    const attempt = await attemptOnline(this.connectivity.isOnline && !isPendingCreate, async () => {
       const formData = new FormData();
       formData.append('file', file);
-
-      try {
-        await withRetry(() =>
-          firstValueFrom(this.api.post<void>(`Photo/${photoId}/upload`, formData)),
-        );
-        await this.localDb.markMirroredPhotoHasFiles(photoId);
-        return;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
-      }
+      await withRetry(() => firstValueFrom(this.api.post<void>(`Photo/${photoId}/upload`, formData)));
+    });
+    if (attempt.ok) {
+      await this.localDb.markMirroredPhotoHasFiles(photoId);
+      return;
     }
 
     if (!mirrored) return;
@@ -190,20 +180,16 @@ export class PhotoApiService {
     id: string,
     dto: { title: string; description?: string },
   ): Promise<{ updatedAtUtc: string } | void> {
-    if (this.connectivity.isOnline) {
-      try {
-        const result = await firstValueFrom(
-          this.api.put<{ updatedAtUtc: string }>(`photo/${id}`, dto),
-        );
-        await this.patchMirroredPhoto(id, {
-          title: dto.title,
-          description: dto.description,
-          updatedAtUtc: result.updatedAtUtc,
-        });
-        return result;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
-      }
+    const attempt = await attemptOnline(this.connectivity.isOnline, () =>
+      firstValueFrom(this.api.put<{ updatedAtUtc: string }>(`photo/${id}`, dto)),
+    );
+    if (attempt.ok) {
+      await this.patchMirroredPhoto(id, {
+        title: dto.title,
+        description: dto.description,
+        updatedAtUtc: attempt.value.updatedAtUtc,
+      });
+      return attempt.value;
     }
 
     const mirrored = await this.localDb.getMirroredPhoto(id);
@@ -228,14 +214,12 @@ export class PhotoApiService {
   }
 
   private async resolveDelete(id: string): Promise<void> {
-    if (this.connectivity.isOnline) {
-      try {
-        await firstValueFrom(this.api.delete<void>(`Photo/${id}`));
-        await this.localDb.tombstoneMirroredPhoto(id);
-        return;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
-      }
+    const attempt = await attemptOnline(this.connectivity.isOnline, () =>
+      firstValueFrom(this.api.delete<void>(`Photo/${id}`)),
+    );
+    if (attempt.ok) {
+      await this.localDb.tombstoneMirroredPhoto(id);
+      return;
     }
 
     const existing = await this.localDb.getMirroredPhoto(id);
@@ -258,14 +242,12 @@ export class PhotoApiService {
   }
 
   private async resolveMove(id: string, galleryId: string): Promise<void> {
-    if (this.connectivity.isOnline) {
-      try {
-        await firstValueFrom(this.api.post<void>(`Photo/${id}/move`, { galleryId }));
-        await this.localDb.moveMirroredPhoto(id, galleryId);
-        return;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
-      }
+    const attempt = await attemptOnline(this.connectivity.isOnline, () =>
+      firstValueFrom(this.api.post<void>(`Photo/${id}/move`, { galleryId })),
+    );
+    if (attempt.ok) {
+      await this.localDb.moveMirroredPhoto(id, galleryId);
+      return;
     }
 
     const existing = await this.localDb.getMirroredPhoto(id);
@@ -297,14 +279,12 @@ export class PhotoApiService {
   }
 
   private async resolveCopy(id: string, galleryId: string): Promise<PhotoDto | void> {
-    if (this.connectivity.isOnline) {
-      try {
-        const copy = await firstValueFrom(this.api.post<PhotoDto>(`Photo/${id}/copy`, { galleryId }));
-        await this.localDb.upsertMirroredPhoto(toListItem(copy), galleryId);
-        return copy;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
-      }
+    const attempt = await attemptOnline(this.connectivity.isOnline, () =>
+      firstValueFrom(this.api.post<PhotoDto>(`Photo/${id}/copy`, { galleryId })),
+    );
+    if (attempt.ok) {
+      await this.localDb.upsertMirroredPhoto(toListItem(attempt.value), galleryId);
+      return attempt.value;
     }
 
     // Copying while offline needs a real source photo to duplicate, and a
@@ -330,19 +310,17 @@ export class PhotoApiService {
   }
 
   private async resolveSetTags(id: string, tagNames: string[]): Promise<string[]> {
-    if (this.connectivity.isOnline) {
-      try {
-        const result = await firstValueFrom(
-          this.api.put<{ tagNames: string[]; updatedAtUtc: string }>(`Photo/${id}/tags`, { tagNames }),
-        );
-        await this.patchMirroredPhoto(id, {
-          tags: result.tagNames,
-          updatedAtUtc: result.updatedAtUtc,
-        });
-        return result.tagNames;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
-      }
+    const attempt = await attemptOnline(this.connectivity.isOnline, () =>
+      firstValueFrom(
+        this.api.put<{ tagNames: string[]; updatedAtUtc: string }>(`Photo/${id}/tags`, { tagNames }),
+      ),
+    );
+    if (attempt.ok) {
+      await this.patchMirroredPhoto(id, {
+        tags: attempt.value.tagNames,
+        updatedAtUtc: attempt.value.updatedAtUtc,
+      });
+      return attempt.value.tagNames;
     }
 
     const mirrored = await this.localDb.getMirroredPhoto(id);
@@ -365,14 +343,12 @@ export class PhotoApiService {
   }
 
   private async resolveReorder(galleryId: string, photoIds: string[]): Promise<void> {
-    if (this.connectivity.isOnline) {
-      try {
-        await firstValueFrom(this.api.put<void>('Photo/reorder', { galleryId, photoIds }));
-        await this.localDb.patchMirroredPhotoOrder(galleryId, photoIds);
-        return;
-      } catch (err) {
-        if (!isConnectivityError(err)) throw err;
-      }
+    const attempt = await attemptOnline(this.connectivity.isOnline, () =>
+      firstValueFrom(this.api.put<void>('Photo/reorder', { galleryId, photoIds })),
+    );
+    if (attempt.ok) {
+      await this.localDb.patchMirroredPhotoOrder(galleryId, photoIds);
+      return;
     }
 
     await this.localDb.patchMirroredPhotoOrder(galleryId, photoIds);
@@ -398,10 +374,6 @@ export class PhotoApiService {
         .map((e) => this.localDb.removeOutboxEntry(e.opId!)),
     );
   }
-}
-
-function isConnectivityError(err: unknown): boolean {
-  return err instanceof HttpErrorResponse && err.status === 0;
 }
 
 const UPLOAD_RETRY_ATTEMPTS = 3;

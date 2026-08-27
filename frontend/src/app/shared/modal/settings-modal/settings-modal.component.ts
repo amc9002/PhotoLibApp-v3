@@ -1,4 +1,4 @@
-import { Component, EventEmitter, HostListener, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { I18nService } from '../../../core/i18n/i18n.service';
@@ -7,6 +7,7 @@ import { Lang } from '../../../core/i18n/translations';
 import { ThemeId, ThemeService, THEME_IDS } from '../../../core/theme/theme.service';
 import { AuthService } from '../../../core/auth/auth.service';
 import { authErrorKey } from '../../../core/auth/auth-error.util';
+import { userInitials } from '../../utils/user-initials';
 
 const THEME_LABEL_KEYS: Record<ThemeId, string> = {
   navy: 'settings.themeNavy',
@@ -28,7 +29,7 @@ const THEME_PREVIEW: Record<ThemeId, { canvas: string; elevated: string }> = {
   templateUrl: './settings-modal.component.html',
   styleUrls: ['./settings-modal.component.css'],
 })
-export class SettingsModalComponent {
+export class SettingsModalComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
   @Output() logout = new EventEmitter<void>();
 
@@ -41,11 +42,94 @@ export class SettingsModalComponent {
   changePasswordError: string | null = null;
   changePasswordSuccess = false;
 
+  profileName = '';
+  profileBio = '';
+  private savedProfileName = '';
+  private savedProfileBio = '';
+  isSavingProfile = false;
+  profileError: string | null = null;
+  profileSaved = false;
+
+  isUploadingAvatar = false;
+  avatarError: string | null = null;
+
   constructor(
     public i18n: I18nService,
     public theme: ThemeService,
     public authService: AuthService,
   ) {}
+
+  ngOnInit(): void {
+    const user = this.authService.currentUser;
+    this.profileName = user?.name ?? '';
+    this.profileBio = user?.bio ?? '';
+    this.savedProfileName = this.profileName;
+    this.savedProfileBio = this.profileBio;
+  }
+
+  get avatarUrl(): string | null {
+    return this.authService.avatarUrl();
+  }
+
+  get avatarInitials(): string {
+    return userInitials(this.authService.currentUser?.name);
+  }
+
+  get isProfileDirty(): boolean {
+    return this.profileName.trim() !== this.savedProfileName || this.profileBio !== this.savedProfileBio;
+  }
+
+  submitProfile(): void {
+    const name = this.profileName.trim();
+    if (this.isSavingProfile || !name || !this.isProfileDirty) return;
+
+    this.isSavingProfile = true;
+    this.profileError = null;
+    this.profileSaved = false;
+
+    const bio = this.profileBio.trim() || null;
+
+    this.authService.updateProfile(name, bio).subscribe({
+      next: () => {
+        this.isSavingProfile = false;
+        this.profileSaved = true;
+        this.profileName = name;
+        this.profileBio = bio ?? '';
+        this.savedProfileName = this.profileName;
+        this.savedProfileBio = this.profileBio;
+      },
+      error: (err) => {
+        console.error('Update profile failed', err);
+        this.isSavingProfile = false;
+        this.profileError = authErrorKey(
+          err,
+          { 400: 'settings.nameRequired' },
+          'settings.profileSaveFailed',
+        );
+      },
+    });
+  }
+
+  onAvatarSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || this.isUploadingAvatar) return;
+
+    this.isUploadingAvatar = true;
+    this.avatarError = null;
+
+    this.authService.uploadAvatar(file).subscribe({
+      next: () => {
+        this.isUploadingAvatar = false;
+      },
+      error: (err) => {
+        console.error('Avatar upload failed', err);
+        this.isUploadingAvatar = false;
+        this.avatarError = 'settings.avatarUploadFailed';
+      },
+    });
+  }
 
   setLang(lang: Lang) {
     this.i18n.setLang(lang);

@@ -15,8 +15,8 @@ export class AuthApiService {
     return this.api.post<User>('Auth/login', { email, password });
   }
 
-  register(email: string, password: string) {
-    return this.api.post<User>('Auth/register', { email, password });
+  register(email: string, password: string, name: string) {
+    return this.api.post<User>('Auth/register', { email, password, name });
   }
 
   logout() {
@@ -29,5 +29,15 @@ export class AuthApiService {
 
   me() {
     return this.api.get<User>('Auth/me');
+  }
+
+  updateProfile(name: string, bio: string | null) {
+    return this.api.put<User>('Auth/me', { name, bio });
+  }
+
+  uploadAvatar(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.api.post<User>('Avatar/me', formData);
   }
 }

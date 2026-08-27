@@ -9,7 +9,6 @@ import {
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { forkJoin } from 'rxjs';
 import { PhotoListItemDto } from '../../models/photoLisrItem.dto';
 import { PhotoCarouselComponent } from './photo-carousel/photo-carousel.component';
 import { PhotoViewerMainComponent } from './photo-viewer-main/photo-viewer-main.component';
@@ -17,9 +16,9 @@ import { HostListener } from '@angular/core';
 import { PhotoActionsComponent } from './photo-actions/photo-actions.component';
 import { EditMetadataModalComponent } from '../../shared/modal/edit-metadata-modal/edit-metadata-modal.component';
 import { PhotoInfoModalComponent } from './photo-actions/photo-info-modal/photo-info-modal.component';
-import { PhotoApiService } from '../../services/photo-api.service';
-import { PhotoDto } from '../../models/photo.dto';
-import { SlideshowConfig, SlideshowOrder } from '../../models/slideshow-config';
+import { PhotoMetadataEditingService } from '../../services/photo-metadata-editing.service';
+import { SlideshowPlayerService } from './slideshow-player.service';
+import { SlideshowConfig } from '../../models/slideshow-config';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 
 @Component({
@@ -34,6 +33,7 @@ import { TranslatePipe } from '../../core/i18n/translate.pipe';
     PhotoInfoModalComponent,
     TranslatePipe,
   ],
+  providers: [PhotoMetadataEditingService, SlideshowPlayerService],
   templateUrl: './photo-viewer.component.html',
   styleUrls: ['./photo-viewer.component.css'],
 })
@@ -54,11 +54,6 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
   @ViewChild('viewerRoot', { static: true }) viewerRootRef!: ElementRef<HTMLElement>;
 
   photoMenuOpen = false;
-  editMetadataOpen = false;
-  isSavingMetadata = false;
-  metadataSaveError: string | null = null;
-  infoOpen = false;
-  infoPhoto?: PhotoDto;
 
   /** Whether the title/description side panel is folded away to give the photo full width. */
   infoPanelCollapsed = false;
@@ -69,26 +64,12 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
     this.isFullscreen = document.fullscreenElement === this.viewerRootRef.nativeElement;
   };
 
-  /** True while auto-advancing through `slideshowSequence`. */
-  slideshowActive = false;
-  private slideshowSequence: PhotoListItemDto[] = [];
-  private slideshowIntervalMs = 0;
-  /**
-   * Paced off `PhotoViewerMainComponent`'s `(loaded)` event rather than a
-   * fixed `setInterval` - a metronome that fires regardless of load status
-   * would, for a slow-loading original, keep requesting the next photo
-   * before the previous request ever resolves. Each request cancels the one
-   * before it (see photo-viewer-main's switchMap), so a metronome faster
-   * than the load time means nothing ever finishes loading - the carousel
-   * advances but the photo itself never appears.
-   */
-  private slideshowAdvanceTimeout?: ReturnType<typeof setTimeout>;
   private infoPanelCollapsedBeforeSlideshow = false;
 
   @HostListener('window:keydown', ['$event'])
   onKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
-      if (this.editMetadataOpen || this.infoOpen) {
+      if (this.metadataEditing.editOpen || this.metadataEditing.infoOpen) {
         return;
       }
       if (this.isFullscreen) {
@@ -111,12 +92,12 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // 2️⃣ Калі няма фота — навігацыя немагчымая
+    // No photos means there's nothing to navigate to.
     if (!this.photos?.length || !this.activePhotoId) {
       return;
     }
 
-    // 3️⃣ Знаходзім індэкс бягучага фота
+    // Find the current photo's index.
     const currentIndex = this.photos.findIndex(
       (photo) => photo.id === this.activePhotoId,
     );
@@ -125,8 +106,8 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.editMetadataOpen && !this.infoOpen) {
-      // 4️⃣ Наступнае фота (→)
+    if (!this.metadataEditing.editOpen && !this.metadataEditing.infoOpen) {
+      // Next photo (→)
       if (event.key === 'ArrowRight') {
         event.preventDefault();
 
@@ -135,7 +116,7 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
         this.manualSelect(this.photos[nextIndex].id);
       }
 
-      // 5️⃣ Папярэдняе фота (←)
+      // Previous photo (←)
       if (event.key === 'ArrowLeft') {
         event.preventDefault();
 
@@ -146,7 +127,10 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
     }
   }
 
-  constructor(private photoApi: PhotoApiService) {}
+  constructor(
+    public metadataEditing: PhotoMetadataEditingService,
+    public slideshow: SlideshowPlayerService,
+  ) {}
 
   ngOnInit() {
     if (this.openEditOnLoad) {
@@ -159,7 +143,7 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.clearSlideshowTimer();
+    this.slideshow.clearTimer();
     document.removeEventListener('fullscreenchange', this.onFullscreenChange);
     if (this.isFullscreen) {
       document.exitFullscreen?.().catch(() => {});
@@ -192,7 +176,7 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
 
   // Backdrop closes viewer; overlay actions must stop event bubbling
   onBackdropClick() {
-    if (this.editMetadataOpen || this.infoOpen) {
+    if (this.metadataEditing.editOpen || this.metadataEditing.infoOpen) {
       return;
     }
     this.close.emit();
@@ -203,67 +187,17 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
   }
 
   openEditMetadata() {
-    this.metadataSaveError = null;
-    this.editMetadataOpen = true;
-  }
-
-  closeEditMetadata() {
-    this.editMetadataOpen = false;
-  }
-
-  private applyLocalPhotoUpdate(
-    photoId: string,
-    data: { title: string; description: string; tags: string[] },
-  ) {
-    const photo = this.photos.find((p) => p.id === photoId);
-    if (!photo) {
-      return;
-    }
-
-    photo.title = data.title;
-    photo.description = data.description;
-    photo.tags = data.tags;
+    if (!this.activePhotoId) return;
+    this.metadataEditing.openEditFor(this.activePhotoId);
   }
 
   onSaveMetadata(data: { title: string; description: string; tags: string[] }) {
-    if (!this.activePhotoId) {
-      return;
-    }
-    this.isSavingMetadata = true;
-    this.metadataSaveError = null;
-
-    forkJoin([
-      this.photoApi.update(this.activePhotoId, data),
-      this.photoApi.setTags(this.activePhotoId, data.tags),
-    ]).subscribe({
-      next: () => {
-        this.applyLocalPhotoUpdate(this.activePhotoId!, data);
-        this.isSavingMetadata = false;
-        this.closeEditMetadata();
-      },
-      error: (err) => {
-        console.error('Failed to update photo metadata', err);
-        this.isSavingMetadata = false;
-        this.metadataSaveError = 'photoViewer.saveFailed';
-      },
-    });
+    this.metadataEditing.save(this.photos, data);
   }
 
   onShowInfo() {
     if (!this.activePhotoId) return;
-
-    this.photoApi.getById(this.activePhotoId).subscribe({
-      next: (photo) => {
-        this.infoPhoto = photo;
-        this.infoOpen = true;
-      },
-      error: (err) => console.error('Failed to load photo info', err),
-    });
-  }
-
-  closeInfo() {
-    this.infoOpen = false;
-    this.infoPhoto = undefined;
+    this.metadataEditing.showInfoFor(this.activePhotoId);
   }
 
   onDeleteRequested() {
@@ -298,7 +232,7 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
 
   /** Photo selection driven by the user (arrows, keyboard, carousel click) - stops any running slideshow. */
   manualSelect(photoId: string) {
-    if (this.slideshowActive) {
+    if (this.slideshow.active) {
       this.stopSlideshow();
     }
     this.photoSelected.emit(photoId);
@@ -306,81 +240,27 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
 
   // ---------------- slideshow ----------------
 
-  private buildSlideshowSequence(order: SlideshowOrder): PhotoListItemDto[] {
-    const sequence = [...this.photos];
-
-    if (order === 'reverse') {
-      sequence.reverse();
-    } else if (order === 'random') {
-      for (let i = sequence.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [sequence[i], sequence[j]] = [sequence[j], sequence[i]];
-      }
-    }
-
-    return sequence;
-  }
-
   private startSlideshow(config: SlideshowConfig) {
     if (!this.photos?.length) return;
 
-    this.slideshowSequence = this.buildSlideshowSequence(config.order);
-    this.slideshowIntervalMs = config.intervalMs;
-    this.slideshowActive = true;
     this.infoPanelCollapsedBeforeSlideshow = this.infoPanelCollapsed;
     this.infoPanelCollapsed = true;
 
-    const firstId = this.slideshowSequence[0].id;
-    if (firstId !== this.activePhotoId) {
-      // Deferred: this runs from ngOnInit, still inside the parent's
-      // change-detection pass. Emitting synchronously here would update the
-      // parent-bound `activePhotoId` input mid-cycle and trigger Angular's
-      // ExpressionChangedAfterItHasBeenCheckedError in dev mode.
-      setTimeout(() => this.photoSelected.emit(firstId));
-    }
-    // If firstId === activePhotoId, photo-viewer-main's initial `ngOnChanges`
-    // (which fires on first binding too, not just on later changes) still
-    // loads it and reports back via `onMainPhotoLoaded`, so pacing starts
-    // either way without needing a separate kick here.
+    this.slideshow.start(this.photos, config, this.activePhotoId, (photoId) =>
+      this.photoSelected.emit(photoId),
+    );
   }
 
   /** Called once the currently displayed photo has actually finished loading (or failed). */
   onMainPhotoLoaded() {
-    if (!this.slideshowActive) return;
-
-    this.clearSlideshowTimer();
-    // The interval is "how long to look at the photo", separate from and
-    // in addition to however long the crossfade itself takes - without
-    // adding the transition duration here, a transition configured longer
-    // than (or close to) the interval never gets to finish before the next
-    // advance interrupts it and restarts it from scratch, which looks like
-    // it's barely fading at all no matter how long it's set to.
-    const crossfadeMs = this.slideshowConfig?.transitionMs ?? 0;
-    const delay = this.slideshowIntervalMs + crossfadeMs;
-    this.slideshowAdvanceTimeout = setTimeout(() => this.advanceSlideshow(), delay);
-  }
-
-  private advanceSlideshow() {
-    if (!this.slideshowSequence.length) return;
-
-    const currentIndex = this.slideshowSequence.findIndex((p) => p.id === this.activePhotoId);
-    const nextIndex = (currentIndex + 1) % this.slideshowSequence.length;
-    this.photoSelected.emit(this.slideshowSequence[nextIndex].id);
+    this.slideshow.onPhotoLoaded(this.activePhotoId);
   }
 
   stopSlideshow() {
-    if (!this.slideshowActive) return;
+    if (!this.slideshow.active) return;
 
-    this.slideshowActive = false;
-    this.clearSlideshowTimer();
+    this.slideshow.stop();
     this.infoPanelCollapsed = this.infoPanelCollapsedBeforeSlideshow;
-  }
-
-  private clearSlideshowTimer() {
-    if (this.slideshowAdvanceTimeout !== undefined) {
-      clearTimeout(this.slideshowAdvanceTimeout);
-      this.slideshowAdvanceTimeout = undefined;
-    }
   }
 }
 
