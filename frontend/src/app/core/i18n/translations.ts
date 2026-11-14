@@ -247,6 +247,14 @@ export const translations: Record<string, Record<Lang, string>> = {
   'syncReview.discardAll': { be: 'Скасаваць усе', en: 'Discard all' },
   'syncReview.confirmAll': { be: 'Пацвердзіць усе', en: 'Confirm all' },
 
+  // ---------------- avatar crop modal ----------------
+  'avatarCrop.heading': { be: 'Наладзіць фота', en: 'Adjust photo' },
+  'avatarCrop.zoom': { be: 'Маштаб', en: 'Zoom' },
+  'avatarCrop.hint': {
+    be: 'Пацягніце фота і скарыстайце паўзунок, каб абраць вобласць',
+    en: 'Drag the photo and use the slider to choose the area',
+  },
+
   // ---------------- settings modal ----------------
   'settings.heading': { be: 'Налады', en: 'Settings' },
   'settings.account': { be: 'Акаўнт', en: 'Account' },

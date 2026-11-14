@@ -1,0 +1,47 @@
+.avatar-crop-modal {
+  max-width: 340px;
+}
+
+.crop-frame {
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--canvas);
+  touch-action: none;
+  cursor: grab;
+  user-select: none;
+}
+
+.crop-frame:active {
+  cursor: grabbing;
+}
+
+.crop-frame img {
+  position: absolute;
+  max-width: none;
+  -webkit-user-drag: none;
+}
+
+/* A large box-shadow "spotlight" leaves only the circular guide unshaded,
+   previewing how the avatar will actually be displayed (see .avatar-circle
+   elsewhere) without clipping the exported square. */
+.crop-frame-guide {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.zoom-slider {
+  display: block;
+  margin: 16px auto 0;
+}
+
+.crop-hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}

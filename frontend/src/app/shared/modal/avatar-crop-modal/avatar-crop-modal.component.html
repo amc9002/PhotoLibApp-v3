@@ -1,0 +1,53 @@
+<div class="modal-backdrop" (click)="cancel.emit()">
+  <div class="modal avatar-crop-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ "avatarCrop.heading" | t }}</h2>
+      <button class="modal-close" (click)="cancel.emit()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div
+        class="crop-frame"
+        [style.width.px]="frameSize"
+        [style.height.px]="frameSize"
+        (pointerdown)="onPointerDown($event)"
+        (wheel)="onWheel($event)"
+      >
+        <img
+          #imgEl
+          [src]="imageUrl"
+          (load)="onImageLoad()"
+          [style.width.px]="displayWidth"
+          [style.height.px]="displayHeight"
+          [style.left.px]="offsetX"
+          [style.top.px]="offsetY"
+          draggable="false"
+          alt=""
+        />
+        <div class="crop-frame-guide"></div>
+      </div>
+
+      <input
+        type="range"
+        class="zoom-slider"
+        [style.width.px]="frameSize"
+        [min]="minZoom"
+        [max]="maxZoom"
+        step="0.01"
+        [value]="zoom"
+        [disabled]="!imageReady"
+        (input)="onZoomInput($event)"
+        [attr.aria-label]="'avatarCrop.zoom' | t"
+      />
+
+      <p class="crop-hint">{{ "avatarCrop.hint" | t }}</p>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn secondary" (click)="cancel.emit()">{{ "common.cancel" | t }}</button>
+      <button class="btn primary" [disabled]="!imageReady || isSaving" (click)="onSave()">
+        {{ "common.save" | t }}
+      </button>
+    </div>
+  </div>
+</div>

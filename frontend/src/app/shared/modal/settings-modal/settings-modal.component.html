@@ -44,6 +44,13 @@
         />
         <div class="form-error" *ngIf="avatarError">{{ avatarError | t }}</div>
 
+        <app-avatar-crop-modal
+          *ngIf="pendingAvatarFile as file"
+          [file]="file"
+          (save)="onAvatarCropped($event)"
+          (cancel)="onAvatarCropCancelled()"
+        ></app-avatar-crop-modal>
+
         <form class="profile-form" (ngSubmit)="submitProfile()">
           <div class="form-field">
             <label for="profile-name">{{ "settings.name" | t }}</label>

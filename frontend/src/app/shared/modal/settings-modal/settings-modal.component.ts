@@ -8,6 +8,7 @@ import { ThemeId, ThemeService, THEME_IDS } from '../../../core/theme/theme.serv
 import { AuthService } from '../../../core/auth/auth.service';
 import { authErrorKey } from '../../../core/auth/auth-error.util';
 import { userInitials } from '../../utils/user-initials';
+import { AvatarCropModalComponent } from '../avatar-crop-modal/avatar-crop-modal.component';
 
 const THEME_LABEL_KEYS: Record<ThemeId, string> = {
   navy: 'settings.themeNavy',
@@ -25,7 +26,7 @@ const THEME_PREVIEW: Record<ThemeId, { canvas: string; elevated: string }> = {
 @Component({
   selector: 'app-settings-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, TranslatePipe, AvatarCropModalComponent],
   templateUrl: './settings-modal.component.html',
   styleUrls: ['./settings-modal.component.css'],
 })
@@ -52,6 +53,7 @@ export class SettingsModalComponent implements OnInit {
 
   isUploadingAvatar = false;
   avatarError: string | null = null;
+  pendingAvatarFile: File | null = null;
 
   constructor(
     public i18n: I18nService,
@@ -116,8 +118,20 @@ export class SettingsModalComponent implements OnInit {
     input.value = '';
     if (!file || this.isUploadingAvatar) return;
 
+    this.avatarError = null;
+    this.pendingAvatarFile = file;
+  }
+
+  onAvatarCropCancelled(): void {
+    this.pendingAvatarFile = null;
+  }
+
+  onAvatarCropped(blob: Blob): void {
+    this.pendingAvatarFile = null;
     this.isUploadingAvatar = true;
     this.avatarError = null;
+
+    const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
 
     this.authService.uploadAvatar(file).subscribe({
       next: () => {
