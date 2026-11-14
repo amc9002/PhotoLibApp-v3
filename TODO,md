@@ -10,6 +10,33 @@ full gallery slideshow feature (order/interval/crossfade, settings
 persisted). Remaining near-term gaps: presentation/postcard viewer
 mode and album concept + sharing.*
 
+*Reconciled again on 2026-11-14 against a full code audit: authentication
+(Phase 1 below) is done and in production use; profile editing, avatar
+upload, and a new single-user Discovery feed (tag-personalized, see its
+own section below) have landed since the last pass; soft reveal
+animations now apply across view swaps/modals/menus. No automated tests
+exist anywhere in the repo - flagged here since it affects how safely any
+of the phases below (especially the local-first/desktop ones) can be
+refactored.*
+
+**This file stays the tactical, near-term roadmap.** The bigger strategic
+direction - evolving PhotoLib into a hybrid Local-first Desktop + optional
+Cloud/Social platform - is now documented separately, in more depth than
+fits here:
+- [`ARCHITECTURE-PROPOSED.md`](ARCHITECTURE-PROPOSED.md) - the target
+  architecture (desktop/local, cloud/social, web), data model, image
+  derivative/permission strategy. Marked FUTURE/PROPOSED throughout - none
+  of it is built yet.
+- [`MIGRATION-PLAN.md`](MIGRATION-PLAN.md) - the phased path from today's
+  codebase to that target, with risks and acceptance criteria per phase.
+
+The **Social / Collaboration** and **SaaS / Multi-Tenant Monetization**
+sections below predate those documents and are kept for their still-useful
+reasoning (e.g. the visibility-levels design, the pricing-model notes) -
+`ARCHITECTURE-PROPOSED.md` supersedes their *sequencing*, since it treats
+"local-first" as a parallel track rather than something that only happens
+after monetization.
+
 ---
 
 ## Backend – Core API
@@ -70,6 +97,15 @@ mode and album concept + sharing.*
 - [x] App branding (logo, favicon, colour system) — not originally on this list
 - [x] Performance work: bounded thumbnail cache, async photo file lookups, carousel trackBy, throttled mousemove change detection — not originally on this list
 - [x] Drag-and-drop reordering for galleries and photos — not originally on this list
+- [x] Per-user authentication, self-service registration, profile editing
+  (name/bio), avatar upload with client-side pan/zoom crop before upload —
+  not originally on this list, see Phase 1 below for the full writeup
+- [x] Soft top-down reveal animations (`@angular/animations`) on view
+  swaps, modals, dropdowns, and context menus — not originally on this list
+- [x] Discovery feed — endless, tag-personalized grid of the signed-in
+  user's own photos across all galleries, default view when no gallery is
+  selected, collapses to a narrow strip rather than disappearing once a
+  gallery is open — not originally on this list, see its own section below
 
 ---
 
@@ -162,6 +198,26 @@ mode and album concept + sharing.*
 
 ---
 
+## Discovery Feed
+
+- [x] Live, weighted-random sampling of the signed-in user's own photos
+  across all their galleries, biased toward tags they actually open in
+  the viewer (`PhotoView` log, Efraimidis-Spirakis weighted sampling,
+  capped boost so random variety never disappears entirely) —
+  `DiscoveryFeedService`/`DiscoveryController` on the backend,
+  `discovery-feed.component.ts` on the frontend
+- [x] Default landing view when no gallery is selected; collapses to a
+  narrow right-side strip (not hidden) once a gallery is open, toolbar
+  button to return to it
+- [ ] Mix in other users' *public* photos once a visibility model exists
+  (see Social / Collaboration below, and `ARCHITECTURE-PROPOSED.md` for
+  the full cross-user feed design) — today's feed is strictly single-user
+- [ ] Surface *why* a photo was picked (e.g. "because you liked Travel") -
+  not built, low priority until there's more than one person's content to
+  explain a choice about
+
+---
+
 ## Social / Collaboration (Future)
 
 - [ ] Share photos between users (read-only)
@@ -174,11 +230,18 @@ mode and album concept + sharing.*
   - **Selected friends** — visible only to an explicitly chosen subset of
     friends (needs a many-to-many "share list" per gallery, not just one flag)
   - **Private** — visible only to the owner (today's implicit behavior)
-  - Depends on Phase 1 (real user accounts) from the SaaS section below,
-    plus a "friends/follows" relationship between users, which doesn't
-    exist yet at all - this is a bigger data-model change than it looks
-    (every read endpoint needs to filter by visibility + requester
+  - Depends on Phase 1 (real user accounts) from the SaaS section below -
+    **done** - plus a "friends/follows" relationship between users, which
+    doesn't exist yet at all - this is a bigger data-model change than it
+    looks (every read endpoint needs to filter by visibility + requester
     identity, not just by owner)
+  - The Discovery feed's tag-affinity weighting (`PhotoView` log) is
+    reusable groundwork once this exists — the same personalization logic
+    extends naturally to "friends' public photos," not just your own
+  - See `ARCHITECTURE-PROPOSED.md` §4 for the fuller data-architecture
+    treatment (publication vs. sync vs. sharing as distinct operations,
+    ownership/attribution when a photo appears in someone else's feed,
+    revocation) — this bullet list is the short version
 
 ---
 
@@ -407,7 +470,13 @@ is reachable by strangers rather than just you:
 - Whether to keep this repo's offline-first architecture (local IndexedDB
   mirror) once there's a real backend source of truth per user — still
   useful, but the sync-conflict story gets more complex with concurrent
-  multi-device use per account
+  multi-device use per account. **Superseded by a fuller answer in
+  `ARCHITECTURE-PROPOSED.md`**: rather than treating "offline" as a
+  temporary degraded state of one cloud backend, the proposed direction
+  makes the local library independently usable (a real local-first
+  desktop app, no account required) with publishing/sync to the cloud as
+  an explicit, separate step — see that document and `MIGRATION-PLAN.md`
+  for how today's outbox/sync-coordinator would evolve to support it.
 
 ---
 
@@ -427,11 +496,16 @@ is reachable by strangers rather than just you:
 
 ## Ideas / Notes
 
-- Cloud storage support (Blob / S3) – future version
-- Multiple thumbnail sizes
-- EXIF parsing on backend
+- Cloud storage support (Blob / S3) – future version, see
+  `ARCHITECTURE-PROPOSED.md` §5 (image derivative + delivery strategy) for
+  a fuller treatment than this one-liner
+- Multiple thumbnail sizes — same section covers this (medium preview tier
+  between the current 300px thumbnail and the full original)
+- EXIF parsing on backend — **done**, server-side via `ExifReader`
+  (MetadataExtractor), camera/date metadata + GPS lat/lon, shown in the
+  photo info panel with an embedded map
 - Distinct UI modes:
-  - Gallery overview (grid / masonry)
-  - Photo viewer (focused)
-  - Overlay windows (properties, full-size)
+  - Gallery overview (grid / masonry) — **done**
+  - Photo viewer (focused) — **done**
+  - Overlay windows (properties, full-size) — **done**
 - Consider enforcing gallery creation only together with first photo upload

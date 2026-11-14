@@ -1,20 +1,31 @@
 # PhotoLib
 
-PhotoLib is an offline-first photo library application: galleries and
-photos, browsable and editable even without a server connection, syncing
-back once connectivity returns. Frontend in Angular, backend in ASP.NET
-Core.
+PhotoLib is a self-hosted, offline-first photo library for a small group of
+people (a household or a few friends) sharing one instance over a private
+network (e.g. Tailscale) — each person signs in to their own account with
+their own private galleries. Frontend in Angular, backend in ASP.NET Core.
+
+It is not currently a public/multi-tenant cloud product and assumes no
+exposure to the open internet. A plan to evolve it into a hybrid
+Local-first Desktop + optional Cloud/Social platform is documented
+separately in [`ARCHITECTURE-PROPOSED.md`](ARCHITECTURE-PROPOSED.md) and
+[`MIGRATION-PLAN.md`](MIGRATION-PLAN.md) — none of that is implemented yet;
+everything below describes what exists today.
 
 ---
 
 ## Tech Stack
 
-- **Frontend**: Angular 19 (standalone components), Angular CDK (drag & drop)
+- **Frontend**: Angular 19 (standalone components), Angular CDK (drag &
+  drop, virtual scroll), `@angular/animations`
 - **Backend**: ASP.NET Core 9 Web API
-- **Database**: SQLite (development)
+- **Database**: SQLite (same engine in development and in the Docker image
+  — there is no separate production-grade database yet)
 - **ORM**: Entity Framework Core
-- **Storage**: Local file system (originals + thumbnails, served via dedicated endpoints)
+- **Storage**: Local file system (originals + thumbnails + avatars, served
+  via dedicated endpoints)
 - **Offline cache**: IndexedDB via the `idb` package
+- **Auth**: cookie-based sessions, per-user accounts
 - **Containerization**: Docker Compose (see Quick Start below)
 
 ---
@@ -49,6 +60,34 @@ Core.
 - Requires your own Anthropic API key - see **Development Setup** below.
   Without one configured, the button fails with an inline error instead of
   crashing; every other feature in the app works normally without it.
+
+### Accounts & profile
+- Each person signs in with their own email/password; accounts are
+  created either by self-service registration (open on the instance, safe
+  because reachability itself is gated by your private network) or via an
+  admin-key-gated endpoint for the instance owner's own first account -
+  see [`FRIENDS-ACCESS-GUIDE.md`](FRIENDS-ACCESS-GUIDE.md) for the full
+  walkthrough to send to friends.
+- Every gallery and photo is private to its owner; nothing is shared
+  between accounts on the same instance today.
+- Edit your display name and bio, and upload an avatar with a client-side
+  pan/zoom crop step before it's sent to the server.
+- There is no password-reset flow - losing a password means losing access
+  to that account's library, with no self-service recovery. Keep this in
+  mind before sharing an instance with people you can't easily walk through
+  re-registering.
+
+### Discovery feed
+- A default landing view (shown when no gallery is selected) that shows an
+  endless, shuffled grid of your own photos pulled from across all your
+  galleries, rather than requiring you to pick a gallery first.
+- Quietly learns which photo tags you actually open in the full-screen
+  viewer and nudges later batches toward more of that - capped, so unrelated
+  photos always keep showing up too, never narrowing to just one theme.
+- Scoped to your own photos only for now; there's no cross-user or public
+  content model yet (see `ARCHITECTURE-PROPOSED.md` for where that's headed).
+- Collapses to a narrow strip on the right edge (rather than disappearing)
+  when you select a gallery, so it's always one click away via the toolbar.
 
 ### Offline support
 The app keeps working - reading and writing - while the backend is
@@ -144,6 +183,10 @@ docker compose up -d
 - Photo/gallery metadata lives in the database; image files are stored
   separately on disk and served via dedicated endpoints
   (`/api/Photo/{id}/thumbnail`, `/api/Photo/{id}/file`).
+- Every gallery (and transitively every photo in it) belongs to exactly one
+  user; ownership checks are centralized in a single service, and a failed
+  check always returns 404 (never 403), so a guessed id for someone else's
+  content is indistinguishable from one that doesn't exist.
 - Soft delete (`IsDeleted` + `UpdatedAtUtc`) on both entities; hard-delete
   admin endpoints exist for cleanup in development.
 - `SortOrder` on both entities drives manual drag-and-drop ordering.
@@ -151,6 +194,12 @@ docker compose up -d
   a retried sync replay can't create a duplicate.
 - Offline sync's conflict check compares each entity's `UpdatedAtUtc` as
   last known to the client against the server's current value.
+- View swaps, modals, dropdowns and context menus ease in/out with a short
+  shared animation (`@angular/animations`) instead of appearing instantly.
+
+See [`PROJECT-ANALYSIS.md`](PROJECT-ANALYSIS.md) for a full technical
+breakdown (data model, API surface, offline-sync internals, known
+limitations) verified directly against the code.
 
 ---
 
@@ -160,11 +209,15 @@ docker compose up -d
 backend/            ASP.NET Core Web API (controllers, EF Core models/migrations)
 frontend/           Angular app
   src/app/core/
-    api/             thin HttpClient wrapper
+    api/             thin HttpClient wrapper (every API call goes through this)
+    auth/            session state, 401-handling interceptor
     offline/         IndexedDB mirror, outbox, connectivity, sync coordinator
-  src/app/components/  gallery/photo viewer UI
-  src/app/services/    PhotoApiService / GalleryApiService (offline-aware)
-  src/app/shared/      shared modals, directives, utils
+    i18n/            BE/EN translations, language switching
+    theme/           background theme presets
+  src/app/components/  gallery/photo viewer UI, login, discovery feed
+  src/app/services/    PhotoApiService / GalleryApiService (offline-aware),
+                       DiscoveryApiService / TagApiService (online-only)
+  src/app/shared/      shared modals, directives, animations, utils
 ```
 
 ---
@@ -186,6 +239,20 @@ dotnet run
 
 Runs on `http://localhost:5146` by default (see
 `backend/Properties/launchSettings.json`).
+
+To create your first (owner) account in dev mode, set an admin key via
+user-secrets and call the admin-registration endpoint with it, the same way
+the Docker setup's `AUTH_ADMIN_KEY` works:
+
+```bash
+dotnet user-secrets set "Auth:AdminKey" "some-long-random-value"
+# then POST /api/Auth/admin/register with header X-Admin-Key: some-long-random-value
+# (e.g. via Swagger at http://localhost:5146/swagger, or curl)
+```
+
+Anyone else can self-register afterward through the normal login screen's
+"create account" option - only the admin-key path claims any pre-existing
+data and is meant for the instance owner's own first account.
 
 #### AI-assisted descriptions (optional)
 
