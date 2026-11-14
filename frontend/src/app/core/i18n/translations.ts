@@ -19,6 +19,16 @@ export const translations: Record<string, Record<Lang, string>> = {
   'common.areYouSure': { be: 'Вы ўпэўнены?', en: 'Are you sure?' },
 
   // ---------------- auth ----------------
+  'auth.heroLine1': { be: 'Твае фота.', en: 'Your photos.' },
+  'auth.heroLine2': { be: 'Твае галерэі.', en: 'Your galleries.' },
+  'auth.heroLine3': { be: 'Разам з сябрамі.', en: 'Together with friends.' },
+  'auth.heroSubtitle': {
+    be: 'Захоўвай здымкі, парадкуй іх па галерэях і адкрывай доступ сябрам — усё на ўласным серверы.',
+    en: 'Store your photos, organize them into galleries, and share access with friends — all on your own server.',
+  },
+  'auth.or': { be: 'або', en: 'or' },
+  'auth.browsePublic': { be: 'Прагляд публічных фота', en: 'Browse public photos' },
+  'auth.comingSoon': { be: 'Хутка', en: 'Coming soon' },
   'auth.email': { be: 'Email', en: 'Email' },
   'auth.name': { be: 'Імя', en: 'Name' },
   'auth.password': { be: 'Пароль', en: 'Password' },

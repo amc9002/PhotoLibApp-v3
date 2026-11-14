@@ -1,15 +1,37 @@
 <div class="login-screen">
-  <div class="login-stack">
+  <div class="login-panel">
     <img class="login-logo" src="logo-full.png" alt="PhotoLib" />
 
-    <form class="modal login-card" (ngSubmit)="submit()">
-      <div class="modal-header">
-        <h2>{{ (mode === "login" ? "auth.login" : "auth.createAccount") | t }}</h2>
+    <h1 class="login-hero">
+      Your photos.<br />
+      Your galleries.<br />
+      <span class="accent">Together with friends.</span>
+    </h1>
+    <p class="login-subtitle">
+      Store your photos, organize them into galleries, and share access with friends — all on your own server.
+    </p>
+
+    <form class="login-form" (ngSubmit)="submit()">
+      <div class="form-field">
+        <label for="login-email">Email</label>
+        <div class="input-with-icon">
+          <span class="field-icon">✉</span>
+          <input
+            id="login-email"
+            type="email"
+            autocomplete="username"
+            [(ngModel)]="email"
+            name="email"
+            [disabled]="isSubmitting"
+            required
+          />
+        </div>
       </div>
 
-      <div class="modal-body">
-        <div class="form-field" *ngIf="mode === 'register'">
-          <label for="login-name">{{ "auth.name" | t }}</label>
+      <div class="form-field" *ngIf="mode === 'register'">
+        <label for="login-name">Name</label>
+        <div class="input-with-icon">
+          <span class="field-icon">👤</span>
           <input
             id="login-name"
             type="text"
@@ -21,69 +43,78 @@
             required
           />
         </div>
+      </div>
 
-        <div class="form-field">
-          <label for="login-email">{{ "auth.email" | t }}</label>
+      <div class="form-field">
+        <label for="login-password">Password</label>
+        <div class="input-with-icon password-input-wrap">
+          <span class="field-icon">🔒</span>
           <input
-            id="login-email"
-            type="email"
-            autocomplete="username"
-            [(ngModel)]="email"
-            name="email"
+            id="login-password"
+            [type]="showPassword ? 'text' : 'password'"
+            [autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
+            [(ngModel)]="password"
+            name="password"
             [disabled]="isSubmitting"
+            [minlength]="mode === 'register' ? 8 : null"
             required
           />
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+            [disabled]="isSubmitting"
+            [attr.aria-label]="showPassword ? 'Hide' : 'Show'"
+            [title]="showPassword ? 'Hide' : 'Show'"
+          >
+            {{ showPassword ? "Hide" : "Show" }}
+          </button>
         </div>
-
-        <div class="form-field">
-          <label for="login-password">{{ "auth.password" | t }}</label>
-          <div class="password-input-wrap">
-            <input
-              id="login-password"
-              [type]="showPassword ? 'text' : 'password'"
-              [autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
-              [(ngModel)]="password"
-              name="password"
-              [disabled]="isSubmitting"
-              [minlength]="mode === 'register' ? 8 : null"
-              required
-            />
-            <button
-              type="button"
-              class="password-toggle"
-              (click)="togglePasswordVisibility()"
-              [disabled]="isSubmitting"
-              [attr.aria-label]="(showPassword ? 'auth.hidePassword' : 'auth.showPassword') | t"
-              [title]="(showPassword ? 'auth.hidePassword' : 'auth.showPassword') | t"
-            >
-              {{ (showPassword ? "auth.hidePassword" : "auth.showPassword") | t }}
-            </button>
-          </div>
-          <span class="form-hint" *ngIf="mode === 'register'">{{ "auth.passwordHint" | t }}</span>
-        </div>
-
-        <div class="form-error" *ngIf="error">{{ error | t }}</div>
+        <span class="form-hint" *ngIf="mode === 'register'">At least 8 characters</span>
       </div>
 
-      <div class="modal-footer login-footer">
-        <button
-          type="button"
-          class="btn link"
-          [disabled]="isSubmitting"
-          (click)="switchMode(mode === 'login' ? 'register' : 'login')"
-        >
-          {{ (mode === "login" ? "auth.needAccount" : "auth.haveAccount") | t }}
-        </button>
+      <div class="form-error" *ngIf="error">{{ error }}</div>
 
-        <button
-          type="submit"
-          class="btn primary"
-          [disabled]="isSubmitting || !email || !password || (mode === 'register' && !name)"
-        >
-          <span class="btn-spinner" *ngIf="isSubmitting"></span>
-          {{ (isSubmitting ? (mode === "login" ? "auth.loggingIn" : "auth.registering") : (mode === "login" ? "auth.login" : "auth.createAccount")) | t }}
-        </button>
-      </div>
+      <button
+        type="submit"
+        class="btn primary login-submit"
+        [disabled]="isSubmitting || !email || !password || (mode === 'register' && !name)"
+      >
+        <span class="btn-spinner" *ngIf="isSubmitting"></span>
+        {{ isSubmitting ? (mode === "login" ? "Logging in…" : "Creating account…") : (mode === "login" ? "Log in" : "Create account") }}
+      </button>
+
+      <button
+        type="button"
+        class="btn link login-switch"
+        [disabled]="isSubmitting"
+        (click)="switchMode(mode === 'login' ? 'register' : 'login')"
+      >
+        {{ mode === "login" ? "Don't have an account? Register" : "Already have an account? Log in" }}
+      </button>
     </form>
+
+    <div class="login-divider"><span>or</span></div>
+
+    <button
+      type="button"
+      class="btn secondary login-browse-public"
+      disabled
+      title="Coming soon"
+    >
+      <span class="field-icon">🌐</span>
+      Browse public photos
+      <span class="coming-soon-badge">Coming soon</span>
+    </button>
+  </div>
+
+  <div class="login-collage" aria-hidden="true">
+    <img class="tile tile-lake" src="login/lake.jpg" alt="" />
+    <img class="tile tile-boat" src="login/boat.jpg" alt="" />
+    <img class="tile tile-castle" src="login/castle.jpg" alt="" />
+    <img class="tile tile-forest" src="login/forest.jpg" alt="" />
+    <img class="tile tile-hike" src="login/hike.jpg" alt="" />
+    <img class="tile tile-flower" src="login/flower.jpg" alt="" />
+    <img class="tile tile-fox" src="login/fox.jpg" alt="" />
   </div>
 </div>

@@ -1,36 +1,88 @@
+/* Self-hosted (not a Google Fonts CDN link) so the login page still
+   renders correctly on a LAN-only/offline-first self-hosted instance with
+   no outbound internet access. Used only for the tagline below - everything
+   functional (labels, buttons, inputs) stays on the app's regular sans
+   typeface. */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/playfair-display-italic.woff2') format('woff2');
+}
+
 .login-screen {
   position: fixed;
   inset: 0;
   z-index: 999999;
 
   display: flex;
-  align-items: center;
   justify-content: center;
+  overflow: hidden;
+
+  background: var(--canvas);
+}
+
+/* ---------------- left panel ---------------- */
+
+.login-panel {
+  flex: 0 0 460px;
+  max-width: 100%;
+  padding: 48px 56px;
+  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
 
   background: linear-gradient(180deg, var(--canvas-elevated) 0%, var(--canvas) 100%);
 }
 
-.login-stack {
+.login-logo {
+  /* .login-panel is a column flexbox, whose default align-items: stretch
+     forces a width:auto replaced element (like this <img>) to fill the
+     cross-axis instead of keeping its intrinsic aspect ratio - without
+     this, the logo renders visibly squashed/stretched to the panel width. */
+  align-self: flex-start;
+  height: 36px;
+  width: auto;
+  margin-bottom: 36px;
+}
+
+.login-hero {
+  margin: 0 0 14px;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.login-hero .accent {
+  color: var(--amber);
+}
+
+.login-subtitle {
+  margin: 0 0 32px;
+  max-width: 360px;
+  color: var(--text-muted);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+/* ---------------- form ---------------- */
+
+.login-form {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 28px;
-}
-
-.login-logo {
-  height: 72px;
-  width: auto;
-}
-
-.login-card {
-  width: 320px;
+  gap: 14px;
 }
 
 .form-field {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 12px;
 }
 
 .form-field label {
@@ -38,37 +90,44 @@
   color: var(--text-muted);
 }
 
-.form-field input {
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+
   background: var(--canvas-elevated);
   border: 1px solid var(--canvas-border);
-  border-radius: 4px;
-  padding: 8px;
+  border-radius: 6px;
+}
 
+.input-with-icon:focus-within {
+  border-color: var(--amber);
+}
+
+.field-icon {
+  flex: 0 0 auto;
+  font-size: 13px;
+  opacity: 0.6;
+}
+
+.input-with-icon input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0;
+
+  background: none;
+  border: none;
   color: var(--text);
   font-size: 13px;
 }
 
-.form-field input:focus {
+.input-with-icon input:focus {
   outline: none;
-  border-color: var(--amber);
-}
-
-.password-input-wrap {
-  position: relative;
-  display: flex;
-}
-
-.password-input-wrap input {
-  flex: 1;
-  padding-right: 52px;
 }
 
 .password-toggle {
-  position: absolute;
-  top: 50%;
-  right: 8px;
-  transform: translateY(-50%);
-
+  flex: 0 0 auto;
   background: none;
   border: none;
   padding: 2px;
@@ -90,7 +149,6 @@
 .form-error {
   color: var(--warn);
   font-size: 12px;
-  margin: -4px 0 4px;
 }
 
 .form-hint {
@@ -98,13 +156,17 @@
   color: var(--text-muted);
 }
 
-.login-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.login-submit {
+  margin-top: 6px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 8px;
 }
 
-.btn.link {
+.login-switch {
+  align-self: center;
+  margin-top: 2px;
   background: none;
   border: none;
   padding: 0;
@@ -114,7 +176,7 @@
   cursor: pointer;
 }
 
-.btn.link:hover:not(:disabled) {
+.login-switch:hover:not(:disabled) {
   color: var(--text);
 }
 
@@ -139,5 +201,121 @@
 @media (prefers-reduced-motion: reduce) {
   .btn-spinner {
     animation: none;
+  }
+}
+
+/* ---------------- "or" divider + public browsing ---------------- */
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 28px 0 20px;
+
+  color: var(--text-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--canvas-border);
+}
+
+.login-browse-public {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+
+  background: transparent;
+  border: 1px solid var(--canvas-border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.login-browse-public:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.coming-soon-badge {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--canvas-elevated);
+  border: 1px solid var(--canvas-border);
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+/* ---------------- right collage ---------------- */
+
+.login-collage {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 14px;
+  padding: 24px;
+}
+
+.tile {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: 14px;
+}
+
+.tile-lake {
+  grid-column: 1 / 3;
+  grid-row: 1 / 3;
+}
+
+.tile-boat {
+  grid-column: 3 / 4;
+  grid-row: 1 / 2;
+}
+
+.tile-castle {
+  grid-column: 4 / 5;
+  grid-row: 1 / 3;
+}
+
+.tile-forest {
+  grid-column: 3 / 4;
+  grid-row: 2 / 3;
+}
+
+.tile-hike {
+  grid-column: 1 / 3;
+  grid-row: 3 / 4;
+}
+
+.tile-flower {
+  grid-column: 3 / 4;
+  grid-row: 3 / 4;
+}
+
+.tile-fox {
+  grid-column: 4 / 5;
+  grid-row: 3 / 4;
+}
+
+@media (max-width: 900px) {
+  .login-collage {
+    display: none;
+  }
+
+  .login-panel {
+    flex: 1 1 auto;
+    margin: 0 auto;
   }
 }
