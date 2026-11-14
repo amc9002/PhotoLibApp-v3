@@ -4,6 +4,7 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 import { PhotoListItemDto } from '../../../models/photoLisrItem.dto';
 import { PhotoContextMenuComponent } from '../../../shared/ui/photo-context-menu/photo-context-menu.component';
 import { PhotoFeedItemComponent } from './photo-feed-item/photo-feed-item.component';
+import { revealTopDown } from '../../../shared/animations/reveal-top-down.animation';
 
 const CONTEXT_MENU_WIDTH = 210;
 const CONTEXT_MENU_HEIGHT = 190;
@@ -19,6 +20,7 @@ const CONTEXT_MENU_MARGIN = 8;
 @Component({
   selector: 'app-photo-feed',
   standalone: true,
+  animations: [revealTopDown],
   imports: [CommonModule, ScrollingModule, PhotoContextMenuComponent, PhotoFeedItemComponent],
   templateUrl: './photo-feed.component.html',
   styleUrls: ['./photo-feed.component.css'],

@@ -11,7 +11,7 @@
     ⋮
   </button>
 
-  <div class="photo-action-menu" *ngIf="menuOpen">
+  <div class="photo-action-menu" *ngIf="menuOpen" @revealTopDown>
     <button
       class="photo-action-item"
       (click)="onEditMetadataClick(); $event.stopPropagation()"

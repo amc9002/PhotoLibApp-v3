@@ -42,6 +42,7 @@
 
         <app-avatar-crop-modal
           *ngIf="pendingAvatarFile as file"
+          @revealTopDown
           [file]="file"
           (save)="onAvatarCropped($event)"
           (cancel)="onAvatarCropCancelled()"

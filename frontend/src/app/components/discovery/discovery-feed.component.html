@@ -1,4 +1,4 @@
-<div class="discovery-feed-body" (scroll)="onScroll($event)">
+<div class="discovery-feed-body" [@fadeThroughReflow]="mode" (scroll)="onScroll($event)">
   <ng-container *ngIf="connectivity.isOnline$ | async; else offline">
     <div class="discovery-grid" *ngIf="photos.length; else empty">
       <div
@@ -30,6 +30,7 @@
 
 <app-photo-viewer
   *ngIf="viewerOpen && viewerPhotoId"
+  @revealTopDown
   [photos]="photos"
   [activePhotoId]="viewerPhotoId"
   (close)="closeViewer()"

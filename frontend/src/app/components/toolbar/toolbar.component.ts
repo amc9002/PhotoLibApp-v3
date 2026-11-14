@@ -15,10 +15,12 @@ import { ViewModeService } from '../../services/view-mode.service';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { photosSelectedText } from '../../core/i18n/plurals';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { revealTopDown } from '../../shared/animations/reveal-top-down.animation';
 
 @Component({
   selector: 'app-toolbar',
   standalone: true,
+  animations: [revealTopDown],
   imports: [CommonModule, DragDropModule, TranslatePipe],
   templateUrl: './toolbar.component.html',
   styleUrls: ['./toolbar.component.css'],

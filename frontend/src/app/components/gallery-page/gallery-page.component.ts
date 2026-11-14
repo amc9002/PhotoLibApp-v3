@@ -24,10 +24,12 @@ import { photoRemoveMessage } from '../../core/i18n/plurals';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { SlideshowConfig } from '../../models/slideshow-config';
 import { SlideshowSettingsModalComponent } from '../../shared/modal/slideshow-settings-modal/slideshow-settings-modal.component';
+import { revealTopDown } from '../../shared/animations/reveal-top-down.animation';
 
 @Component({
   selector: 'app-gallery-page',
   standalone: true,
+  animations: [revealTopDown],
   imports: [
     CommonModule,
     GalleryViewComponent,

@@ -23,6 +23,7 @@
 
 <app-confirm-modal
   *ngIf="confirmOpen"
+  @revealTopDown
   [title]="'createGallery.confirmTitle' | t"
   [message]="confirmMessage"
   [confirmText]="'common.create' | t"

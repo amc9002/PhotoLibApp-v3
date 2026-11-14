@@ -113,6 +113,7 @@
 <ng-container *ngIf="activePhoto as photo">
   <app-edit-metadata-modal
     *ngIf="metadataEditing.editOpen"
+    @revealTopDown
     heading="photoViewer.editDetails"
     [photoId]="photo.id"
     [isSaving]="metadataEditing.isSaving"
@@ -127,6 +128,7 @@
 
 <app-photo-info-modal
   *ngIf="metadataEditing.infoOpen && metadataEditing.infoPhoto as infoPhoto"
+  @revealTopDown
   [photo]="infoPhoto"
   (close)="metadataEditing.closeInfo()"
 ></app-photo-info-modal>

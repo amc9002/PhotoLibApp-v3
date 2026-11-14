@@ -4,10 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { ConfirmModalComponent } from '../../shared/modal/confirm-modal/confirm-modal.component';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { I18nService } from '../../core/i18n/i18n.service';
+import { revealTopDown } from '../../shared/animations/reveal-top-down.animation';
 
 @Component({
   selector: 'app-create-gallery',
   standalone: true,
+  animations: [revealTopDown],
   imports: [CommonModule, FormsModule, ConfirmModalComponent, TranslatePipe],
   templateUrl: './create-gallery.component.html',
   styleUrls: ['./create-gallery.component.css'],

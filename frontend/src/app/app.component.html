@@ -39,6 +39,7 @@
     ></app-toolbar>
     <app-gallery-properties
       *ngIf="galleryPropertiesModal.isOpen && selectedGallery"
+      @revealTopDown
       [gallery]="selectedGallery"
       (close)="closeGalleryProperties()"
     ></app-gallery-properties>
@@ -48,6 +49,7 @@
 <main class="app-content">
   <app-gallery-page
     *ngIf="selectedGallery"
+    @revealTopDown
     [gallery]="selectedGallery"
     [allGalleries]="galleries"
     (galleryEmptied)="onGalleryEmptied()"
@@ -69,12 +71,14 @@
 
 <app-create-gallery
   *ngIf="createGalleryModal.isOpen"
+  @revealTopDown
   (create)="createGallery($event)"
   (cancel)="closeCreateGallery()"
 ></app-create-gallery>
 
 <app-confirm-modal
   *ngIf="deleteGalleryConfirmOpen"
+  @revealTopDown
   [title]="deleteGalleryTitle | t"
   [message]="deleteGalleryMessage | t"
   [confirmText]="'common.delete' | t"
@@ -85,6 +89,7 @@
 
 <app-edit-metadata-modal
   *ngIf="editGalleryOpen && selectedGallery"
+  @revealTopDown
   heading="app.editGallery"
   [title]="selectedGallery.title"
   [description]="selectedGallery.description ?? ''"
@@ -97,6 +102,7 @@
 
 <app-add-from-internet-modal
   *ngIf="addFromInternetModal.isOpen && selectedGallery"
+  @revealTopDown
   [galleryId]="selectedGallery.id"
   [galleryTitle]="selectedGallery.title"
   (close)="closeAddFromInternet()"
@@ -104,6 +110,7 @@
 
 <app-settings-modal
   *ngIf="settingsModal.isOpen"
+  @revealTopDown
   (close)="closeSettings()"
 ></app-settings-modal>
 

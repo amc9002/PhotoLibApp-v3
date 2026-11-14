@@ -24,10 +24,12 @@ import { AuthService } from './core/auth/auth.service';
 import { userInitials } from './shared/utils/user-initials';
 import { ModalState } from './shared/utils/modal-state';
 import { DiscoveryFeedComponent } from './components/discovery/discovery-feed.component';
+import { revealTopDown } from './shared/animations/reveal-top-down.animation';
 
 @Component({
   selector: 'app-root',
   standalone: true,
+  animations: [revealTopDown],
   imports: [
     CommonModule,
     GalleryPageComponent,

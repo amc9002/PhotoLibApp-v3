@@ -9,6 +9,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { authErrorKey } from '../../../core/auth/auth-error.util';
 import { userInitials } from '../../utils/user-initials';
 import { AvatarCropModalComponent } from '../avatar-crop-modal/avatar-crop-modal.component';
+import { revealTopDown } from '../../animations/reveal-top-down.animation';
 
 const THEME_LABEL_KEYS: Record<ThemeId, string> = {
   navy: 'settings.themeNavy',
@@ -26,6 +27,7 @@ const THEME_PREVIEW: Record<ThemeId, { canvas: string; elevated: string }> = {
 @Component({
   selector: 'app-settings-modal',
   standalone: true,
+  animations: [revealTopDown],
   imports: [CommonModule, FormsModule, TranslatePipe, AvatarCropModalComponent],
   templateUrl: './settings-modal.component.html',
   styleUrls: ['./settings-modal.component.css'],

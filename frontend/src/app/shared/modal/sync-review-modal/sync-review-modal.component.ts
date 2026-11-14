@@ -5,6 +5,7 @@ import { SyncCoordinatorService } from '../../../core/offline/sync-coordinator.s
 import { SyncReviewItem } from '../../../core/offline/sync-review.model';
 import { PhotoThumbnailComponent } from '../../ui/photo-thumbnail/photo-thumbnail.component';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { revealTopDown } from '../../animations/reveal-top-down.animation';
 
 /**
  * Shown once the app reconnects with unconfirmed offline changes queued.
@@ -15,6 +16,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 @Component({
   selector: 'app-sync-review-modal',
   standalone: true,
+  animations: [revealTopDown],
   imports: [CommonModule, PhotoThumbnailComponent, TranslatePipe],
   templateUrl: './sync-review-modal.component.html',
   styleUrls: ['./sync-review-modal.component.css'],

@@ -1,10 +1,12 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { revealTopDown } from '../../../shared/animations/reveal-top-down.animation';
 
 @Component({
   selector: 'app-photo-actions',
   standalone: true,
+  animations: [revealTopDown],
   imports: [CommonModule, TranslatePipe],
   templateUrl: './photo-actions.component.html',
   styleUrls: ['./photo-actions.component.css'],

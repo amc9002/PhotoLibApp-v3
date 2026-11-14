@@ -16,6 +16,7 @@
   <div
     class="dropdown"
     *ngIf="dropdownOpen"
+    @revealTopDown
     cdkDropList
     (cdkDropListDropped)="onGalleryDropped($event)"
   >
@@ -88,7 +89,7 @@
       ⋮
     </button>
 
-    <div class="service-menu" *ngIf="serviceMenuOpen">
+    <div class="service-menu" *ngIf="serviceMenuOpen" @revealTopDown>
       <ng-container *ngIf="photoSelection.count > 0">
         <div class="service-menu-label">
           {{ photosSelectedLabel }}

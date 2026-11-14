@@ -7,6 +7,8 @@ import { ConnectivityService } from '../../core/offline/connectivity.service';
 import { PhotoThumbnailComponent } from '../../shared/ui/photo-thumbnail/photo-thumbnail.component';
 import { PhotoViewerComponent } from '../photo-viewer/photo-viewer.component';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { revealTopDown } from '../../shared/animations/reveal-top-down.animation';
+import { fadeThroughReflow } from '../../shared/animations/fade-through.animation';
 
 /** How many photos to request per batch, full or follow-up. */
 const BATCH_SIZE = 40;
@@ -25,6 +27,7 @@ const PRELOAD_DISTANCE_PX = 600;
 @Component({
   selector: 'app-discovery-feed',
   standalone: true,
+  animations: [revealTopDown, fadeThroughReflow],
   imports: [CommonModule, PhotoThumbnailComponent, PhotoViewerComponent, TranslatePipe],
   templateUrl: './discovery-feed.component.html',
   styleUrls: ['./discovery-feed.component.css'],

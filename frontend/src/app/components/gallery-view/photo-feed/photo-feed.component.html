@@ -9,6 +9,7 @@
 
 <app-photo-context-menu
   *ngIf="contextMenuPhotoId as photoId"
+  @revealTopDown
   [x]="contextMenuX"
   [y]="contextMenuY"
   (editInfo)="editPhotoRequest.emit(photoId); closeContextMenu()"

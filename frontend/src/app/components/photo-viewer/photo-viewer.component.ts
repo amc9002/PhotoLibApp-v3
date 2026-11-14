@@ -21,10 +21,12 @@ import { SlideshowPlayerService } from './slideshow-player.service';
 import { SlideshowConfig } from '../../models/slideshow-config';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { DiscoveryApiService } from '../../services/discovery-api.service';
+import { revealTopDown } from '../../shared/animations/reveal-top-down.animation';
 
 @Component({
   selector: 'app-photo-viewer',
   standalone: true,
+  animations: [revealTopDown],
   imports: [
     CommonModule,
     PhotoCarouselComponent,

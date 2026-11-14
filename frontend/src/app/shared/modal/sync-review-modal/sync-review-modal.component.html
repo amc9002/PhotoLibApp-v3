@@ -1,4 +1,4 @@
-<div class="modal-backdrop" *ngIf="items.length">
+<div class="modal-backdrop" *ngIf="items.length" @revealTopDown>
   <div class="modal sync-review-modal">
     <div class="modal-header">
       <h2>{{ "syncReview.heading" | t }}</h2>

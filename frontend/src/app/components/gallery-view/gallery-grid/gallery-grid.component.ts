@@ -15,6 +15,7 @@ import { PhotoThumbnailComponent } from '../../../shared/ui/photo-thumbnail/phot
 import { PhotoContextMenuComponent } from '../../../shared/ui/photo-context-menu/photo-context-menu.component';
 import { ThumbnailSizeService } from '../../../services/thumbnail-size.service';
 import { PhotoSelectionService } from '../../../services/photo-selection.service';
+import { revealTopDown } from '../../../shared/animations/reveal-top-down.animation';
 
 const MIN_DRAG_DISTANCE = 4;
 const CONTEXT_MENU_WIDTH = 210;
@@ -24,6 +25,7 @@ const CONTEXT_MENU_MARGIN = 8;
 @Component({
   selector: 'app-gallery-grid',
   standalone: true,
+  animations: [revealTopDown],
   imports: [CommonModule, DragDropModule, PhotoThumbnailComponent, PhotoContextMenuComponent],
   templateUrl: './gallery-grid.component.html',
   styleUrls: ['./gallery-grid.component.css'],
