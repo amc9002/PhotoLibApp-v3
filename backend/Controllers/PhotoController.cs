@@ -317,17 +317,27 @@ namespace PhotoLibApi.Controllers
                 await file.CopyToAsync(stream);
             }
 
+            // Persisted before attempting thumbnail/EXIF generation below, so a
+            // failure there (e.g. a corrupt or exotic JPEG ImageSharp can't
+            // fully decode - not uncommon for images downloaded from social
+            // sites) can't leave the original orphaned on disk while the
+            // database still says this photo has no file, which otherwise
+            // breaks anything that trusts that flag (thumbnails, AI
+            // description generation).
+            photo.HasOriginal = true;
+            await _db.SaveChangesAsync();
+
             try
             {
                 _imageProcessing.GenerateThumbnailAndExif(photo, filePath);
+                await _db.SaveChangesAsync();
             }
-            catch (SixLabors.ImageSharp.UnknownImageFormatException)
+            catch (SixLabors.ImageSharp.ImageFormatException)
             {
-                return BadRequest(new { message = "File is not a recognizable image." });
+                // The original itself is still saved and usable - only the
+                // thumbnail/EXIF enrichment failed. Leave HasThumbnail false
+                // rather than discarding the upload.
             }
-
-            photo.HasOriginal = true;
-            await _db.SaveChangesAsync();
 
             return NoContent();
         }

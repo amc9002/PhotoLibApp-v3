@@ -13,6 +13,7 @@ import { ButtonGroupNavDirective } from '../../directives/button-group-nav.direc
 import { TagApiService } from '../../../services/tag-api.service';
 import { PhotoApiService } from '../../../services/photo-api.service';
 import { parseTagsInput } from '../../utils/tags';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { DescriptionLength, DescriptionStyle } from '../../../models/generate-description.dto';
 
@@ -61,6 +62,7 @@ export class EditMetadataModalComponent implements OnInit {
   constructor(
     private tagApi: TagApiService,
     private photoApi: PhotoApiService,
+    private i18n: I18nService,
   ) {}
 
   ngOnInit() {
@@ -124,6 +126,7 @@ export class EditMetadataModalComponent implements OnInit {
         this.aiStyle,
         this.aiLength,
         this.aiInstructions.trim() || undefined,
+        this.i18n.lang,
       )
       .subscribe({
         next: (draft) => {

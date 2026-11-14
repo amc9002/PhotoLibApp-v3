@@ -166,13 +166,15 @@ namespace PhotoLibApi.Services
                   $" requested output language, unless they conflict with accuracy:\n" +
                   $"{request.AdditionalInstructions.Trim()}";
 
+            var language = LanguageName(request.Language);
+
             return $"""
                 Identify the specific real-world subject of this photo (e.g. the exact
                 ship, building, landmark, species, or event depicted - not just a generic
                 description). Use web search to find genuinely interesting, accurate facts
                 about that subject if you can identify it with reasonable confidence.
 
-                Write a title and a description in {style}, {length}.
+                Write the title, description and tags in {language}, in {style}, {length}.
                 Also suggest 3-6 short tag names (single words or short phrases) relevant
                 to the subject.
 
@@ -182,6 +184,19 @@ namespace PhotoLibApi.Services
                 {userInstructionsBlock}
                 """;
         }
+
+        /// <summary>
+        /// Maps a UI language code to the name used in the prompt. Defaults
+        /// to English for an unrecognized or missing code, rather than
+        /// leaving the model to guess from the photo's own context (which is
+        /// how a Cyrillic-titled photo previously came back in English).
+        /// </summary>
+        private static string LanguageName(string? languageCode) => languageCode?.ToLowerInvariant() switch
+        {
+            "be" => "Belarusian",
+            "en" => "English",
+            _ => "English",
+        };
 
         private sealed class GeneratedDraft
         {

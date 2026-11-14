@@ -6,6 +6,8 @@ export interface GenerateDescriptionRequest {
   style: DescriptionStyle;
   length: DescriptionLength;
   additionalInstructions?: string;
+  /** UI language code (e.g. "be", "en") the generated text should be written in. */
+  language?: string;
 }
 
 export interface GenerateDescriptionResponse {

@@ -91,11 +91,13 @@ export class PhotoApiService {
     style: DescriptionStyle,
     length: DescriptionLength,
     additionalInstructions?: string,
+    language?: string,
   ): Observable<GenerateDescriptionResponse> {
     return this.api.post<GenerateDescriptionResponse>(`Photo/${photoId}/generate-description`, {
       style,
       length,
       additionalInstructions,
+      language,
     });
   }
 
