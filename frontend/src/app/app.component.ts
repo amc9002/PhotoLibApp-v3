@@ -92,10 +92,10 @@ export class AppComponent implements OnInit {
   }
 
   logout(): void {
-    // Settings can trigger this from its own logout button while still
-    // open - close it too, or a later sign-in reopens it unprompted since
-    // settingsModal lives on this always-alive component, not reset just
-    // because the *ngIf-gated children behind it were destroyed.
+    // Settings may still be open from earlier in the session - close it,
+    // or a later sign-in reopens it unprompted since settingsModal lives on
+    // this always-alive component, not reset just because the *ngIf-gated
+    // children behind it were destroyed.
     this.closeSettings();
     this.authService.logout().subscribe({
       error: (err) => console.error('Logout failed', err),

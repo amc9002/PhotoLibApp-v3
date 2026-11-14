@@ -32,7 +32,6 @@ const THEME_PREVIEW: Record<ThemeId, { canvas: string; elevated: string }> = {
 })
 export class SettingsModalComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
-  @Output() logout = new EventEmitter<void>();
 
   readonly themeIds = THEME_IDS;
 

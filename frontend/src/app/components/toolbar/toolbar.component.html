@@ -168,6 +168,15 @@
       >
         {{ "toolbar.settings" | t }}
       </div>
+
+      <div class="service-menu-divider"></div>
+
+      <div
+        class="service-menu-item"
+        (click)="onLogout(); $event.stopPropagation()"
+      >
+        {{ "auth.logout" | t }}
+      </div>
     </div>
   </div>
 </ng-container>

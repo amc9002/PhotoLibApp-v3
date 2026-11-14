@@ -34,6 +34,7 @@
       (moveSelected)="onMoveSelected()"
       (deleteSelected)="onDeleteSelected()"
       (openSettings)="openSettings()"
+      (logout)="logout()"
     ></app-toolbar>
     <app-gallery-properties
       *ngIf="galleryPropertiesModal.isOpen && selectedGallery"
@@ -105,7 +106,6 @@
 <app-settings-modal
   *ngIf="settingsModal.isOpen"
   (close)="closeSettings()"
-  (logout)="logout()"
 ></app-settings-modal>
 
 <app-sync-review-modal></app-sync-review-modal>

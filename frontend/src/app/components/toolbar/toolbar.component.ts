@@ -41,6 +41,7 @@ export class ToolbarComponent {
   @Output() moveSelected = new EventEmitter<void>();
   @Output() deleteSelected = new EventEmitter<void>();
   @Output() openSettings = new EventEmitter<void>();
+  @Output() logout = new EventEmitter<void>();
 
   constructor(
     private elementRef: ElementRef,
@@ -151,5 +152,10 @@ export class ToolbarComponent {
   onOpenSettings() {
     this.closeServiceMenu();
     this.openSettings.emit();
+  }
+
+  onLogout() {
+    this.closeServiceMenu();
+    this.logout.emit();
   }
 }
