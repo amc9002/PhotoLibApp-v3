@@ -636,6 +636,36 @@ namespace PhotoLibApi.Controllers
         }
 
         /// <summary>
+        /// Records that the caller opened this photo full-screen in the
+        /// viewer. Used only in aggregate (grouped by tag) to bias the
+        /// Discovery feed toward themes the user engages with - see
+        /// <see cref="DiscoveryController"/>.
+        /// </summary>
+        /// <param name="id">Photo identifier.</param>
+        /// <response code="204">View recorded.</response>
+        /// <response code="404">Photo not found.</response>
+        [HttpPost("{id:guid}/view")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> RecordView(Guid id)
+        {
+            var photo = await _galleryAccess.GetOwnedPhotoAsync(id, _currentUser.UserId);
+            if (photo == null)
+                return NotFound();
+
+            _db.PhotoViews.Add(new PhotoView
+            {
+                Id = Guid.NewGuid(),
+                UserId = _currentUser.UserId,
+                PhotoId = id,
+                ViewedAtUtc = DateTime.UtcNow,
+            });
+            await _db.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        /// <summary>
         /// Replaces the full tag set of a photo.
         /// </summary>
         /// <param name="id">Photo identifier.</param>

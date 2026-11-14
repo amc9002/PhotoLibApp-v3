@@ -90,7 +90,20 @@ app-toolbar {
 }
 
 .app-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
   padding: 40px;
+}
+
+/* app-gallery-page and app-discovery-feed were mutually exclusive via
+   *ngIf before Discovery existed, so neither had layout rules of its own
+   to conflict with - app-gallery-page grows to fill whatever space
+   app-discovery-feed's own host sizing (full-width or a collapsed strip)
+   leaves behind. */
+app-gallery-page {
+  flex: 1;
+  min-width: 0;
 }
 
 .gallery-view {

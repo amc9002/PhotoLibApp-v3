@@ -64,5 +64,16 @@ namespace PhotoLibApi.Services
 
             return gallery;
         }
+
+        /// <summary>
+        /// Composable query for every non-deleted photo <paramref name="userId"/>
+        /// owns, across all their galleries - not executed here, callers add
+        /// their own <c>.Select</c>/<c>.Where</c> before materializing, same
+        /// as <see cref="Controllers.PhotoController.GetByGallery"/> does
+        /// internally for a single gallery.
+        /// </summary>
+        public IQueryable<Photo> OwnedPhotos(Guid userId) =>
+            _db.Photos.Where(p => !p.IsDeleted &&
+                _db.Galleries.Any(g => g.Id == p.GalleryId && g.OwnerId == userId && !g.IsDeleted));
     }
 }

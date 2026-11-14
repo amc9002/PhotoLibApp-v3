@@ -23,6 +23,7 @@ import { LoginComponent } from './components/login/login.component';
 import { AuthService } from './core/auth/auth.service';
 import { userInitials } from './shared/utils/user-initials';
 import { ModalState } from './shared/utils/modal-state';
+import { DiscoveryFeedComponent } from './components/discovery/discovery-feed.component';
 
 @Component({
   selector: 'app-root',
@@ -39,6 +40,7 @@ import { ModalState } from './shared/utils/modal-state';
     SyncReviewModalComponent,
     SettingsModalComponent,
     LoginComponent,
+    DiscoveryFeedComponent,
     TranslatePipe,
   ],
   templateUrl: './app.component.html',

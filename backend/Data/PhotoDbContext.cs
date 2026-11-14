@@ -11,6 +11,7 @@ namespace PhotoLibApi.Data
         public DbSet<Gallery> Galleries => Set<Gallery>();
         public DbSet<Tag> Tags => Set<Tag>();
         public DbSet<User> Users => Set<User>();
+        public DbSet<PhotoView> PhotoViews => Set<PhotoView>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -19,6 +20,7 @@ namespace PhotoLibApi.Data
             modelBuilder.Entity<Photo>().HasIndex(p => new { p.Id, p.ClientTempId });
             modelBuilder.Entity<Gallery>().HasIndex(g => g.OwnerId);
             modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
+            modelBuilder.Entity<PhotoView>().HasIndex(v => v.UserId);
 
             // Unidirectional many-to-many: Tag has no navigation back to Photo/Gallery,
             // which keeps tag reads free of serialization cycles.

@@ -40,6 +40,7 @@ builder.Services.AddScoped<TagResolver>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<CurrentUserService>();
 builder.Services.AddScoped<GalleryAccessService>();
+builder.Services.AddScoped<DiscoveryFeedService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 // Session cookie for signed-in users. API-only backend, so the default

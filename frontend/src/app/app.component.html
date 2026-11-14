@@ -7,6 +7,7 @@
       [galleries]="galleries"
       [selectedGallery]="selectedGallery"
       (gallerySelected)="selectGallery($event)"
+      (discoverySelected)="selectedGallery = undefined"
       (galleriesReordered)="onGalleriesReordered($event)"
     ></app-toolbar>
   </div>
@@ -53,9 +54,7 @@
     (galleryCreated)="onGalleryCreatedElsewhere($event)"
   ></app-gallery-page>
 
-  <div *ngIf="!selectedGallery" class="empty-state">
-    {{ "app.selectGallery" | t }}
-  </div>
+  <app-discovery-feed [mode]="selectedGallery ? 'collapsed' : 'full'"></app-discovery-feed>
 </main>
 
 <input

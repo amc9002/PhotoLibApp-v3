@@ -132,6 +132,28 @@ namespace backend.Migrations
                     b.ToTable("Photos");
                 });
 
+            modelBuilder.Entity("PhotoLibApi.Models.PhotoView", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("PhotoId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ViewedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PhotoViews");
+                });
+
             modelBuilder.Entity("PhotoLibApi.Models.Tag", b =>
                 {
                     b.Property<Guid>("Id")

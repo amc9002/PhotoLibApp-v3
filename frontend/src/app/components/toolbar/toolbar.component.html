@@ -1,6 +1,13 @@
 <!-- LEFT TOOLBAR -->
 <ng-container *ngIf="layout === 'left'">
   <button
+    class="toolbar-btn"
+    (click)="onDiscoverySelected()"
+  >
+    {{ "toolbar.discovery" | t }}
+  </button>
+
+  <button
     class="toolbar-btn gallery-btn"
     (click)="toggleDropdown(); $event.stopPropagation()"
   >

@@ -1,0 +1,125 @@
+/* Width/flex-sizing lives on the host itself (not an inner wrapper div) so
+   this component is a well-behaved flex item of AppComponent's
+   `.app-content` in both modes - `.collapsed` is toggled via a HostBinding
+   in the .ts. Height matches the gallery's own content area's identical
+   calc() (fixed header + .app-content padding). */
+:host {
+  display: block;
+  height: calc(100vh - 96px);
+  flex: 1 1 0;
+  min-width: 0;
+  transition:
+    flex-basis var(--ui-normal) var(--ui-ease),
+    width var(--ui-normal) var(--ui-ease);
+}
+
+:host(.collapsed) {
+  flex: 0 0 160px;
+  width: 160px;
+}
+
+.discovery-feed-body {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.discovery-feed-message {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Same square-thumbnail tile as GalleryGridComponent so Discovery reads as
+   "a gallery" by default rather than a distinct feed UI - captions are
+   hover-only here though (see .discovery-hover-info below), not always
+   visible like the gallery grid's. */
+.discovery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  padding: 4px 4px 24px;
+}
+
+:host(.collapsed) .discovery-grid {
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding: 4px;
+}
+
+.discovery-item {
+  position: relative;
+  cursor: pointer;
+}
+
+.discovery-tile {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+
+  background: linear-gradient(135deg, var(--canvas-elevated), var(--canvas));
+  border-radius: 6px;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition: box-shadow 150ms ease;
+}
+
+.discovery-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.discovery-item:hover .discovery-tile {
+  box-shadow:
+    0 0 0 2px rgba(0, 0, 0, 0.35),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+
+/* No title/tags shown by default - instead, on hover, the title + gallery
+   owner appear as an overlay that starts near the bottom of this tile and
+   extends past it, covering the row of tiles underneath. It's positioned
+   absolutely (out of grid flow) so nothing else's position ever shifts -
+   only `opacity` transitions, same trick GalleryGridComponent uses for its
+   own hover title (see `.photo-item::after` there). */
+.discovery-hover-info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% - 28px);
+  z-index: 10;
+
+  padding: 24px 8px 8px;
+  border-radius: 0 0 6px 6px;
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.85) 40%);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+.discovery-item:hover .discovery-hover-info {
+  opacity: 1;
+}
+
+.discovery-hover-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  word-break: break-word;
+}
+
+.discovery-hover-owner {
+  margin-top: 2px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}

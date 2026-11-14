@@ -1,0 +1,37 @@
+<div class="discovery-feed-body" (scroll)="onScroll($event)">
+  <ng-container *ngIf="connectivity.isOnline$ | async; else offline">
+    <div class="discovery-grid" *ngIf="photos.length; else empty">
+      <div
+        class="discovery-item"
+        *ngFor="let photo of photos; trackBy: trackById"
+        [attr.data-photo-id]="photo.id"
+        (click)="openViewer(photo.id)"
+      >
+        <div class="discovery-tile">
+          <app-photo-thumbnail [photoId]="photo.id" [hasThumbnail]="photo.hasThumbnail"></app-photo-thumbnail>
+        </div>
+
+        <div class="discovery-hover-info" *ngIf="mode !== 'collapsed'">
+          <div class="discovery-hover-title">{{ photo.title }}</div>
+          <div class="discovery-hover-owner">{{ photo.ownerName }}</div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #empty>
+      <div class="discovery-feed-message">{{ "discovery.empty" | t }}</div>
+    </ng-template>
+  </ng-container>
+
+  <ng-template #offline>
+    <div class="discovery-feed-message">{{ "discovery.offline" | t }}</div>
+  </ng-template>
+</div>
+
+<app-photo-viewer
+  *ngIf="viewerOpen && viewerPhotoId"
+  [photos]="photos"
+  [activePhotoId]="viewerPhotoId"
+  (close)="closeViewer()"
+  (photoSelected)="openViewer($event)"
+></app-photo-viewer>

@@ -77,7 +77,8 @@ export const translations: Record<string, Record<Lang, string>> = {
   },
 
   // ---------------- app shell ----------------
-  'app.selectGallery': { be: 'Абярыце галерэю, каб паглядзець фота', en: 'Select a gallery to view photos' },
+  'discovery.offline': { be: 'Discovery патрабуе злучэння з сецівам', en: 'Discovery needs a connection' },
+  'discovery.empty': { be: 'Пакуль няма фота для паказу', en: 'No photos to show yet' },
   'app.addPhotosInput': { be: 'Дадаць фота ў галерэю', en: 'Add photos to gallery' },
   'app.deleteGalleryTitle': { be: 'Выдаліць галерэю?', en: 'Delete gallery?' },
   'app.deleteGalleryMessage': {
@@ -97,6 +98,7 @@ export const translations: Record<string, Record<Lang, string>> = {
 
   // ---------------- toolbar ----------------
   'toolbar.gallery': { be: 'Галерэя ▼', en: 'Gallery ▼' },
+  'toolbar.discovery': { be: 'Discovery', en: 'Discovery' },
   'toolbar.noGalleries': { be: 'Няма галерэй', en: 'No galleries' },
   'toolbar.gridView': { be: 'Рэжым пліткі', en: 'Grid view' },
   'toolbar.feedView': { be: 'Рэжым стужкі', en: 'Feed view' },

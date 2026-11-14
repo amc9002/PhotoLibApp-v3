@@ -20,6 +20,7 @@ import { PhotoMetadataEditingService } from '../../services/photo-metadata-editi
 import { SlideshowPlayerService } from './slideshow-player.service';
 import { SlideshowConfig } from '../../models/slideshow-config';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
+import { DiscoveryApiService } from '../../services/discovery-api.service';
 
 @Component({
   selector: 'app-photo-viewer',
@@ -130,6 +131,7 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
   constructor(
     public metadataEditing: PhotoMetadataEditingService,
     public slideshow: SlideshowPlayerService,
+    private discoveryApi: DiscoveryApiService,
   ) {}
 
   ngOnInit() {
@@ -254,6 +256,12 @@ export class PhotoViewerComponent implements OnInit, OnDestroy {
   /** Called once the currently displayed photo has actually finished loading (or failed). */
   onMainPhotoLoaded() {
     this.slideshow.onPhotoLoaded(this.activePhotoId);
+    // Fire-and-forget: feeds Discovery's tag-affinity weighting (see
+    // DiscoveryFeedService on the backend). Not critical to the viewing
+    // experience, so a failure here shouldn't surface to the user.
+    this.discoveryApi.recordView(this.activePhotoId).subscribe({
+      error: (err) => console.error('Failed to record photo view', err),
+    });
   }
 
   stopSlideshow() {
