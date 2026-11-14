@@ -29,7 +29,17 @@ export class ConnectivityService implements OnDestroy {
     window.addEventListener('online', this.onOnline);
     window.addEventListener('offline', this.onOffline);
 
-    this.probe();
+    // Deferred rather than called synchronously here: this constructor can
+    // run mid-way through resolving some other root-provided service's own
+    // dependency chain (e.g. the first component to inject this service
+    // during a single change-detection pass that's also still constructing
+    // others). A synchronous HTTP call right now re-enters the injector
+    // while this service's own provider record is still marked "resolving",
+    // and since authInterceptor injects AuthService - whose chain comes back
+    // through ApiService to this very service - that trips Angular's
+    // circular-dependency guard (NG0200). Deferring to a microtask lets
+    // construction finish and the injector settle before the first probe.
+    queueMicrotask(() => this.probe());
 
     // navigator.onLine can flip true (wifi reconnected) while this specific
     // backend is still down, so keep re-checking until a probe succeeds.
