@@ -236,3 +236,8 @@ app.UseAuthorization();
 app.UseRateLimiter();
 app.MapControllers();
 app.Run();
+
+// Required so WebApplicationFactory<Program> (used by the backend.Tests
+// integration tests) can see this top-level-statement Program class from
+// another assembly - otherwise the generated class is internal.
+public partial class Program { }
