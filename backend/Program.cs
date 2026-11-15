@@ -212,6 +212,21 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// Serves the Angular production build, when one has been published
+// alongside this backend (see backend.csproj's conditional copy into
+// wwwroot - e.g. a future local/desktop publish). The existing Docker
+// image's build context is scoped to this backend/ folder alone, with no
+// access to frontend/dist at all, so wwwroot/index.html never exists
+// there - this stays entirely inactive for that deployment, with no
+// separate configuration flag: the file's presence at startup is the
+// switch.
+var spaIndexPath = Path.Combine(AppContext.BaseDirectory, "wwwroot", "index.html");
+var servingSpa = File.Exists(spaIndexPath);
+if (servingSpa)
+{
+    app.UseStaticFiles();
+}
+
 app.UseRouting();
 
 // Chrome's Private Network Access policy blocks a public page (e.g. any
@@ -235,6 +250,30 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 app.MapControllers();
+
+if (servingSpa)
+{
+    // Client-side routes (e.g. /gallery/abc, or / itself) aren't real
+    // files - fall back to index.html for those. Real /api/* routes are
+    // matched by MapControllers above and never reach this fallback at
+    // all; an /api/* path that reaches here is one no controller
+    // recognizes, so it gets a real 404 instead of the SPA shell - an
+    // explicit path check here, rather than a route-template constraint,
+    // since inline regex constraints on a catch-all parameter don't
+    // reliably match the empty (root "/") case.
+    app.MapFallback(async context =>
+    {
+        if (context.Request.Path.StartsWithSegments("/api"))
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+
+        context.Response.ContentType = "text/html";
+        await context.Response.SendFileAsync(spaIndexPath);
+    });
+}
+
 app.Run();
 
 // Required so WebApplicationFactory<Program> (used by the backend.Tests

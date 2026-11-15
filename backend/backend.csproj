@@ -30,5 +30,20 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
 </ItemGroup>
 
+  <!--
+    When the Angular production build already exists next to this project
+    (a manual `ng build` run before `dotnet publish` - not the existing
+    Docker image, whose build context is scoped to this backend/ folder
+    alone and never has access to frontend/dist at all), copy it into the
+    publish output's wwwroot so this backend can optionally serve both the
+    SPA and the API from one origin (see Program.cs). Inert whenever that
+    folder doesn't exist - no separate configuration flag needed.
+  -->
+  <ItemGroup Condition="Exists('../frontend/dist/frontend/browser')">
+    <Content Include="../frontend/dist/frontend/browser/**/*">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <TargetPath>wwwroot/%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
+    </Content>
+  </ItemGroup>
 
 </Project>
