@@ -32,34 +32,108 @@ Monetization section already has its own Phase 1 (auth — **done**, see
 `PROJECT-ANALYSIS.md`), Phase 2 (AI quotas), Phase 3 (billing), Phase 4
 (security hardening), Phase 5 (PostgreSQL + monitoring). Those are
 orthogonal to most of this plan except where explicitly cross-referenced
-below — e.g. this plan's Phase 5 (cloud storage) has a hard dependency on
-`TODO,md`'s Phase 5 (PostgreSQL), not because cloud storage needs billing,
-but because SQLite's single-writer model (already flagged as a known
-limitation) cannot safely serve a real multi-tenant cloud database.
+below — e.g. this plan's Phase 4B (independent cloud storage, full scale)
+has a hard dependency on `TODO,md`'s Phase 5 (PostgreSQL), not because
+cloud storage needs billing, but because SQLite's single-writer model
+(already flagged as a known limitation) cannot safely serve a real
+multi-tenant cloud database. (Phase 4A, the small-scale pilot described
+below, deliberately stays on SQLite and does **not** depend on `TODO,md`
+Phase 5 — see the owner-decisions note after the diagram.)
+
+**Two tracks, not one sequential list**: Phases 1–3 below ("Track A") take
+the app from today's single shared backend to a standalone Desktop
+application. Phases 4–7 ("Track B") take it from there to an optional
+Cloud/Social layer. Per the project owner's decision of 2026-11-15, **Track
+A is the current priority and Track B is on hold** until the Desktop MVP
+has been built and proven reliable — the phase descriptions below still
+document Track B in full so the plan doesn't need to be rewritten when
+work resumes on it, but no Track B phase is active work right now.
 
 ```mermaid
 graph TD
-    P0["Phase 0\nDocument current architecture\n(DONE this session)"]
-    P1["Phase 1\nSeparate local data access\nfrom cloud API dependencies"]
-    P2["Phase 2\nGenuine local-first\nstorage model"]
-    P3["Phase 3\nDesktop packaging"]
-    P4["Phase 4\nIndependent cloud storage\nfor published content"]
-    P5["Phase 5\nSelective sync & publishing"]
-    P6["Phase 6\nSocial functionality"]
-    P7["Phase 7\nBrowser-based cloud\ninterface (Web)"]
+    subgraph TrackA["Track A — Desktop (ACTIVE)"]
+        P0["Phase 0\nDocument current architecture\n(DONE)"]
+        P1["Phase 1\nSeparate local data access\nfrom cloud API dependencies"]
+        P2["Phase 2\nGenuine local-first storage model\n+ local library export"]
+        P3["Phase 3\nDesktop packaging"]
+        P0 --> P1 --> P2 --> P3
+    end
 
-    P0 --> P1 --> P2 --> P3
-    P1 --> P4
-    P2 --> P5
-    P3 --> P5
-    P4 --> P5
-    P5 --> P6 --> P7
+    subgraph TrackB["Track B — Cloud/Social (ON HOLD until Track A validated)"]
+        P4A["Phase 4A\nSocial pilot on EXISTING\ninfrastructure (3-5 -> 10-20 users)"]
+        P4B["Phase 4B\nIndependent cloud storage,\nfull scale (PostgreSQL + object store)"]
+        P5["Phase 5\nSelective sync & publishing"]
+        P6["Phase 6\nSocial functionality"]
+        P7["Phase 7\nBrowser-based cloud\ninterface (Web)"]
+        P4A -.->|"pilot validates demand/stability"| P4B
+        P4B --> P5 --> P6 --> P7
+    end
 
-    TODOp5["TODO,md Phase 5\n(PostgreSQL migration)"] -.->|"hard dependency"| P4
-    TODOp2["TODO,md Phase 2\n(AI usage quotas)"] -.->|"should land before\nmulti-tenant cloud traffic"| P4
+    P1 -.->|"not started yet;\nTrack A must land first"| P4A
+    P1 -.-> P4B
+    P2 -.-> P5
+    P3 -.-> P5
+
+    TODOp5["TODO,md Phase 5\n(PostgreSQL migration)"] -.->|"hard dependency"| P4B
+    TODOp2["TODO,md Phase 2\n(AI usage quotas)"] -.->|"should land before\nmulti-tenant cloud traffic"| P4B
+
+    style P4A stroke-dasharray: 5 5
+    style P4B stroke-dasharray: 5 5
+    style P5 stroke-dasharray: 5 5
+    style P6 stroke-dasharray: 5 5
+    style P7 stroke-dasharray: 5 5
 ```
 
 ---
+
+## Owner decisions (2026-11-15)
+
+Three sequencing/scoping questions were resolved directly by the project
+owner, and this revision of the plan incorporates them:
+
+1. **Track A first.** Track B's full parallel build does not start now.
+   The immediate priority is a working, reliable Desktop MVP (Phases 1–3).
+   However, Track A's design must already account for Track B's known
+   future needs, so Desktop's local architecture doesn't need reworking
+   later purely to accommodate the Cloud/Social layer — see "Forward-looking
+   architectural decisions" below, placed right after Phase 1.
+2. **Export format.** The first implementation of local library export
+   (Phase 2) uses ZIP + JSON: untouched original files plus a JSON
+   manifest of gallery structure and metadata. It must be **versioned and
+   documented** from day one so it can be extended later without breaking
+   older exports — XMP sidecar export is a plausible future addition,
+   explicitly deferred rather than built now, to avoid complicating the
+   first implementation without a proven need.
+3. **Pilot sizing and availability.** When Track B resumes, its first
+   social pilot (Phase 4A) targets 3–5 participants, scaling to 10–20 if
+   stable. Running on the existing shared Tailscale instance means the
+   pilot is unavailable whenever that host or its network is down — the
+   owner has explicitly accepted this as **a limitation of the test
+   environment, not a flaw in the target architecture**, so Phase 4A's
+   risk assessment below is scoped accordingly (it would be a real problem
+   at public/investor-demo scale, which is exactly what Phase 4B exists to
+   solve once the pilot has validated the feature set).
+
+**Three further clarifications (2026-11-15, second round), all applied
+below before Phase 1 begins:**
+
+4. **Desktop auto-update deferred to public release.** Phase 3's pilot
+   (trusted testers only) ships with manual updates; the auto-update
+   mechanism becomes a public-release requirement, not a pilot one.
+5. **Installer signing deferred to public release.** Phase 3's pilot does
+   not require a signed installer. A distribution-and-verification method
+   for the Windows installer must be defined first (e.g. a checksum
+   published alongside the download); code-signing/notarization
+   requirements are evaluated before the public release, not before the
+   pilot.
+6. **Local-mode API access security needs its own analysis.** Binding the
+   no-auth local backend to `127.0.0.1` (Phase 2) is necessary but not
+   sufficient — anything running in the user's browser on that machine
+   (a malicious web page, a browser extension) can still reach
+   `localhost`. Phase 2 must explicitly analyze and mitigate this (e.g.
+   CORS restricted to the app's own origin, `SameSite` cookies if any
+   session concept remains, or a per-launch local token the Tauri shell
+   injects) rather than relying on the loopback bind alone.
 
 ## Phase 0 — Document current architecture *(done)*
 
@@ -117,6 +191,48 @@ to keep this phase low-risk and fast.
 
 ---
 
+## Forward-looking architectural decisions (apply during Track A, so Track B doesn't require rework)
+
+Per owner decision 1 above: Track B is not being built now, but a short
+list of decisions, applied while building Track A, avoids having to
+re-architect Desktop's local storage later. This list is deliberately
+short — most of the Cloud/Social model (visibility levels, Friendship,
+Subscriptions, Activity Feed) genuinely has **no bearing on Track A** and
+is not pre-built here, since Desktop's local `Gallery`/`Photo` tables have
+no concept of other users at all until a cloud account exists.
+
+- **Keep the mutation outbox structurally single-purpose.** Today's
+  `OutboxEntry`/`SyncCoordinatorService` (`PROJECT-ANALYSIS.md` §8.2–8.3)
+  queues edits to content *you own*. Track B will eventually need a
+  separate, read-only concept for content you don't own but can see
+  (another user's shared photo, per `ARCHITECTURE-PROPOSED.md` §6.1's
+  domain 3/4 distinction). Track A doesn't need to build that second
+  concept now — it just needs to **not** grow the outbox into a
+  general-purpose "cache of arbitrary remote objects," which would make
+  that future separation harder to retrofit.
+- **Treat local ids as locally-stable, not globally-stable.** Nothing
+  changes in Phase 1/2 — `ClientTempId`-style local ids keep working
+  exactly as today. The only discipline is: don't start treating a local
+  id as if it were (or will become) a cross-device/cross-account id. When
+  Track B eventually assigns a cloud id at publish time
+  (`ARCHITECTURE-PROPOSED.md` §3.3), it will be a new, separate value, not
+  a reinterpretation of the local one.
+- **Keep the local export format (Phase 2) genuinely self-describing.**
+  Not because it will be reused unchanged as a future publish/sync
+  payload (that's not decided), but because a versioned, documented
+  export format is cheap now and expensive to retrofit onto data that was
+  never designed to leave the device.
+- **No new persisted state for Discovery, visibility, or social concepts.**
+  `DiscoveryFeedService`'s existing `PhotoView`-based weighting
+  (`PROJECT-ANALYSIS.md`) is already confirmed reusable unchanged when
+  Track B extends its candidate pool later — there is nothing to
+  pre-build here, and adding speculative fields (a `Visibility` column, a
+  friend-list placeholder, etc.) to Track A's schema now would violate
+  the standing "don't add object/feature types without justification"
+  constraint for no present benefit.
+
+---
+
 ## Phase 2 — Introduce a genuine local-first storage model
 
 **Goal**: the *backend itself* can run fully standalone, pointed at a
@@ -137,6 +253,19 @@ single-user local install.
   with no signed-in user — likely a synthetic "local owner" identity
   created on first run, so the existing ownership-scoped query shape
   doesn't need to fork into two code paths.
+- **A dedicated access-security analysis for the no-auth local API** — per
+  owner clarification, binding to `127.0.0.1` alone is explicitly
+  **not** treated as sufficient. A `127.0.0.1`-bound server is still
+  reachable by anything running in the user's own browser on that
+  machine (a malicious page's fetch/form, a rogue extension), which is a
+  real cross-site-request risk once there's no auth check to block it.
+  Before this phase is accepted as done, document and apply a concrete
+  mitigation — candidates to evaluate (not a commitment to all of them):
+  restrictive CORS allowing only the packaged frontend's own origin,
+  rejecting requests whose `Origin`/`Referer` doesn't match, and/or a
+  per-launch local secret the Tauri shell generates and injects into the
+  frontend (Phase 3) to present on every request. Pick based on an
+  explicit risk write-up, not by default.
 - Decide the **local database's relationship to a later-connected cloud
   account**: when a user eventually signs in from a previously
   account-less local install, what happens to the galleries already
@@ -146,6 +275,40 @@ single-user local install.
   ownerless galleries" mechanism in `AuthController.AdminRegister`, which
   is a close precedent for exactly this kind of one-time ownership
   migration.)
+- **Local library export**, new in this revision per owner decision 2
+  above: a user-triggered export of an entire local library (or a
+  selected gallery) to a single ZIP file containing the original photo
+  files unmodified, plus a JSON manifest describing gallery structure,
+  sort order, tags, titles/descriptions, and other metadata exactly as
+  stored locally. The manifest carries an explicit format-version field
+  (e.g. `"formatVersion": 1`) and ships with a documented, plain-language
+  schema description — not just something inferred from code — so future
+  revisions (e.g. an additional XMP sidecar export, explicitly deferred
+  per owner decision 2, not built now) can extend it without breaking
+  older exports. **Scope for this phase is export only**; import/restore-
+  from-export is a separate, not-yet-committed capability and should not
+  be assumed or half-built alongside it.
+  - Per owner clarification, the manifest's field list must be checked
+    against the actual `Photo`/`Gallery`/`Tag` EF Core models at
+    implementation time, not assumed from this plan. As of this audit
+    (`backend/Models/Photo.cs`, `Gallery.cs`, `Tag.cs`), the
+    **user-meaningful** fields to include are: `Photo.Title`,
+    `Description`, `ExifJson` (the raw EXIF group/tag data already
+    extracted at upload time), `Latitude`/`Longitude`, `SortOrder`,
+    `CreatedAtUtc`/`UpdatedAtUtc`, and its `Tags` (by name); `Gallery.Title`,
+    `Description`, `SortOrder`, `CreatedAtUtc`/`UpdatedAtUtc`, and its
+    `Tags`; plus the gallery→photo structure itself (which photos belong
+    to which gallery, in what order). Fields that are **deliberately
+    excluded** as internal/not meaningful outside this specific database —
+    `Id`/`GalleryId` (server-assigned, re-derived on import if import is
+    ever built), `ClientTempId` (sync plumbing), `RowVersion`
+    (EF concurrency token), `IsDeleted` (soft-delete only ever queries
+    exclude it anyway), `HasOriginal`/`HasThumbnail` (derived from the
+    files the export already includes) — should be named explicitly in
+    the manifest's documentation as intentionally omitted, not silently
+    dropped, in case that judgment needs revisiting later. This list must
+    be re-verified against the models at the time Phase 2 is actually
+    implemented, since the schema may have changed by then.
 
 **Dependencies**: Phase 1 (so the frontend doesn't care which backend mode
 it's talking to).
@@ -170,6 +333,9 @@ the backend; it does not migrate any existing shared-instance data.
   at it per Phase 1) works fully — create/upload/organize/browse/tag,
   offline-tolerant exactly as it already is, since "offline" and "no
   cloud account" become nearly the same state in local mode.
+- Exporting a real local library with multiple galleries, photos, tags,
+  and a non-trivial sort order produces a ZIP whose JSON manifest can be
+  parsed back and validated against its documented schema version.
 
 ---
 
@@ -186,17 +352,31 @@ backend + existing Angular UI in a WebView).
   Core needs a graceful-shutdown signal handled, not a hard kill, so
   in-flight SQLite writes aren't interrupted), a window pointed at the
   local backend's `localhost` URL, a system-tray/launcher icon.
-- Platform-specific installers (Windows MSI/NSIS, macOS `.dmg`, Linux
-  AppImage/`.deb` — Tauri's bundler handles the mechanics; what's new here
-  is validating the ASP.NET Core runtime's distribution story per platform,
+- An **installer for Windows first** (the team's primary platform —
+  macOS/Linux installers follow once Windows is validated, not required
+  for the pilot): Tauri's bundler handles the MSI/NSIS mechanics; what's
+  new here is validating the ASP.NET Core runtime's distribution story,
   specifically whether to bundle a self-contained .NET runtime per install
   or depend on a shared one — self-contained is the safer default for an
-  end-user-facing installer, at a larger download-size cost).
+  end-user-facing installer, at a larger download-size cost.
+  - Per owner clarification, **code-signing is explicitly not required
+    for the pilot** — the pilot ships to a small group of trusted
+    testers, not the general public. What *is* required for the pilot:
+    a defined distribution-and-verification method so testers can
+    confirm they received an unmodified installer (e.g. a published
+    SHA-256 checksum alongside the download link, verified manually).
+    Code-signing/notarization requirements are deliberately deferred to
+    be revisited **before the public release**, not before the pilot.
 - A **file/folder picker** for choosing where the local library lives
   (first-run setup), using Tauri's own filesystem dialog APIs rather than
   anything browser-sandboxed.
-- An **auto-update mechanism** (Tauri's built-in updater plugin) — not
-  optional for a real desktop product; users will not manually reinstall.
+- **Manual updates for the pilot.** Per owner clarification, the
+  auto-update mechanism (Tauri's built-in updater plugin) is deferred to
+  the public-release phase, not built for the pilot. The pilot instead
+  needs a documented manual-update procedure (download the new
+  installer, reinstall over the existing local install) that is verified
+  not to lose the local database or photo folder in the process —
+  reinstalling must be safe, even though it isn't automatic.
 
 **Dependencies**: Phase 2 (a working local-mode backend to wrap).
 
@@ -206,33 +386,102 @@ routing/base-href assumptions behave correctly inside a Tauri WebView
 pointed at `localhost` (flagged, not yet confirmed, in
 `PROJECT-ANALYSIS.md` §11); cross-platform ASP.NET Core child-process
 lifecycle edge cases (zombie processes if the Tauri shell crashes without
-cleanly stopping its child); code-signing/notarization requirements per
-platform (macOS Gatekeeper, Windows SmartScreen) which are process/cost
-concerns, not just engineering ones.
+cleanly stopping its child). Code-signing/notarization (macOS Gatekeeper,
+Windows SmartScreen) is **not a pilot risk** per owner clarification —
+it's explicitly deferred and re-assessed before the public release,
+so it should not block or slow down the pilot's Phase 3 work.
 
 **Data migration**: none — first-run setup creates a fresh local database;
 nothing to migrate from in a pure-desktop-first install.
 
 **Acceptance criteria**:
-- A signed, installable package exists for at least one platform (pick the
-  team's primary dev platform first; cross-platform validation can follow)
-  that installs, launches, creates a local library on first run, and
-  supports the full existing feature set (minus anything that was already
-  server-shared-instance-specific, like the bookmarklet's relay page,
-  which needs its own local-mode review, not assumed to port unchanged).
+- An installable Windows package exists (unsigned is acceptable for the
+  pilot, per owner clarification — cross-platform and signed builds can
+  follow later) that installs, launches, creates a local library on first
+  run, and supports the full existing feature set (minus anything that was
+  already server-shared-instance-specific, like the bookmarklet's relay
+  page, which needs its own local-mode review, not assumed to port
+  unchanged).
+- A published checksum (or equivalent) lets a pilot tester verify the
+  installer they received is unmodified.
 - Quitting the app cleanly stops the local backend process (verified via
   OS process inspection, not just "the window closed").
 - Works with the network disconnected, from first launch — no feature
   degrades.
+- A manual update (reinstalling a newer build over an existing install)
+  has been tested at least once and does not lose the local database or
+  photo folder.
 
 ---
 
-## Phase 4 — Establish independent cloud storage for published content
+## Phase 4 — Cloud functionality for the Social track *(ON HOLD until Track A is validated)*
+
+Per owner decision 1, this phase does not start until the Desktop MVP
+(Phases 1–3) is built and proven reliable. It is split into two sub-phases
+that were previously conflated: a cheap, existing-infrastructure pilot
+(4A) and the full independent-cloud build-out (4B) that a real public/
+investor-facing product eventually needs. 4A does not require 4B — a
+small friend pilot does not need PostgreSQL, object storage, or a second
+deployed service.
+
+### Phase 4A — Social pilot on existing infrastructure
+
+**Goal**: validate the social feature set (Friendship, gallery
+Subscriptions, the independent-permissions/`AudienceLevel` model, the
+Activity Feed, and Discovery's extension to friends' content — detailed in
+the separate concept/design review, not re-specified here) with a small
+group of real users, without standing up any new infrastructure.
+
+**Required changes**:
+- The social data model and API surface, built directly into the
+  **existing** ASP.NET Core backend, existing SQLite database, and
+  existing Docker Compose + Tailscale deployment — no new service, no new
+  database engine, no object storage. Photos continue to live exactly
+  where they do today.
+- Sized explicitly for **3–5 initial participants**, with headroom to
+  **10–20** if that proves stable, per owner decision 3 — not designed or
+  tested against any larger load.
+
+**Dependencies**: Phase 1 (clean API boundary) only — explicitly does
+**not** depend on Phase 2 or 3 (Desktop), since the pilot runs on the
+existing shared web app. Sequenced after Track A by owner decision, not by
+a technical dependency.
+
+**Risks**: **low-to-medium**, and deliberately scoped down from the
+original Phase 4's "high" rating because this sub-phase reuses proven,
+already-deployed infrastructure instead of introducing a second service.
+The one accepted risk — the shared host (and therefore the pilot) being
+unreachable when that machine or its network is down — is, per owner
+decision 3, **treated as a known limitation of the test environment, not
+a defect to fix before launch.** This acceptance applies only at pilot
+scale; it does not carry over to Phase 4B.
+
+**Data migration**: none — new tables only, additive to the existing
+schema.
+
+**Acceptance criteria**:
+- 3–5 real participants can use the pilot's social features (follow/
+  subscribe, see each other's shared galleries per the granted
+  permissions, see a personalized Discovery feed that includes friends'
+  content, see an Activity Feed of relevant events) against the existing
+  shared backend, with no new infrastructure stood up.
+- The owner has explicitly signed off that the pilot's feature set (not
+  just its infrastructure) is ready to validate with real people — this
+  plan governs sequencing/infrastructure, not the detailed feature spec,
+  which is tracked separately.
+
+---
+
+### Phase 4B — Independent cloud storage for published content (full scale)
 
 **Goal**: a real, separately-deployed cloud backend exists, with its own
 multi-tenant database and blob/object storage, able to durably hold
 published content independent of any desktop install being online —
-per `ARCHITECTURE-PROPOSED.md` §1/§3.
+per `ARCHITECTURE-PROPOSED.md` §1/§3. Gated on Phase 4A having validated
+that the social feature set works and that demand/stability justify
+dedicated infrastructure spend — e.g. an investor-facing demo, more than
+~20 participants, or a genuine always-on guarantee the shared Tailscale
+host cannot promise.
 
 **Required changes**:
 - **Hard prerequisite**: migrate off SQLite to PostgreSQL for this cloud
@@ -258,11 +507,12 @@ per `ARCHITECTURE-PROPOSED.md` §1/§3.
   folder on one host — doesn't fit a managed PostgreSQL + object-storage
   deployment at all).
 
-**Dependencies**: Phase 1 (clean API boundary). *Not* dependent on Phases
-2–3 — cloud storage can be built and tested against the existing
-Tailscale-shared-instance frontend before desktop packaging exists, since
-"publish to cloud" is meaningful even from a browser-only client. Hard
-external dependency on `TODO,md` Phase 5 (PostgreSQL).
+**Dependencies**: Phase 4A (the pilot must have validated the social
+feature set first — see this phase's gating condition above). Not
+dependent on Phases 2–3 — cloud storage can be built and tested against
+the existing Tailscale-shared-instance frontend before desktop packaging
+exists, since "publish to cloud" is meaningful even from a browser-only
+client. Hard external dependency on `TODO,md` Phase 5 (PostgreSQL).
 
 **Risks**: **high** — this is the first phase introducing genuinely new
 infrastructure (a second deployed service, a different database engine, a
@@ -302,7 +552,7 @@ explicitly publish/sync content, per the five distinct operations in
   database gains a nullable "connected cloud account id," not a
   requirement.
 - **Publish** UI/flow: select a local gallery, choose a `Visibility` level,
-  trigger upload of the original + await derivative generation (Phase 4),
+  trigger upload of the original + await derivative generation (Phase 4B),
   record the assigned cloud id back onto the local `Gallery`/`Photo`
   records (§3.3's "cloud assigns the id, never the device").
 - **Private cross-device sync** flow: extend (not replace) the existing
@@ -318,8 +568,8 @@ explicitly publish/sync content, per the five distinct operations in
   table instead (§6.1).
 
 **Dependencies**: Phase 2 (local-first storage model — publishing *from*
-something requires that something to exist independently first), Phase 4
-(somewhere to publish *to*). Does not strictly require Phase 3 (desktop
+something requires that something to exist independently first), Phase 4B
+(somewhere durable to publish *to*). Does not strictly require Phase 3 (desktop
 packaging) — publishing could be validated from the existing web client
 against local-mode-Phase-2 data first, though the full product vision
 assumes Desktop exists by this point.
@@ -351,10 +601,19 @@ a specific user chooses to connect and publish from it.
 
 ---
 
-## Phase 6 — Implement social functionality
+## Phase 6 — Implement social functionality (full scale)
 
 **Goal**: friends/following, cross-user feeds, saving others' photos — the
-"Social" half of `ARCHITECTURE-PROPOSED.md` §2.B.
+"Social" half of `ARCHITECTURE-PROPOSED.md` §2.B, hardened for public/
+investor-facing scale. Much of this feature set is **not new work** by
+this point — Phase 4A already built and piloted the Friendship/visibility/
+Discovery-extension model on existing infrastructure; this phase is
+primarily about moving that already-validated model onto Phase 4B's
+durable infrastructure and hardening it for abuse/scale concerns the small
+pilot didn't need to face (see Risks below). The detailed permission-model
+shape (independent capability flags, not a single `Visibility` level) was
+refined in a separate design review after this plan was first written —
+treat the bullets below as the still-valid *goal*, not the final schema.
 
 **Required changes**:
 - `Follow`/`Friendship` data model (direction matters — "following" is
@@ -371,8 +630,10 @@ a specific user chooses to connect and publish from it.
   owned" pattern needs a genuine extension (not replacement) to "ownership
   OR granted-visibility check."
 
-**Dependencies**: Phase 5 (publishing/visibility must exist before
-"friends can see published content" is meaningful).
+**Dependencies**: Phase 4A (already satisfied — the pilot is what proves
+this feature set out), Phase 5 (publishing/visibility must exist at full
+scale before "friends can see published content" is meaningful beyond the
+pilot).
 
 **Risks**: **high** — this is the phase most exposed to real-world misuse
 concerns (harassment via unwanted follows, content scraping of public
@@ -464,3 +725,9 @@ Explicitly, to set expectations for anyone reading this plan mid-execution:
   subsumed by it; billing a shared Tailscale instance's AI feature and
   running a social cloud platform are different products that happen to
   share some infrastructure.
+- Phase 4A's pilot being occasionally unreachable (when the shared host or
+  its network is down) is **accepted at pilot scale only**, per owner
+  decision 3 — it is a statement about this specific test environment,
+  not a claim that the target architecture tolerates published content
+  being unavailable. Phase 4B exists precisely to remove that limitation
+  once the product needs to make that guarantee for real.
