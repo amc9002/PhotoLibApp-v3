@@ -34,19 +34,25 @@ namespace PhotoLibApi.Services
         }
 
         /// <summary>
-        /// Loads a tracked photo by id, but only if its gallery is owned by
-        /// <paramref name="userId"/> - otherwise <c>null</c>, same as "photo
-        /// doesn't exist" from the caller's perspective.
+        /// Loads a tracked photo by id, but only if it isn't itself
+        /// soft-deleted and its gallery is owned by <paramref name="userId"/>
+        /// and isn't soft-deleted either - otherwise <c>null</c>, same as
+        /// "photo doesn't exist" from the caller's perspective. Visibility is
+        /// always computed from both flags at read time, never cascaded by
+        /// writing one object's <c>IsDeleted</c> onto the other - deleting a
+        /// gallery never touches its photos' own flag, so a later restore of
+        /// the gallery (not yet implemented) would correctly leave
+        /// individually-deleted photos deleted.
         /// </summary>
         public async Task<Photo?> GetOwnedPhotoAsync(Guid photoId, Guid userId)
         {
             var photo = await _db.Photos.FindAsync(photoId);
-            if (photo == null)
+            if (photo == null || photo.IsDeleted)
                 return null;
 
             var ownedByCaller = await _db.Galleries
                 .AsNoTracking()
-                .AnyAsync(g => g.Id == photo.GalleryId && g.OwnerId == userId);
+                .AnyAsync(g => g.Id == photo.GalleryId && g.OwnerId == userId && !g.IsDeleted);
 
             return ownedByCaller ? photo : null;
         }
@@ -59,6 +65,31 @@ namespace PhotoLibApi.Services
         public async Task<Gallery?> GetOwnedGalleryAsync(Guid galleryId, Guid userId)
         {
             var gallery = await _db.Galleries.FindAsync(galleryId);
+            if (gallery == null || gallery.IsDeleted || gallery.OwnerId != userId)
+                return null;
+
+            return gallery;
+        }
+
+        /// <summary>
+        /// Same ownership rules as <see cref="GetOwnedGalleryAsync"/>
+        /// (exists, owned by <paramref name="userId"/>, not soft-deleted),
+        /// but with the <see cref="Gallery.Tags"/> navigation eagerly
+        /// loaded via <c>Include</c>. Callers that are about to *replace*
+        /// the gallery's tag set (<see cref="Controllers.GalleryController.SetTags"/>)
+        /// need this - without the collection already loaded, EF Core's
+        /// change tracker has no record of the existing associations, so
+        /// assigning a new collection only adds rows and never removes the
+        /// stale ones. Callers that don't touch <c>Tags</c> at all
+        /// (<c>Update</c>, <c>Delete</c>) should keep using
+        /// <see cref="GetOwnedGalleryAsync"/> instead, to avoid the extra
+        /// join for no benefit.
+        /// </summary>
+        public async Task<Gallery?> GetOwnedGalleryWithTagsAsync(Guid galleryId, Guid userId)
+        {
+            var gallery = await _db.Galleries
+                .Include(g => g.Tags)
+                .FirstOrDefaultAsync(g => g.Id == galleryId);
             if (gallery == null || gallery.IsDeleted || gallery.OwnerId != userId)
                 return null;
 

@@ -78,8 +78,11 @@ namespace PhotoLibApi.Controllers
 
             var ownerId = _currentUser.UserId;
 
+            // Soft-deleted galleries are excluded, same as every other
+            // gallery operation - a deleted id is simply absent from what
+            // SortOrderHelper has to assign, so it's left untouched.
             var galleries = await _db.Galleries
-                .Where(g => g.OwnerId == ownerId && request.GalleryIds.Contains(g.Id))
+                .Where(g => g.OwnerId == ownerId && !g.IsDeleted && request.GalleryIds.Contains(g.Id))
                 .ToListAsync();
 
             SortOrderHelper.Apply(galleries, request.GalleryIds, g => g.Id, (g, i) => g.SortOrder = i);
@@ -200,13 +203,18 @@ namespace PhotoLibApi.Controllers
 
             // Idempotent replay: a sync retry with the same ClientTempId
             // returns the row that already exists instead of duplicating it.
+            // ClientTempId identifies the create *operation*, not the
+            // object's current state - deliberately matched regardless of
+            // IsDeleted, so replaying the same operation always resolves to
+            // the same result, even if the created object was deleted
+            // since (the caller sees IsDeleted: true and can act on that,
+            // rather than a second, duplicate row being created).
             if (!string.IsNullOrEmpty(request.ClientTempId))
             {
                 var existing = await _db.Galleries
                     .FirstOrDefaultAsync(g =>
                         g.OwnerId == ownerId &&
-                        g.ClientTempId == request.ClientTempId &&
-                        !g.IsDeleted);
+                        g.ClientTempId == request.ClientTempId);
 
                 if (existing != null)
                     return StatusCode(StatusCodes.Status201Created, existing);
@@ -282,7 +290,7 @@ namespace PhotoLibApi.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> SetTags(Guid id, [FromBody] SetTagsRequest request)
         {
-            var gallery = await _galleryAccess.GetOwnedGalleryAsync(id, _currentUser.UserId);
+            var gallery = await _galleryAccess.GetOwnedGalleryWithTagsAsync(id, _currentUser.UserId);
 
             if (gallery == null)
                 return NotFound();

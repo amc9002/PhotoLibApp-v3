@@ -255,12 +255,17 @@ namespace PhotoLibApi.Controllers
 
             // Idempotent replay: a sync retry with the same ClientTempId
             // returns the row that already exists instead of duplicating it.
+            // ClientTempId identifies the create *operation*, not the
+            // object's current state - deliberately matched regardless of
+            // IsDeleted, so replaying the same operation always resolves to
+            // the same result, even if the created photo was deleted since
+            // (the caller sees IsDeleted: true and can act on that, rather
+            // than a second, duplicate row being created).
             if (!string.IsNullOrEmpty(request.ClientTempId))
             {
                 var existing = await _db.Photos.FirstOrDefaultAsync(p =>
                     p.GalleryId == request.GalleryId &&
-                    p.ClientTempId == request.ClientTempId &&
-                    !p.IsDeleted);
+                    p.ClientTempId == request.ClientTempId);
 
                 if (existing != null)
                     return StatusCode(StatusCodes.Status201Created, existing);
@@ -731,7 +736,11 @@ namespace PhotoLibApi.Controllers
         }
 
         /// <summary>
-        /// Copies a photo (metadata and files) into another gallery.
+        /// Copies a photo (metadata, files, and tags) into another gallery.
+        /// The copy links to the same <see cref="Tag"/> rows as the source,
+        /// as its own independent set of associations - no new tags are
+        /// created, and later tag changes on either photo don't affect the
+        /// other.
         /// </summary>
         /// <param name="id">Photo identifier.</param>
         /// <param name="request">Destination gallery.</param>
@@ -754,6 +763,11 @@ namespace PhotoLibApi.Controllers
             if (!await _galleryAccess.IsOwnedAsync(request.GalleryId, _currentUser.UserId))
                 return NotFound(new { message = $"Gallery with id '{request.GalleryId}' not found." });
 
+            // GetOwnedPhotoAsync doesn't load Tags (most of its other callers
+            // don't need them), so they're loaded explicitly here, scoped to
+            // just this action, rather than changing that shared method.
+            await _db.Entry(source).Collection(p => p.Tags).LoadAsync();
+
             var copy = new Photo
             {
                 Id = Guid.NewGuid(),
@@ -764,6 +778,10 @@ namespace PhotoLibApi.Controllers
                 CreatedAtUtc = DateTime.UtcNow,
                 UpdatedAtUtc = DateTime.UtcNow,
                 SortOrder = await NextSortOrderAsync(request.GalleryId),
+                // Links the copy to the exact same Tag rows the source has -
+                // a new, independent set of PhotoTags associations, not new
+                // Tag rows and not a shared collection instance with source.
+                Tags = source.Tags.ToList(),
             };
 
             if (source.HasOriginal)
@@ -832,8 +850,11 @@ namespace PhotoLibApi.Controllers
             if (!await _galleryAccess.IsOwnedAsync(request.GalleryId, _currentUser.UserId))
                 return NotFound();
 
+            // Soft-deleted photos are excluded, same as every other photo
+            // operation - a deleted id is simply absent from what
+            // SortOrderHelper has to assign, so it's left untouched.
             var photos = await _db.Photos
-                .Where(p => p.GalleryId == request.GalleryId && request.PhotoIds.Contains(p.Id))
+                .Where(p => p.GalleryId == request.GalleryId && !p.IsDeleted && request.PhotoIds.Contains(p.Id))
                 .ToListAsync();
 
             SortOrderHelper.Apply(photos, request.PhotoIds, p => p.Id, (p, i) => p.SortOrder = i);
