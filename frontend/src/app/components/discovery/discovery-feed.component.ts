@@ -1,4 +1,4 @@
-import { Component, HostBinding, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostBinding, Input, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { DiscoveryPhotoDto } from '../../models/discovery-photo.dto';
@@ -32,7 +32,7 @@ const PRELOAD_DISTANCE_PX = 600;
   templateUrl: './discovery-feed.component.html',
   styleUrls: ['./discovery-feed.component.css'],
 })
-export class DiscoveryFeedComponent implements OnInit, OnDestroy {
+export class DiscoveryFeedComponent implements OnDestroy {
   @Input() mode: 'full' | 'collapsed' = 'full';
 
   /**
@@ -57,20 +57,18 @@ export class DiscoveryFeedComponent implements OnInit, OnDestroy {
     private discoveryApi: DiscoveryApiService,
     public connectivity: ConnectivityService,
   ) {
-    // If Discovery loaded while offline (empty state shown), pick it up
-    // automatically once the connection comes back rather than leaving the
-    // user stuck on the placeholder until they navigate away and back.
+    // Single load-trigger point, covering both "already online when this
+    // component is created" and "came back online later": isOnline$ is
+    // backed by a BehaviorSubject, which replays its current value
+    // synchronously to a new subscriber - so subscribing here already
+    // fires immediately with today's state, with no separate ngOnInit
+    // call needed (a previous version called loadInitial() from both
+    // places, firing getFeed twice on every cold start while online).
     this.cameBackOnlineSub = this.connectivity.isOnline$.subscribe((online) => {
       if (online && this.photos.length === 0) {
         this.loadInitial();
       }
     });
-  }
-
-  ngOnInit() {
-    if (this.connectivity.isOnline) {
-      this.loadInitial();
-    }
   }
 
   ngOnDestroy() {
