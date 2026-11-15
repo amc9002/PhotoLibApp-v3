@@ -75,3 +75,7 @@ Screenshots/
 # Docker Compose backup output (real user data - never committed)
 ###############################
 /backups/
+
+# Claude Code — personal/session-local files
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
