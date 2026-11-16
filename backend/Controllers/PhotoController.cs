@@ -305,7 +305,7 @@ namespace PhotoLibApi.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Upload(Guid id, [FromForm] IFormFile file)
+        public async Task<IActionResult> Upload(Guid id, IFormFile file)
         {
             if (file == null || file.Length == 0)
                 return BadRequest(new { message = "File is required." });

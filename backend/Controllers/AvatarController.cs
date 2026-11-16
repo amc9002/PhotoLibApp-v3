@@ -53,7 +53,7 @@ namespace PhotoLibApi.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public async Task<IActionResult> UploadAvatar([FromForm] IFormFile file)
+        public async Task<IActionResult> UploadAvatar(IFormFile file)
         {
             if (file == null || file.Length == 0)
                 return BadRequest(new { message = "File is required." });
